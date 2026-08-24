@@ -1,0 +1,327 @@
+# ============================================
+# 🐍 PYTHON - ENTORNO VIRTUAL
+# ============================================
+venv/
+entorno/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.so
+*.pyd
+
+# ============================================
+# 🗃️ PYTHON CACHE
+# ============================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.pyc
+*.pyo
+
+# ============================================
+# 🗄️ BASE DE DATOS
+# ============================================
+*.db
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-journal
+
+# ============================================
+# 📊 LOGS
+# ============================================
+*.log
+logs/
+*.log.*
+nohup.out
+
+# ============================================
+# 📁 MEDIA Y ARCHIVOS SUBIDOS
+# ============================================
+media/
+staticfiles/
+static/
+static_root/
+media_root/
+uploads/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+*.mp4
+*.mp3
+
+# ============================================
+# 🔐 CREDENCIALES Y TOKENS - ¡IMPORTANTE!
+# ============================================
+# Archivos de credenciales OAuth
+credentials.json
+credentials_oauth.json
+client_secret.json
+client_secret_*.json
+client_id.json
+oauth2.json
+token.json
+
+# Tokens de Gmail y Drive
+token.pickle
+drive_token.pickle
+*.pickle
+*.pkl
+token_base64.txt
+credentials_base64.txt
+
+# Tokens generados (TODOS)
+*_TOKEN_BASE64.txt
+*_CREDENTIALS_BASE64.txt
+GMAIL_TOKEN_BASE64.txt
+GMAIL_CREDENTIALS_BASE64.txt
+DRIVE_TOKEN_BASE64.txt
+DRIVE_CREDENTIALS_BASE64.txt
+token_refreshed.txt
+oauth_token.txt
+google_oauth_token.txt
+drive_oauth_token.txt
+
+# Scripts de generación de tokens (pueden contener credenciales)
+generate_gmail_token.py
+generate_drive_token.py
+get_token.py
+regenerate_token.py
+force_new_token.py
+
+# Directorio de secrets (donde guardas tokens localmente)
+.secrets/
+secrets/
+.credentials/
+credentials/
+
+# ============================================
+# 🌐 VARIABLES DE ENTORNO
+# ============================================
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+.env.test
+.env.example  # Si quieres compartir el ejemplo, no lo ignores
+!.env.example
+config.ini
+settings_local.py
+local_settings.py
+secrets.py
+secrets.json
+
+# ============================================
+# 🚀 DEPLOYMENT
+# ============================================
+railway.toml
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.pid
+*.pid.lock
+.railway/
+Procfile
+
+# ============================================
+# 🔧 IDE Y EDITORES
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.backup
+*.tmp
+*.temp
+.ropeproject/
+*.sublime-*
+.project
+.classpath
+.settings/
+*.iml
+.tern-project
+*.local
+nbproject/
+
+# ============================================
+# 🍎 SISTEMA OPERATIVO
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*.dll
+*.exe
+
+# ============================================
+# 🧪 TESTS Y COBERTURA
+# ============================================
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+*.cover
+*.py,cover
+coverage.xml
+*.codecov.*
+test-reports/
+
+# ============================================
+# 📦 ARCHIVOS DE DEPENDENCIAS
+# ============================================
+requirements.txt
+requirements-dev.txt
+requirements-prod.txt
+requirements-test.txt
+Pipfile.lock
+poetry.lock
+package-lock.json
+
+# ============================================
+# 📝 DOCUMENTACIÓN
+# ============================================
+docs/_build/
+*.doctest
+*.man
+*.pdf
+*.html
+site/
+
+# ============================================
+# 🔄 GIT
+# ============================================
+*.orig
+*.rej
+*.patch
+*.diff
+*.merge
+*.swp
+*.swo
+
+# ============================================
+# 🎨 ARCHIVOS DE DISEÑO
+# ============================================
+*.psd
+*.ai
+*.sketch
+*.fig
+*.xd
+
+# ============================================
+# 📦 COMPRIMIDOS
+# ============================================
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+*.bz2
+*.gz
+
+# ============================================
+# 🛠️ HERRAMIENTAS DE DESARROLLO
+# ============================================
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+kubeconfig
+.helm/
+node_modules/
+bower_components/
+
+# ============================================
+# 🔄 ARCHIVOS DE RESPALDO
+# ============================================
+*.backup
+*.old
+*.orig
+*.rej
+*.tmp
+*.temp
+*.bak
+
+# ============================================
+# 📊 CACHÉ DE NAVEGADOR
+# ============================================
+*.cache
+*.cached
+*.min.css
+*.min.js
+
+# ============================================
+# 🔒 ARCHIVOS DE SEGURIDAD
+# ============================================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.cer
+*.jks
+*.keystore
+*.truststore
+id_rsa
+id_rsa.pub
+known_hosts
+
+# ============================================
+# 📋 NOTAS Y TEMPORALES
+# ============================================
+notas.txt
+NOTAS.md
+temp/
+tmp/
+temp_*
+tmp_*
+*.swp
+*.swo
+
+# ============================================
+# 🌐 NODE (si usas frontend)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================
+# 🔄 DOCKER
+# ============================================
+.dockerignore
+docker-compose.override.yml
+docker-compose.*.yml
+*.container
+*.image
+*.tar
