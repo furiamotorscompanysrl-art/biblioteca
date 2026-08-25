@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'bibliotecaartdisumsa-production.up.railway.app',
+    'https://biblioteca-production-b2fa.up.railway.app/',
     '.up.railway.app',
     '127.0.0.1',
     'localhost',
