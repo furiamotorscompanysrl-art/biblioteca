@@ -198,7 +198,6 @@ test-reports/
 # ============================================
 # 📦 ARCHIVOS DE DEPENDENCIAS
 # ============================================
-requirements.txt
 requirements-dev.txt
 requirements-prod.txt
 requirements-test.txt
