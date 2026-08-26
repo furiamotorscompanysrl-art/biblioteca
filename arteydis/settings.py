@@ -17,8 +17,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7xx+3%9o4ni5#7s$0)3ly
 import warnings
 warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 
-# DEBUG
-DEBUG = False
+# DEBUG - Temporalmente True para ver errores
+DEBUG = True  # ← ¡Cambio temporal! Luego vuelve a False
 
 # ALLOWED_HOSTS
 ALLOWED_HOSTS = [
@@ -69,13 +69,14 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# TEMPLATES
+# ============================================
+# TEMPLATES - CORREGIDO
+# ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',
-            BASE_DIR / 'biblioartdis' / 'templates',
+            os.path.join(BASE_DIR, 'templates'),  # ← Ruta CORRECTA
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -95,7 +96,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'default',
         },
@@ -117,7 +118,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'django.request': {
@@ -132,7 +133,7 @@ LOGGING = {
         },
         'biblioartdis': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'cloudinary': {
@@ -154,17 +155,15 @@ LOGIN_URL = '/'
 WSGI_APPLICATION = 'arteydis.wsgi.application'
 
 # ============================================
-# BASE DE DATOS - CONFIGURACIÓN CORREGIDA
+# BASE DE DATOS - CONFIGURACIÓN CORRECTA
 # ============================================
 print("🔧 Configurando base de datos...")
 
-# Usar DATABASE_URL si existe, o configuración manual
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if DATABASE_URL:
-    # Si hay DATABASE_URL en Railway, usar dj_database_url
-    try:
-        import dj_database_url
+# Usar dj_database_url si está disponible
+try:
+    import dj_database_url
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
@@ -173,25 +172,10 @@ if DATABASE_URL:
             )
         }
         print(f"✅ Base de datos configurada desde DATABASE_URL")
-    except ImportError:
-        # Si no está instalado dj_database_url, usar manual
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': 'postgres',
-                'USER': 'postgres.vmwkbkvsthswxshcwhmp',
-                'PASSWORD': 'cnPd.fxp4x.5kMQ2',
-                'HOST': 'aws-1-us-east-1.pooler.supabase.com',
-                'PORT': '6543',
-                'OPTIONS': {
-                    'sslmode': 'require',
-                },
-                'CONN_MAX_AGE': 60,
-            }
-        }
-        print("✅ Base de datos configurada manualmente (fallback)")
-else:
-    # Configuración manual directa
+    else:
+        raise Exception("No DATABASE_URL")
+except Exception as e:
+    print(f"⚠️ Usando configuración manual: {e}")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -206,11 +190,10 @@ else:
             'CONN_MAX_AGE': 60,
         }
     }
-    print("✅ Base de datos configurada manualmente (directa)")
+    print("✅ Base de datos configurada manualmente")
 
-print(f"📌 USER: {DATABASES['default']['USER']}")
 print(f"📌 HOST: {DATABASES['default']['HOST']}")
-print(f"📌 PORT: {DATABASES['default']['PORT']}")
+print(f"📌 USER: {DATABASES['default']['USER']}")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
