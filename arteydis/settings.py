@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 
 # DEBUG - Temporalmente True para ver errores
-DEBUG = True  # ← ¡Cambio temporal! Luego vuelve a False
+DEBUG = True
 
 # ALLOWED_HOSTS
 ALLOWED_HOSTS = [
@@ -70,13 +70,14 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ============================================
-# TEMPLATES - CORREGIDO
+# TEMPLATES - CORREGIDO PARA buscar en biblioartdis/templates/
 # ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),  # ← Ruta CORRECTA
+            os.path.join(BASE_DIR, 'biblioartdis', 'templates'),  # ← PRIMERO busca aquí
+            os.path.join(BASE_DIR, 'templates'),  # ← Fallback en raíz
         ],
         'APP_DIRS': True,
         'OPTIONS': {
