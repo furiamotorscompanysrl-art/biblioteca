@@ -64,16 +64,6 @@ media_root/
 uploads/
 
 # Solo excluir archivos multimedia, NO HTML
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.mp4
-*.mp3
-*.ico
-*.svg
-*.webp
-*.bmp
 
 # PDF SOLO si son subidos por usuarios (NO excluir templates)
 # *.pdf  # ← DESCOMENTAR SI EXCLUYES PDFS SUBIDOS
