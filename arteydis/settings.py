@@ -6,35 +6,30 @@ import cloudinary.uploader
 import cloudinary.api
 import sys
 import json
-import dj_database_url  # ← IMPORTANTE: Agregar esta importación
-from dotenv import load_dotenv  # ← Para cargar variables de entorno
 
-# Cargar variables de entorno desde .env (solo para desarrollo local)
-load_dotenv()
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============================================
-# SECRET KEY - Usar variable de entorno o generar una nueva
+# SECRET KEY
 # ============================================
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7xx+3%9o4ni5#7s$0)3lyjb8g4albmz533@^+3w)1hm$v$06^)')
 
-# Silenciar warnings específicos
+# Silenciar warnings
 import warnings
 warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 
 # ============================================
-# DEBUG - Siempre False en producción
+# DEBUG
 # ============================================
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = False
 
 # ============================================
-# ALLOWED_HOSTS - Configuración corregida
+# ALLOWED_HOSTS
 # ============================================
 ALLOWED_HOSTS = [
-    'biblioteca-production-b2fa.up.railway.app',  # ← Tu dominio correcto
-    '.up.railway.app',  # ← Permite todos los subdominios de Railway
+    'biblioteca-production-b2fa.up.railway.app',
+    '.up.railway.app',
     '127.0.0.1',
     'localhost',
     'healthcheck.railway.app',
@@ -51,15 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Cloudinary (solo para imágenes y PDFs pequeños)
     'cloudinary',
     'cloudinary_storage',
-    
-    # Apps propias
     'biblioartdis.apps.BiblioartdisConfig',
-    
-    # Aplicaciones adicionales
     'django_extensions',
     'django_filters',
     'django_cleanup.apps.CleanupConfig',
@@ -89,16 +78,16 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ============================================
-# TEMPLATES - ¡CORREGIDO! Ahora busca en la carpeta templates/
+# TEMPLATES
 # ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',  # ← ¡ESTA ES LA CLAVE! Busca en la raíz/templates/
-            BASE_DIR / 'biblioartdis' / 'templates',  # ← También busca en la app
+            BASE_DIR / 'templates',
+            BASE_DIR / 'biblioartdis' / 'templates',
         ],
-        'APP_DIRS': True,  # ← Busca en templates/ de cada app instalada
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -111,7 +100,7 @@ TEMPLATES = [
 ]
 
 # ============================================
-# LOGGING - Mejorado para producción
+# LOGGING
 # ============================================
 LOGGING = {
     'version': 1,
@@ -149,7 +138,7 @@ LOGGING = {
             'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['file'],
+            'handlers': ['console', 'file'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -166,7 +155,6 @@ LOGGING = {
     },
 }
 
-# Crear directorio de logs si no existe
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.makedirs(os.path.join(BASE_DIR, 'logs'))
 
@@ -178,76 +166,48 @@ LOGIN_URL = '/'
 WSGI_APPLICATION = 'arteydis.wsgi.application'
 
 # ============================================
-# BASE DE DATOS - CORREGIDA CON dj_database_url
+# BASE DE DATOS - ¡CONFIGURACIÓN DIRECTA!
 # ============================================
-# Usar variable de entorno DATABASE_URL (Recomendado para Railway)
-DATABASE_URL = os.environ.get('DATABASE_URL')
+print("🔧 Configurando base de datos...")
 
-if DATABASE_URL:
-    # Usar la URL de la variable de entorno (Railway)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'cnPd.fxp4x.5kMQ2',
+        'HOST': 'db.vmwkbkvsthswxshcwhmp.supabase.co',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
+        'CONN_MAX_AGE': 60,
     }
-else:
-    # ============================================
-    # BASE DE DATOS - CONFIGURACIÓN DIRECTA
-    # ============================================
+}
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'cnPd.fxp4x.5kMQ2',
-            'HOST': 'db.vmwkbkvsthswxshcwhmp.supabase.co',
-            'PORT': '5432',
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
-            'CONN_MAX_AGE': 60,
-        }
-    }
-
-    print("✅ Base de datos configurada manualmente con ENGINE explícito")
+print(f"✅ DATABASES configurada con ENGINE: {DATABASES['default']['ENGINE']}")
+print(f"📌 HOST: {DATABASES['default']['HOST']}")
 
 # ============================================
 # Password validation
 # ============================================
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 9},
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 9}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Configuración de timeout de sesión
 SESSION_EXPIRE_SECONDS = 3600
 SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 SESSION_TIMEOUT_REDIRECT = '/'
 
-# ============================================
-# Internationalization
-# ============================================
 LANGUAGE_CODE = 'es'
 TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Configuración de mensajes
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',
     messages.INFO: 'alert-info',
@@ -259,17 +219,15 @@ MESSAGE_TAGS = {
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # ============================================
-# CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS
+# ARCHIVOS ESTÁTICOS
 # ============================================
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ============================================
-# CONFIGURACIÓN DE CLOUDINARY - Usar variables de entorno
+# CLOUDINARY
 # ============================================
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dnnl3rije'),
@@ -285,29 +243,28 @@ CLOUDINARY_STORAGE = {
     'SECURE': True,
 }
 
-# Usar Cloudinary Storage SOLO para imágenes y PDFs pequeños
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
 # ============================================
-# CONFIGURACIÓN DE GOOGLE DRIVE
+# GOOGLE DRIVE
 # ============================================
 GOOGLE_DRIVE_CREDENTIALS_JSON = os.environ.get('GOOGLE_DRIVE_CREDENTIALS_JSON')
 if GOOGLE_DRIVE_CREDENTIALS_JSON:
     try:
         GOOGLE_DRIVE_CREDENTIALS = json.loads(GOOGLE_DRIVE_CREDENTIALS_JSON)
-        print("✅ Google Drive credentials loaded successfully")
-    except json.JSONDecodeError as e:
+        print("✅ Google Drive credentials loaded")
+    except json.JSONDecodeError:
         GOOGLE_DRIVE_CREDENTIALS = None
-        print(f"❌ Error decoding Google Drive credentials: {e}")
+        print("❌ Error decodificando Google Drive credentials")
 else:
     GOOGLE_DRIVE_CREDENTIALS = None
-    print("⚠️ GOOGLE_DRIVE_CREDENTIALS_JSON not found")
+    print("⚠️ GOOGLE_DRIVE_CREDENTIALS_JSON no encontrado")
 
 GOOGLE_DRIVE_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_FOLDER_ID', '')
 
 # ============================================
-# CONFIGURACIÓN DE EMAIL - Usar variables de entorno
+# EMAIL
 # ============================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -316,16 +273,11 @@ EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
-    DEFAULT_FROM_EMAIL = f'Biblioteca ARTyDIS <{EMAIL_HOST_USER}>'
-    print("✅ Email configured successfully")
-else:
-    DEFAULT_FROM_EMAIL = 'Biblioteca ARTyDIS <noreply@example.com>'
-    print("⚠️ Email credentials not configured")
+DEFAULT_FROM_EMAIL = f'Biblioteca ARTyDIS <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Biblioteca ARTyDIS <noreply@example.com>'
 EMAIL_TIMEOUT = 30
 
 # ============================================
-# CONFIGURACIONES DE SEGURIDAD PARA PRODUCCIÓN
+# SEGURIDAD
 # ============================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
@@ -333,42 +285,25 @@ CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# HSTS - Desactivado temporalmente para pruebas
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
-
 CSRF_TRUSTED_ORIGINS = [
-    'https://biblioteca-production-b2fa.up.railway.app',  # ← Tu dominio correcto
+    'https://biblioteca-production-b2fa.up.railway.app',
 ]
 
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 3600
 
-# ============================================
-# CONFIGURACIONES ADICIONALES
-# ============================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SILENCED_SYSTEM_CHECKS = ['security.W019']
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 IMPORT_EXPORT_SKIP_ADMIN_LOG = False
 
-# ============================================
-# CONFIGURACIÓN PARA EVITAR SEÑALES DUPLICADAS
-# ============================================
 IS_MANAGEMENT_COMMAND = 'manage.py' in sys.argv[0] if sys.argv else False
 
-# ============================================
-# CONFIGURACIÓN ADICIONAL PARA EMAIL
-# ============================================
 EMAIL_USE_LOCALTIME = True
-EMAIL_SSL_CERTFILE = None
-EMAIL_SSL_KEYFILE = None
 
-# ============================================
-# LÍMITES DE SUBIDA DE ARCHIVOS
-# ============================================
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 DATA_UPLOAD_MAX_NUMBER_FILES = 100
-DATA_UPLOAD_MAX_FILE_SIZE = 1024 * 1024 * 500  # 500 MB
+DATA_UPLOAD_MAX_FILE_SIZE = 1024 * 1024 * 500
+
+print("🚀 Settings cargados correctamente")
