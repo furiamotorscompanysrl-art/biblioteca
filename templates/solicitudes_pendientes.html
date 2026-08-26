@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📋 Solicitudes Pendientes de Aprobación</h2>
+    
+    {% if pendientes %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Fecha</th>
+                        <th>Documentos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in pendientes %}
+                    <tr>
+                        <td>{{ usuario.nombres }} {{ usuario.apepat }}</td>
+                        <td>{{ usuario.correo }}</td>
+                        <td>{{ usuario.telefono }}</td>
+                        <td>{{ usuario.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{{ usuario.matricula_pdf.url }}" target="_blank" class="btn btn-sm btn-info">📄 Matrícula</a>
+                            <a href="{{ usuario.carnet_frente.url }}" target="_blank" class="btn btn-sm btn-info">🪪 Frente</a>
+                            <a href="{{ usuario.carnet_reverso.url }}" target="_blank" class="btn btn-sm btn-info">🪪 Reverso</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'aprobar_usuario' usuario.id %}" class="btn btn-success btn-sm">✅ Aprobar</a>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rechazarModal{{ usuario.id }}">❌ Rechazar</button>
+                            
+                            <!-- Modal Rechazar -->
+                            <div class="modal fade" id="rechazarModal{{ usuario.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="post" action="{% url 'rechazar_usuario' usuario.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Rechazar Solicitud</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p><strong>{{ usuario.nombres }}</strong></p>
+                                                <div class="mb-3">
+                                                    <label>Motivo del rechazo:</label>
+                                                    <textarea name="motivo" class="form-control" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">Rechazar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-success">
+            ✅ No hay solicitudes pendientes.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

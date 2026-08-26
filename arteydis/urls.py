@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from biblioartdis import views
-from biblioartdis.views import CustomLoginView
+from biblioartdis.views.auth_views import CustomLoginView
 
 urlpatterns = [
     # Página principal y autenticación
@@ -18,6 +18,20 @@ urlpatterns = [
     path('verificar-codigo/', views.verificar_codigo_view, name='verificar_codigo'),
     path('reenviar-codigo/', views.reenviar_codigo, name='reenviar_codigo'),
     
+    # ============================================
+    # REGISTRO CON APROBACIÓN MANUAL (NUEVO)
+    # ============================================
+    path('registrar/', views.registrar_usuario, name='registrar_usuario'),
+    path('solicitudes-pendientes/', views.listar_solicitudes_pendientes, name='solicitudes_pendientes'),
+    path('aprobar-usuario/<int:usuario_id>/', views.aprobar_usuario, name='aprobar_usuario'),
+    path('rechazar-usuario/<int:usuario_id>/', views.rechazar_usuario, name='rechazar_usuario'),
+    
+    # ============================================
+    # RESTABLECER CONTRASEÑA (ADMIN)
+    # ============================================
+    path('restablecer-password-admin/', views.restablecer_password_admin, name='restablecer_password_admin'),
+    path('restablecer-password-api/', views.restablecer_password_api, name='restablecer_password_api'),
+    
     # Perfil y usuarios
     path('perfil/', views.perfil, name='perfil'),
     path('agregar_usuario/', views.agregar_usuario, name='agregar_usuario'),
@@ -30,7 +44,7 @@ urlpatterns = [
     # Gestión de libros
     path('listar_libros/', views.listar_libros, name='listar_libros'),
     path('ver_pdf/<int:libro_id>/', views.ver_pdf, name='ver_pdf'),
-    path('libro/ver_descargar/<int:libro_id>/', views.ver_descargar_libro, name='ver_descargar_libro'),  # ⭐ NUEVA LÍNEA
+    path('libro/ver_descargar/<int:libro_id>/', views.ver_descargar_libro, name='ver_descargar_libro'),
     path('libro/<int:libro_id>/editar/', views.editar_libro, name='editar_libro'),
     path('libros/<int:libro_id>/eliminar/', views.eliminar_libro, name='eliminar_libro'),
     path('libros/agregar/', views.agregar_libro, name='agregar_libro'),

@@ -519,3 +519,54 @@ def chat_con_gemini(request):
             return JsonResponse({'error': str(e), 'success': False}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# ============================================
+# RESTABLECER CONTRASEÑA (ADMIN)
+# ============================================
+
+@login_required
+def restablecer_password(request):
+    """
+    Vista para que el administrador restablezca la contraseña de un usuario.
+    La nueva contraseña será el número de CI del usuario.
+    """
+    # Verificar que el usuario es administrador
+    if not hasattr(request.user, 'usuario') or request.user.usuario.tipo_usuario != 'Administrador':
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('inicio')
+    
+    if request.method == 'POST':
+        try:
+            usuario_id = request.POST.get('usuario_id')
+            if not usuario_id:
+                messages.error(request, 'ID de usuario no proporcionado.')
+                return redirect('lista_usuarios')
+            
+            usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+            
+            # Establecer la contraseña como el CI del usuario
+            nueva_password = usuario.ci
+            usuario.user.set_password(nueva_password)
+            usuario.user.save()
+            
+            logger.info(f"Contraseña restablecida para usuario: {usuario.user.username} por admin: {request.user.username}")
+            messages.success(request, f'✅ Contraseña restablecida para {usuario.nombres} {usuario.apepat}. Nueva contraseña: {nueva_password}')
+            
+            return redirect('lista_usuarios')
+            
+        except Usuario.DoesNotExist:
+            messages.error(request, 'Usuario no encontrado.')
+            return redirect('lista_usuarios')
+        except Exception as e:
+            logger.error(f"Error al restablecer contraseña: {str(e)}")
+            messages.error(request, f'Error al restablecer contraseña: {str(e)}')
+            return redirect('lista_usuarios')
+    
+    # GET - Mostrar confirmación
+    usuario_id = request.GET.get('usuario_id')
+    if usuario_id:
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        return render(request, 'confirmar_restablecer_password.html', {'usuario': usuario})
+    
+    messages.error(request, 'ID de usuario no proporcionado.')
+    return redirect('lista_usuarios')

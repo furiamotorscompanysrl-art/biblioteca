@@ -36,6 +36,17 @@ class Usuario(models.Model):
         ('BE', 'BE'),
         ('PD', 'PD'),
     )
+    
+    # ============================================
+    # ESTADOS DE REGISTRO PARA APROBACIÓN MANUAL
+    # ============================================
+    ESTADO_REGISTRO_CHOICES = (
+        ('pendiente', 'Pendiente de Aprobación'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('inactivo', 'Inactivo'),
+    )
+    
     usuario_id = models.AutoField(primary_key=True)  
     nombres = models.CharField(max_length=50)
     apepat = models.CharField(max_length=30)
@@ -49,10 +60,60 @@ class Usuario(models.Model):
     nro_celular = models.CharField(max_length=20)
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     fecha_alta = models.DateTimeField(default=timezone.now)
-    fecha_baja = models.DateTimeField(null=True, blank=True,
-        default=get_fecha_baja_default
-    )
+    fecha_baja = models.DateTimeField(null=True, blank=True, default=get_fecha_baja_default)
     esta_activo = models.BooleanField(default=True)
+    
+    # ============================================
+    # NUEVOS CAMPOS PARA REGISTRO CON APROBACIÓN
+    # ============================================
+    estado_registro = models.CharField(
+        max_length=20, 
+        choices=ESTADO_REGISTRO_CHOICES, 
+        default='pendiente'
+    )
+    
+    # Datos personales para registro
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+    carrera = models.CharField(max_length=100, blank=True, null=True)
+    semestre = models.CharField(max_length=10, blank=True, null=True)
+    anio_ingreso = models.CharField(max_length=10, blank=True, null=True)
+    
+    # Documentos subidos (Cloudinary)
+    matricula_pdf = CloudinaryField(
+        'Matrícula',
+        folder='usuarios/matriculas/',
+        resource_type='auto',
+        null=True,
+        blank=True
+    )
+    carnet_frente = CloudinaryField(
+        'Carnet Frente',
+        folder='usuarios/carnets/',
+        null=True,
+        blank=True
+    )
+    carnet_reverso = CloudinaryField(
+        'Carnet Reverso',
+        folder='usuarios/carnets/',
+        null=True,
+        blank=True
+    )
+    
+    # Fechas y aprobación
+    fecha_solicitud = models.DateTimeField(auto_now_add=True, null=True)
+    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    aprobado_por = models.ForeignKey(
+        'Usuario', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='aprobados'
+    )
+    motivo_rechazo = models.TextField(blank=True, null=True)
+    
+    # Flag para saber si puede restablecer contraseña
+    puede_restablecer_password = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-fecha_alta']
@@ -61,7 +122,8 @@ class Usuario(models.Model):
         try:
             nombre_str = str(self.nombres) if self.nombres else "Sin nombre"
             tipo_str = str(self.tipo_usuario) if self.tipo_usuario else "Sin tipo"
-            return f"ID: {self.usuario_id} Usuario: {nombre_str}, Tipo: {tipo_str}"
+            estado = f"({self.estado_registro})" if self.estado_registro != 'aprobado' else ""
+            return f"ID: {self.usuario_id} Usuario: {nombre_str}, Tipo: {tipo_str} {estado}"
         except:
             return f"Usuario {self.usuario_id}"
 
@@ -84,6 +146,18 @@ class Usuario(models.Model):
         if self.dias_restantes <= 0:
             return "Expirado"
         return "Activo"
+    
+    @property
+    def esta_pendiente(self):
+        return self.estado_registro == 'pendiente'
+    
+    @property
+    def esta_aprobado(self):
+        return self.estado_registro == 'aprobado'
+    
+    @property
+    def esta_rechazado(self):
+        return self.estado_registro == 'rechazado'
 
     @classmethod
     def get_usuarios_por_vencer(cls, dias=30):
@@ -98,6 +172,7 @@ class Usuario(models.Model):
     def get_estadisticas(cls):
         total = cls.objects.count()
         activos = cls.objects.filter(esta_activo=True).count()
+        pendientes = cls.objects.filter(estado_registro='pendiente').count()
         por_tipo = cls.objects.filter(esta_activo=True).values(
             'tipo_usuario'
         ).annotate(total=Count('tipo_usuario'))
@@ -105,71 +180,9 @@ class Usuario(models.Model):
         return {
             'total_usuarios': total,
             'usuarios_activos': activos,
+            'pendientes': pendientes,
             'por_tipo': por_tipo
         }
-
-
-# ============================================
-# SEÑAL COMENTADA - DESACTIVADA TEMPORALMENTE
-# ============================================
-# La señal está desactivada porque:
-# 1. El auth_views.py ya crea usuarios automáticamente con get_or_create
-# 2. El Admin también maneja la creación de perfiles automáticamente
-# 3. Esta señal causaba conflictos (duplicate key) al crear usuarios desde Admin
-#
-# Si se necesita reactivar en el futuro, descomentar el código siguiente:
-# ============================================
-
-# @receiver(post_save, sender=User)
-# def create_or_update_user_profile(sender, instance, created, **kwargs):
-#     """
-#     Crea o actualiza el perfil Usuario cuando se crea/actualiza un User
-#     Usa get_or_create para evitar duplicados
-#     """
-#     if created:
-#         # Para usuarios NUEVOS: crear perfil solo si no existe
-#         perfil, created = Usuario.objects.get_or_create(
-#             user=instance,
-#             defaults={
-#                 'nombres': instance.first_name if instance.first_name else (instance.username if instance.username else "Usuario"),
-#                 'apepat': '-',
-#                 'apemat': '-',
-#                 'ci': instance.username if instance.username else 'SIN CI',
-#                 'correo': instance.email if instance.email else f'{instance.username}@example.com',
-#                 'extension': 'LP',
-#                 'tipo_usuario': 'Externo',
-#                 'nro_celular': '00000000'
-#             }
-#         )
-#         if created:
-#             print(f"✅ Perfil Usuario creado para: {instance.username}")
-#         else:
-#             print(f"⚠️ Perfil Usuario ya existía para: {instance.username}")
-#     else:
-#         # Para usuarios EXISTENTES: actualizar datos si es necesario
-#         try:
-#             perfil = instance.usuario
-#             # Actualizar campos si cambiaron en User
-#             if instance.first_name and perfil.nombres != instance.first_name:
-#                 perfil.nombres = instance.first_name
-#             if instance.email and perfil.correo != instance.email:
-#                 perfil.correo = instance.email
-#             perfil.save()
-#             print(f"🔄 Perfil Usuario actualizado para: {instance.username}")
-#         except Usuario.DoesNotExist:
-#             # Si por alguna razón no existe, crearlo
-#             Usuario.objects.create(
-#                 user=instance,
-#                 nombres=instance.first_name if instance.first_name else instance.username,
-#                 apepat='-',
-#                 apemat='-',
-#                 ci=instance.username,
-#                 correo=instance.email or f'{instance.username}@example.com',
-#                 extension='LP',
-#                 tipo_usuario='Externo',
-#                 nro_celular='00000000'
-#             )
-#             print(f"✅ Perfil Usuario recreado para: {instance.username}")
 
 
 class Autor(models.Model):
@@ -504,17 +517,3 @@ class CodigoVerificacion(models.Model):
     def es_valido(self):
         from django.utils import timezone
         return not self.usado and timezone.now() < self.expira_en
-
-
-# ============================================
-# AUDITLOG - DESACTIVADO TEMPORALMENTE
-# ============================================
-# from auditlog.registry import auditlog
-# auditlog.register(Usuario)
-# auditlog.register(Autor)
-# auditlog.register(Categoria)
-# auditlog.register(Libro, exclude_fields=['archivo_autorizacion'])
-# auditlog.register(Sugerencia)
-# auditlog.register(Imagen)
-# auditlog.register(Revista)
-# auditlog.register(Coleccion)

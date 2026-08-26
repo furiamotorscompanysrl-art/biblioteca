@@ -9,9 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* ============================================ */
-        /* ESTILOS MODERNOS PARA LOGIN - VERSIÓN CLARA  */
-        /* ============================================ */
         :root {
             --primary-dark: #0F2B3D;
             --primary: #1A3A4F;
@@ -45,7 +42,6 @@
             overflow-x: hidden;
         }
 
-        /* Patrón decorativo de fondo */
         body::before {
             content: '';
             position: absolute;
@@ -59,7 +55,6 @@
             pointer-events: none;
         }
 
-        /* Tarjeta principal */
         .login-card {
             max-width: 480px;
             width: 100%;
@@ -72,7 +67,6 @@
             animation: fadeInUp 0.5s ease-out;
         }
 
-        /* Header de la tarjeta */
         .card-header-custom {
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
             padding: 2rem 1.5rem;
@@ -82,7 +76,6 @@
         .logo {
             max-width: 100px;
             margin-bottom: 1rem;
-            animation: floatLogo 3s ease-in-out infinite;
         }
 
         .card-header-custom h4 {
@@ -98,12 +91,10 @@
             margin: 0.5rem 0 0;
         }
 
-        /* Cuerpo de la tarjeta */
         .card-body-custom {
             padding: 2rem;
         }
 
-        /* Campos de formulario */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -159,7 +150,6 @@
             margin-top: 0.3rem;
         }
 
-        /* Botón principal */
         .btn-login {
             width: 100%;
             padding: 0.85rem;
@@ -183,7 +173,6 @@
             box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
         }
 
-        /* Separador */
         .separator {
             display: flex;
             align-items: center;
@@ -208,7 +197,6 @@
             margin-left: 1rem;
         }
 
-        /* Info text */
         .info-text {
             text-align: center;
             font-size: 0.75rem;
@@ -221,7 +209,6 @@
             margin-right: 5px;
         }
 
-        /* Botón de registro */
         .btn-register {
             width: 100%;
             padding: 0.75rem;
@@ -238,6 +225,7 @@
             justify-content: center;
             gap: 8px;
             margin-top: 1rem;
+            text-decoration: none;
         }
 
         .btn-register:hover {
@@ -246,7 +234,6 @@
             background: rgba(245, 158, 11, 0.05);
         }
 
-        /* Alertas */
         .alert-custom {
             border-radius: 16px;
             padding: 0.8rem 1rem;
@@ -276,6 +263,12 @@
             border-left: 4px solid var(--accent);
         }
 
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
         .close-btn {
             margin-left: auto;
             background: none;
@@ -289,68 +282,21 @@
             opacity: 1;
         }
 
-        /* Modal */
-        .modal-modern .modal-content {
-            border-radius: 24px;
-            overflow: hidden;
-        }
-
-        .modal-modern .modal-header {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            border-bottom: 2px solid var(--accent);
-        }
-
-        .modal-modern .modal-title {
-            color: white;
-            font-weight: 600;
-        }
-
-        .modal-modern .btn-close {
-            filter: brightness(0) invert(1);
-        }
-
-        /* Animaciones */
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes floatLogo {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        /* Responsive */
         @media (max-width: 576px) {
-            .login-card {
-                margin: 1rem;
-            }
-            .card-body-custom {
-                padding: 1.5rem;
-            }
-            .card-header-custom h4 {
-                font-size: 1.2rem;
-            }
-            .logo {
-                max-width: 80px;
-            }
+            .login-card { margin: 1rem; }
+            .card-body-custom { padding: 1.5rem; }
+            .card-header-custom h4 { font-size: 1.2rem; }
+            .logo { max-width: 80px; }
         }
     </style>
 </head>
@@ -371,15 +317,15 @@
                     <div class="alert-custom alert-{{ message.tags }}">
                         <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
                         {{ message }}
-                        <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
+                        <button type="button" class="close-btn" onclick="this.parentElement.remove()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 {% endfor %}
             {% endif %}
 
-            <!-- Formulario -->
-            <form method="post" action="{% url 'home' %}" novalidate>
+            <!-- Formulario de Login -->
+            <form method="post" action="{% url 'login' %}" novalidate>
                 {% csrf_token %}
                 
                 <div class="form-group">
@@ -388,58 +334,40 @@
                     </label>
                     <div class="input-group-custom">
                         <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" class="form-control" id="correo" name="correo" 
+                        <input type="email" class="form-control" id="email" name="email" 
                                placeholder="ejemplo@umsa.bo" required autofocus>
                     </div>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i> Solo se permiten correos @umsa.bo
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-lock"></i> Contraseña
+                    </label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Ingrese su contraseña" required>
+                    </div>
+                </div>
                 
                 <button type="submit" class="btn-login">
-                    <i class="fas fa-paper-plane"></i> Enviar código de verificación
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                 </button>
             </form>
 
             <div class="separator">
-                <span>Acceso seguro</span>
+                <span>¿No tienes cuenta?</span>
             </div>
+
+            <a href="{% url 'registrar_usuario' %}" class="btn-register">
+                <i class="fas fa-user-plus"></i> Solicitar Acceso
+            </a>
 
             <div class="info-text">
-                <i class="fas fa-shield-alt"></i> Recibirás un código de 6 dígitos a tu correo para ingresar
-            </div>
-
-            <!-- Botón de registro -->
-            <button type="button" class="btn-register" onclick="toggleRegistrationInfo()">
-                <i class="fas fa-user-plus"></i> ¿Cómo registrarse?
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal de información de registro -->
-    <div class="modal fade modal-modern" id="registrationInfo" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle"></i> Registro de Usuarios
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-id-card fa-3x" style="color: var(--accent);"></i>
-                    </div>
-                    <p class="text-center">
-                        <strong>¡Importante!</strong> Para registrarte como usuario en la Biblioteca Digital ARTyDIS, 
-                        debes acercarte personalmente a nuestras instalaciones de la carrera con tu matrícula o cédula de identidad.
-                    </p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn-login" style="width: auto; padding: 0.5rem 1.5rem;" data-bs-dismiss="modal">
-                        Entendido
-                    </button>
-                </div>
+                <i class="fas fa-shield-alt"></i> Acceso seguro con correo institucional
             </div>
         </div>
     </div>
@@ -449,26 +377,34 @@
     <script>
         // Validación del formulario
         document.querySelector('form').addEventListener('submit', function(e) {
-            const correo = document.getElementById('correo');
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
             
-            if (!correo.value) {
+            if (!email.value) {
                 showNotification('⚠️ Por favor ingresa tu correo electrónico', 'error');
-                correo.classList.add('is-invalid');
+                email.classList.add('is-invalid');
                 e.preventDefault();
-            } 
-            // ✅ MODO DESARROLLO: Permitir @umsa.bo y @gmail.com
-            else if (correo.value.endsWith('@umsa.bo') || correo.value.endsWith('@gmail.com')) {
-                // Válido - no hacer nada
-                correo.classList.remove('is-invalid');
-            } 
-            else {
-                showNotification('❌ Solo se permiten correos institucionales @umsa.bo (o @gmail.com para pruebas)', 'error');
-                correo.classList.add('is-invalid');
-                e.preventDefault();
+                return;
             }
+            
+            if (!password.value) {
+                showNotification('⚠️ Por favor ingresa tu contraseña', 'error');
+                password.classList.add('is-invalid');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!email.value.endsWith('@umsa.bo') && email.value !== 'vc3070934@gmail.com') {
+                showNotification('❌ Solo se permiten correos institucionales @umsa.bo', 'error');
+                email.classList.add('is-invalid');
+                e.preventDefault();
+                return;
+            }
+            
+            email.classList.remove('is-invalid');
+            password.classList.remove('is-invalid');
         });
 
-        // Función para mostrar notificaciones
         function showNotification(message, type) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert-custom alert-${type}`;
@@ -486,19 +422,6 @@
                 if (alertDiv) alertDiv.remove();
             }, 5000);
         }
-
-        // Función para mostrar el modal de registro
-        function toggleRegistrationInfo() {
-            const modal = new bootstrap.Modal(document.getElementById('registrationInfo'));
-            modal.show();
-        }
-
-        // Cerrar alertas con el botón de cierre
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.parentElement.remove();
-            });
-        });
     </script>
 </body>
 </html>

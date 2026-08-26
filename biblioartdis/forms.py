@@ -1,7 +1,7 @@
-# forms.py
 from django import forms
 import locale
 from datetime import datetime
+from django.contrib.auth.models import User
 from .models import Autor, Imagen, Usuario, Coleccion, Revista
 
 # Configurar locale para fechas en español
@@ -14,22 +14,30 @@ except locale.Error:
         try:
             locale.setlocale(locale.LC_TIME, 'es_ES')
         except locale.Error:
-            pass  # Usar locale por defecto
+            pass
+
+
+# ============================================
+# FORMULARIO DE LOGIN (EMAIL Y CONTRASEÑA)
+# ============================================
 
 class LoginForm(forms.Form):
-    correo = forms.EmailField(
+    """Formulario de login con email y contraseña"""
+    email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Ingrese su correo electrónico',
-            'id': 'id_correo'
-        })
+            'placeholder': 'ejemplo@umsa.bo',
+            'id': 'id_email'
+        }),
+        label='Correo UMSA'
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ingrese su contraseña',
             'id': 'id_password'
-        })
+        }),
+        label='Contraseña'
     )
 
 
@@ -40,7 +48,6 @@ class VisitaFilterForm(forms.Form):
         (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
     ]
     
-    # Generar años a partir del año actual hasta un rango de 10 años hacia atrás
     current_year = datetime.now().year
     AÑOS = [(year, year) for year in range(current_year, current_year - 10, -1)]
     
@@ -62,7 +69,6 @@ class VisitaFilterForm(forms.Form):
         
         if mes and año:
             try:
-                # Validar que la fecha sea válida
                 datetime(int(año), int(mes), 1)
             except ValueError:
                 raise forms.ValidationError('La fecha seleccionada no es válida')
@@ -173,13 +179,11 @@ class UsuarioForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make all fields optional by default
         for field in self.fields:
             self.fields[field].required = False
             if 'class' not in self.fields[field].widget.attrs:
                 self.fields[field].widget.attrs.update({'class': 'form-control'})
         
-        # Set required fields
         self.fields['nombres'].required = True
         self.fields['ci'].required = True
         self.fields['correo'].required = True
@@ -188,30 +192,23 @@ class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
         fields = [
-            'nombres', 
-            'apepat', 
-            'apemat', 
-            'ci', 
-            'correo', 
-            'extension',
-            'complemento',
-            'tipo_usuario',
-            'ru',
-            'nro_celular',
-            'esta_activo',
-            'fecha_baja'
+            'nombres', 'apepat', 'apemat', 'ci', 'correo', 'extension',
+            'complemento', 'tipo_usuario', 'ru', 'nro_celular',
+            'esta_activo', 'fecha_baja', 'telefono', 'direccion',
+            'carrera', 'semestre', 'anio_ingreso', 'estado_registro',
+            'matricula_pdf', 'carnet_frente', 'carnet_reverso'
         ]
         widgets = {
             'fecha_baja': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'extension': forms.Select(attrs={'class': 'form-control'}),
             'tipo_usuario': forms.Select(attrs={'class': 'form-control'}),
+            'estado_registro': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def clean_correo(self):
         correo = self.cleaned_data.get('correo')
         if not correo:
             raise forms.ValidationError('El correo es requerido.')
-        # Verificar si el correo ya existe, excluyendo el usuario actual
         if Usuario.objects.filter(correo=correo).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('Este correo ya está registrado.')
         return correo
@@ -220,7 +217,6 @@ class UsuarioForm(forms.ModelForm):
         ci = self.cleaned_data.get('ci')
         if not ci:
             raise forms.ValidationError('El CI es requerido.')
-        # Verificar si el CI ya existe, excluyendo el usuario actual
         if Usuario.objects.filter(ci=ci).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('Este CI ya está registrado.')
         return ci
@@ -262,8 +258,114 @@ class CambiarPasswordForm(forms.Form):
         cleaned_data = super().clean()
         password_nuevo = cleaned_data.get('password_nuevo')
         password_confirmacion = cleaned_data.get('password_confirmacion')
+        if password_nuevo and password_confirmacion and password_nuevo != password_confirmacion:
+            raise forms.ValidationError('Las contraseñas no coinciden')
+        return cleaned_data
 
-        if password_nuevo and password_confirmacion:
-            if password_nuevo != password_confirmacion:
-                raise forms.ValidationError('Las contraseñas no coinciden')
+
+# ============================================
+# FORMULARIO DE REGISTRO CON APROBACIÓN
+# ============================================
+
+class RegistroUsuarioForm(forms.ModelForm):
+    username = forms.CharField(
+        max_length=150, 
+        label='Usuario',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        label='Correo UMSA',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Contraseña',
+        min_length=9,
+        help_text='Mínimo 9 caracteres'
+    )
+    confirmar_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirmar Contraseña'
+    )
+    
+    class Meta:
+        model = Usuario
+        fields = [
+            'nombres', 'apepat', 'apemat', 'ci', 'extension', 'complemento',
+            'telefono', 'direccion', 'carrera', 'semestre', 'anio_ingreso',
+            'tipo_usuario', 'ru', 'nro_celular',
+            'matricula_pdf', 'carnet_frente', 'carnet_reverso'
+        ]
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apepat': forms.TextInput(attrs={'class': 'form-control'}),
+            'apemat': forms.TextInput(attrs={'class': 'form-control'}),
+            'ci': forms.TextInput(attrs={'class': 'form-control'}),
+            'extension': forms.Select(attrs={'class': 'form-control'}),
+            'complemento': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'carrera': forms.TextInput(attrs={'class': 'form-control'}),
+            'semestre': forms.TextInput(attrs={'class': 'form-control'}),
+            'anio_ingreso': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_usuario': forms.Select(attrs={'class': 'form-control'}),
+            'ru': forms.TextInput(attrs={'class': 'form-control'}),
+            'nro_celular': forms.TextInput(attrs={'class': 'form-control'}),
+            'matricula_pdf': forms.FileInput(attrs={'class': 'form-control'}),
+            'carnet_frente': forms.FileInput(attrs={'class': 'form-control'}),
+            'carnet_reverso': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email.endswith('@umsa.bo'):
+            raise forms.ValidationError('Debes usar un correo institucional @umsa.bo')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('Este correo ya está registrado')
+        return email
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError('Este usuario ya existe')
+        return username
+    
+    def clean_ci(self):
+        ci = self.cleaned_data.get('ci')
+        if Usuario.objects.filter(ci=ci).exists():
+            raise forms.ValidationError('Este CI ya está registrado')
+        return ci
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirmar = cleaned_data.get('confirmar_password')
+        if password and confirmar and password != confirmar:
+            raise forms.ValidationError('Las contraseñas no coinciden')
+        return cleaned_data
+
+
+# ============================================
+# FORMULARIO PARA RESTABLECER CONTRASEÑA (ADMIN)
+# ============================================
+
+class RestablecerPasswordForm(forms.Form):
+    usuario_id = forms.IntegerField(widget=forms.HiddenInput())
+    nueva_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Nueva Contraseña',
+        min_length=9,
+        help_text='Mínimo 9 caracteres'
+    )
+    confirmar_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirmar Contraseña'
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        nueva = cleaned_data.get('nueva_password')
+        confirmar = cleaned_data.get('confirmar_password')
+        if nueva and confirmar and nueva != confirmar:
+            raise forms.ValidationError('Las contraseñas no coinciden')
         return cleaned_data

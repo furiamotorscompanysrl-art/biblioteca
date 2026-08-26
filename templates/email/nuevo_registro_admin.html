@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h2>📝 Nueva solicitud de registro</h2>
+    <p>El usuario <strong>{{ usuario.nombres }} {{ usuario.apepat }}</strong> ha solicitado acceso a la biblioteca.</p>
+    
+    <h3>Datos del solicitante:</h3>
+    <ul>
+        <li><strong>Correo:</strong> {{ usuario.correo }}</li>
+        <li><strong>Teléfono:</strong> {{ usuario.telefono }}</li>
+        <li><strong>Carrera:</strong> {{ usuario.carrera }}</li>
+        <li><strong>Semestre:</strong> {{ usuario.semestre }}</li>
+        <li><strong>Fecha:</strong> {{ usuario.fecha_solicitud }}</li>
+    </ul>
+    
+    <p>
+        <a href="https://{{ domain }}/admin/biblioartdis/usuario/{{ usuario.id }}/change/">
+            🔗 Revisar solicitud
+        </a>
+    </p>
+</body>
+</html>

@@ -1,5 +1,4 @@
-# views/auth_views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -11,6 +10,8 @@ from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 import json
 import logging
 import re
@@ -18,6 +19,7 @@ import threading
 
 from ..decorators import admin_required
 from ..email_utils import enviar_codigo_verificacion, verificar_codigo
+from ..forms import RegistroUsuarioForm, RestablecerPasswordForm, LoginForm
 
 logger = logging.getLogger(__name__)
 
@@ -25,116 +27,27 @@ logger = logging.getLogger(__name__)
 intentos_fallidos = {}
 
 
-def enviar_codigo_async(user):
-    """
-    Envía el código de verificación en un hilo separado para no bloquear la respuesta
-    """
-    def send_thread():
-        try:
-            enviar_codigo_verificacion(user)
-            logger.info(f"Código enviado asíncronamente a {user.email}")
-        except Exception as e:
-            logger.error(f"Error enviando código asíncrono a {user.email}: {str(e)}")
-    
-    thread = threading.Thread(target=send_thread)
-    thread.daemon = True
-    thread.start()
-    return thread
-
-
-def crear_usuario_si_no_existe(email, correo_especial='vc3070934@gmail.com'):
-    """
-    Crea un usuario automáticamente si no existe.
-    Usa get_or_create para evitar duplicados.
-    RESPETA el rol existente - NO lo sobrescribe.
-    Retorna (user, created, error_message)
-    """
-    try:
-        # Generar username temporal único basado en el email
-        username_base = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0])
-        if not username_base:
-            username_base = f"user_{email.split('@')[0]}"
-        
-        final_username = username_base
-        counter = 1
-        while User.objects.filter(username=final_username).exists():
-            final_username = f"{username_base}{counter}"
-            counter += 1
-        
-        # Buscar si el usuario ya existe por email
-        user = User.objects.filter(email=email).first()
-        created = False
-        
-        if not user:
-            # Crear usuario con username válido
-            user = User.objects.create_user(
-                username=final_username,
-                email=email,
-                password='unusable_password_temp'
-            )
-            user.set_unusable_password()
-            user.first_name = email.split('@')[0].capitalize()
-            user.save()
-            created = True
-            logger.info(f"✅ Usuario creado: {email} (Username: {final_username})")
-        else:
-            logger.info(f"ℹ️ Usuario ya existía: {email}")
-        
-        # Verificar si tiene perfil de Usuario
-        from ..models import Usuario
-        from datetime import timedelta
-        
-        # Solo definir tipo_usuario para nuevos perfiles
-        nuevo_tipo = 'Administrador' if email == correo_especial else 'Externo'
-        
-        perfil, perfil_created = Usuario.objects.get_or_create(
-            user=user,
-            defaults={
-                'nombres': email.split('@')[0].capitalize(),
-                'apepat': '',
-                'apemat': '',
-                'ci': 'PENDIENTE',
-                'correo': email,
-                'extension': 'LP',
-                'complemento': '',
-                'tipo_usuario': nuevo_tipo,
-                'ru': '',
-                'nro_celular': '',
-                'fecha_baja': timezone.now() + timedelta(days=365*5),
-                'esta_activo': True
-            }
-        )
-        
-        if perfil_created:
-            logger.info(f"✅ Perfil creado para: {email} (Tipo: {perfil.tipo_usuario})")
-        else:
-            # NO cambiar el tipo_usuario si ya existe
-            actualizado = False
-            if not perfil.nombres or perfil.nombres == '':
-                perfil.nombres = email.split('@')[0].capitalize()
-                actualizado = True
-            if not perfil.correo or perfil.correo == '':
-                perfil.correo = email
-                actualizado = True
-            if actualizado:
-                perfil.save()
-                logger.info(f"🔄 Perfil actualizado para: {email} (Rol conservado: {perfil.tipo_usuario})")
-            else:
-                logger.info(f"ℹ️ Perfil ya existía para: {email} (Rol: {perfil.tipo_usuario})")
-        
-        return user, created, None
-        
-    except Exception as e:
-        logger.error(f"❌ Error con usuario {email}: {str(e)}", exc_info=True)
-        return None, False, str(e)
-
-
 def home(request):
-    """PASO 1: Solicitar email - Acepta @umsa.bo y el correo especial"""
-    CORREO_ESPECIAL = 'vc3070934@gmail.com'
+    """
+    Login con email y contraseña
+    """
+    # Si ya está autenticado, redirigir según rol
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'usuario'):
+            if request.user.usuario.tipo_usuario == 'Administrador':
+                return redirect('principal')
+            else:
+                return redirect('inicio')
+        return redirect('inicio')
     
     if request.method == 'POST':
-        email = request.POST.get('correo', '').strip().lower()
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        
+        # Validar que no estén vacíos
+        if not email or not password:
+            messages.error(request, '❌ Por favor ingresa tu correo y contraseña.')
+            return render(request, 'login.html')
         
         # Validar formato de email
         try:
@@ -143,22 +56,17 @@ def home(request):
             messages.error(request, '❌ Por favor ingresa un correo electrónico válido.')
             return render(request, 'login.html')
         
-        # Validación: permite @umsa.bo o el correo específico
+        # Validar que sea correo UMSA o el correo especial admin
+        CORREO_ESPECIAL = 'vc3070934@gmail.com'
         if not (email.endswith('@umsa.bo') or email == CORREO_ESPECIAL):
             messages.error(request, '❌ Solo se permiten correos institucionales @umsa.bo')
             return render(request, 'login.html')
         
-        # Verificar intentos fallidos (seguridad)
-        ip = request.META.get('REMOTE_ADDR')
-        if ip in intentos_fallidos and intentos_fallidos[ip] >= 5:
-            messages.error(request, '❌ Demasiados intentos. Espera 5 minutos.')
-            return render(request, 'login.html')
-        
-        # ========== CREAR O OBTENER USUARIO ==========
-        user, creado, error = crear_usuario_si_no_existe(email, CORREO_ESPECIAL)
-        
-        if error or user is None:
-            messages.error(request, f'Error al procesar tu cuenta: {error or "Contacta al administrador"}')
+        # Buscar usuario por email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, '❌ No existe una cuenta con este correo. Por favor regístrate.')
             return render(request, 'login.html')
         
         # Verificar si el usuario está activo
@@ -166,110 +74,59 @@ def home(request):
             messages.error(request, '❌ Tu cuenta está desactivada. Contacta al administrador.')
             return render(request, 'login.html')
         
-        # Verificar si tiene perfil y si está activo (fecha_baja)
+        # Verificar estado de registro
         if hasattr(user, 'usuario'):
-            if user.usuario.fecha_baja and user.usuario.fecha_baja < timezone.now():
-                messages.error(request, '❌ Tu cuenta ha expirado. Contacta al administrador para renovarla.')
+            usuario = user.usuario
+            
+            if usuario.estado_registro == 'pendiente':
+                messages.warning(request, 
+                    '⏳ Tu solicitud está pendiente de aprobación. '
+                    'El administrador revisará tus documentos y te notificará.'
+                )
+                return render(request, 'login.html')
+            
+            if usuario.estado_registro == 'rechazado':
+                messages.error(request, 
+                    f'❌ Tu solicitud fue rechazada. Motivo: {usuario.motivo_rechazo or "No especificado"}'
+                )
+                return render(request, 'login.html')
+            
+            # Verificar expiración
+            if usuario.fecha_baja and usuario.fecha_baja < timezone.now():
+                messages.error(request, '❌ Tu cuenta ha expirado. Contacta al administrador.')
                 return render(request, 'login.html')
         else:
-            logger.warning(f"Usuario {email} no tiene perfil después de get_or_create")
-            messages.error(request, 'Error en la configuración de tu perfil. Contacta al administrador.')
+            messages.error(request, '❌ Error en la configuración de tu perfil. Contacta al administrador.')
             return render(request, 'login.html')
         
-        # Mensaje de bienvenida si es nuevo
-        if creado:
-            if email == CORREO_ESPECIAL:
-                messages.success(request, '✨ ¡Bienvenido Administrador! Se ha creado tu cuenta automáticamente.')
-            else:
-                messages.info(request, '📝 Se ha creado tu cuenta automáticamente. ¡Bienvenido a la biblioteca!')
-        
-        # Enviar código de verificación (ASÍNCRONO - no bloquea)
-        try:
-            enviar_codigo_async(user)
-            logger.info(f"Código de verificación enviado a {email} (modo asíncrono)")
-        except Exception as e:
-            logger.error(f"Error al iniciar envío de código a {email}: {e}")
-            messages.error(request, '❌ Error al enviar el código. Intenta nuevamente.')
+        # Verificar contraseña
+        if not user.check_password(password):
+            # Registrar intento fallido
+            ip = request.META.get('REMOTE_ADDR')
+            if ip not in intentos_fallidos:
+                intentos_fallidos[ip] = 0
+            intentos_fallidos[ip] += 1
+            
+            if intentos_fallidos[ip] >= 5:
+                messages.error(request, '❌ Demasiados intentos fallidos. Espera 5 minutos.')
+                return render(request, 'login.html')
+            
+            messages.error(request, '❌ Contraseña incorrecta.')
             return render(request, 'login.html')
         
-        # Guardar en sesión que el usuario está en proceso de verificación
-        request.session['verificacion_email'] = email
-        request.session['verificacion_timestamp'] = str(timezone.now())
+        # Iniciar sesión
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
         
-        # Redirigir al formulario de código
-        return redirect('verificar_codigo')
+        messages.success(request, f'¡Bienvenido/a {user.first_name or user.username}! 👋')
+        
+        # Redirigir según rol
+        if hasattr(user, 'usuario') and user.usuario.tipo_usuario == 'Administrador':
+            return redirect('principal')
+        else:
+            return redirect('inicio')
     
     return render(request, 'login.html')
-
-
-def verificar_codigo_view(request):
-    """PASO 2: Ingresar código de verificación"""
-    email = request.session.get('verificacion_email')
-    if not email:
-        messages.error(request, '❌ Por favor inicia el proceso de login nuevamente.')
-        return redirect('home')
-    
-    if request.method == 'POST':
-        codigo = request.POST.get('codigo', '').strip()
-        
-        if not codigo or len(codigo) != 6 or not codigo.isdigit():
-            messages.error(request, '❌ Por favor ingresa el código de 6 dígitos.')
-            return render(request, 'verificar_codigo.html', {'email': email})
-        
-        try:
-            user = User.objects.get(email=email)
-            
-            if verificar_codigo(user, codigo):
-                user.backend = 'django.contrib.auth.backends.ModelBackend'
-                login(request, user)
-                
-                request.session.pop('verificacion_email', None)
-                request.session.pop('verificacion_timestamp', None)
-                
-                messages.success(request, f'¡Bienvenido/a {user.first_name or user.username}! 👋')
-                
-                if hasattr(user, 'usuario') and user.usuario.tipo_usuario == 'Administrador':
-                    return redirect('principal')
-                else:
-                    return redirect('inicio')
-            else:
-                ip = request.META.get('REMOTE_ADDR')
-                if ip not in intentos_fallidos:
-                    intentos_fallidos[ip] = 0
-                intentos_fallidos[ip] += 1
-                
-                messages.error(request, '❌ Código incorrecto o expirado. Solicita un nuevo código.')
-                return render(request, 'verificar_codigo.html', {'email': email})
-                
-        except User.DoesNotExist:
-            messages.error(request, '❌ Usuario no encontrado.')
-            return redirect('home')
-        except Exception as e:
-            logger.error(f"Error en verificación de código: {str(e)}")
-            messages.error(request, 'Error al verificar el código. Intenta nuevamente.')
-            return render(request, 'verificar_codigo.html', {'email': email})
-    
-    return render(request, 'verificar_codigo.html', {'email': email})
-
-
-def reenviar_codigo(request):
-    """Reenviar código de verificación vía AJAX"""
-    if request.method == 'POST':
-        email = request.session.get('verificacion_email')
-        if not email:
-            return JsonResponse({'success': False, 'error': 'Sesión inválida'})
-        
-        try:
-            user = User.objects.get(email=email)
-            enviar_codigo_async(user)
-            return JsonResponse({'success': True, 'message': 'Código reenviado a tu correo'})
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Usuario no encontrado'})
-        except Exception as e:
-            logger.error(f"Error reenviando código: {str(e)}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 
 class CustomLoginView(LoginView):
@@ -314,40 +171,269 @@ def cambiar_password(request):
         return JsonResponse({'success': False, 'error': 'Error interno del servidor'})
 
 
+# ============================================
+# REGISTRO CON APROBACIÓN MANUAL
+# ============================================
+
+def registrar_usuario(request):
+    """Vista para que los usuarios soliciten acceso"""
+    if request.method == 'POST':
+        form = RegistroUsuarioForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Crear User
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=form.cleaned_data['nombres'],
+                last_name=f"{form.cleaned_data['apepat']} {form.cleaned_data['apemat']}"
+            )
+            # Desactivar usuario hasta aprobación
+            user.is_active = False
+            user.save()
+            
+            # Crear Usuario con estado pendiente
+            usuario = form.save(commit=False)
+            usuario.user = user
+            usuario.correo = form.cleaned_data['email']
+            usuario.estado_registro = 'pendiente'
+            usuario.fecha_solicitud = timezone.now()
+            usuario.esta_activo = False
+            usuario.save()
+            
+            # Notificar al administrador
+            notificar_admin_nuevo_registro(usuario)
+            
+            messages.success(request, 
+                '✅ Tu solicitud ha sido enviada. '
+                'El administrador revisará tus documentos y te notificará por correo.'
+            )
+            return redirect('login')
+    else:
+        form = RegistroUsuarioForm()
+    
+    return render(request, 'registrar_usuario.html', {'form': form})
+
+
+def notificar_admin_nuevo_registro(usuario):
+    """Notificar a los administradores que hay un nuevo registro pendiente"""
+    try:
+        admins = User.objects.filter(is_superuser=True)
+        for admin in admins:
+            if admin.email:
+                html = render_to_string('email/nuevo_registro_admin.html', {
+                    'usuario': usuario,
+                    'admin': admin,
+                    'domain': 'biblioteca-production-b2fa.up.railway.app'
+                })
+                send_mail(
+                    subject='📝 Nuevo registro pendiente de aprobación',
+                    message=f'El usuario {usuario.nombres} {usuario.apepat} ha solicitado acceso.',
+                    html_message=html,
+                    from_email='Biblioteca ARTyDIS <noreply@example.com>',
+                    recipient_list=[admin.email],
+                    fail_silently=True
+                )
+    except Exception as e:
+        logger.error(f"Error notificando admin: {e}")
+
+
+@login_required
+@admin_required
+def listar_solicitudes_pendientes(request):
+    """Vista para administradores - Lista de solicitudes pendientes"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso para ver esta página')
+        return redirect('inicio')
+    
+    pendientes = Usuario.objects.filter(estado_registro='pendiente')
+    return render(request, 'solicitudes_pendientes.html', {
+        'pendientes': pendientes
+    })
+
+
+@login_required
+@admin_required
+def aprobar_usuario(request, usuario_id):
+    """Administrador aprueba un usuario"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    usuario.estado_registro = 'aprobado'
+    usuario.fecha_aprobacion = timezone.now()
+    usuario.aprobado_por = request.user.usuario
+    usuario.esta_activo = True
+    usuario.save()
+    
+    # Activar el usuario de Django
+    usuario.user.is_active = True
+    usuario.user.save()
+    
+    # Notificar al usuario
+    notificar_usuario_aprobado(usuario)
+    
+    messages.success(request, f'✅ Usuario {usuario.nombres} aprobado correctamente')
+    return redirect('solicitudes_pendientes')
+
+
+@login_required
+@admin_required
+def rechazar_usuario(request, usuario_id):
+    """Administrador rechaza un usuario"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo', 'No especificado')
+        usuario.estado_registro = 'rechazado'
+        usuario.motivo_rechazo = motivo
+        usuario.esta_activo = False
+        usuario.save()
+        
+        # Desactivar usuario de Django
+        usuario.user.is_active = False
+        usuario.user.save()
+        
+        # Notificar al usuario
+        notificar_usuario_rechazado(usuario, motivo)
+        
+        messages.success(request, f'❌ Usuario {usuario.nombres} rechazado')
+        return redirect('solicitudes_pendientes')
+    
+    return render(request, 'rechazar_usuario.html', {'usuario': usuario})
+
+
+def notificar_usuario_aprobado(usuario):
+    """Notificar al usuario que fue aprobado"""
+    try:
+        if usuario.correo:
+            send_mail(
+                subject='✅ Tu cuenta ha sido aprobada',
+                message=f'''
+Hola {usuario.nombres},
+
+Tu solicitud de acceso a la Biblioteca ARTyDIS ha sido APROBADA.
+
+Ya puedes iniciar sesión en: https://biblioteca-production-b2fa.up.railway.app/
+
+Tus credenciales son:
+Usuario: {usuario.user.username}
+Contraseña: La que registraste
+
+¡Bienvenido/a!
+
+Saludos,
+Biblioteca ARTyDIS
+''',
+                from_email='Biblioteca ARTyDIS <noreply@example.com>',
+                recipient_list=[usuario.correo],
+                fail_silently=True
+            )
+    except Exception as e:
+        logger.error(f"Error notificando usuario aprobado: {e}")
+
+
+def notificar_usuario_rechazado(usuario, motivo):
+    """Notificar al usuario que fue rechazado"""
+    try:
+        if usuario.correo:
+            send_mail(
+                subject='❌ Tu solicitud ha sido rechazada',
+                message=f'''
+Hola {usuario.nombres},
+
+Tu solicitud de acceso a la Biblioteca ARTyDIS ha sido RECHAZADA.
+
+Motivo: {motivo}
+
+Si consideras que esto es un error, por favor contacta al administrador.
+
+Saludos,
+Biblioteca ARTyDIS
+''',
+                from_email='Biblioteca ARTyDIS <noreply@example.com>',
+                recipient_list=[usuario.correo],
+                fail_silently=True
+            )
+    except Exception as e:
+        logger.error(f"Error notificando usuario rechazado: {e}")
+
+
+# ============================================
+# RESTABLECER CONTRASEÑA (ADMIN)
+# ============================================
+
+@login_required
+@admin_required
+def restablecer_password_admin(request):
+    """Vista para que el administrador restablezca contraseñas"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario_id = request.GET.get('usuario_id')
+    usuario = None
+    
+    if usuario_id:
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    
+    if request.method == 'POST':
+        form = RestablecerPasswordForm(request.POST)
+        if form.is_valid():
+            usuario_id = form.cleaned_data['usuario_id']
+            nueva_password = form.cleaned_data['nueva_password']
+            usuario_obj = get_object_or_404(Usuario, usuario_id=usuario_id)
+            
+            usuario_obj.user.set_password(nueva_password)
+            usuario_obj.user.save()
+            usuario_obj.puede_restablecer_password = False
+            usuario_obj.save()
+            
+            messages.success(request, f'🔑 Contraseña restablecida para {usuario_obj.nombres}')
+            return redirect('lista_usuarios')
+    else:
+        form = RestablecerPasswordForm(initial={'usuario_id': usuario_id})
+    
+    return render(request, 'restablecer_password_admin.html', {
+        'form': form,
+        'usuario': usuario
+    })
+
+
 @require_http_methods(["POST"])
 @login_required
 @admin_required
-def restablecer_password(request):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-
+def restablecer_password_api(request):
+    """API para restablecer contraseña vía AJAX"""
     try:
-        if not hasattr(request.user, 'usuario') or request.user.usuario.tipo_usuario != 'Administrador':
-            return JsonResponse({'success': False, 'error': 'No tienes permisos'}, status=403)
-
         data = json.loads(request.body)
         usuario_id = data.get('usuario_id')
-        ci = data.get('ci')
+        nueva_password = data.get('nueva_password')
         
-        if not usuario_id or not ci:
-            return JsonResponse({'success': False, 'error': 'Faltan datos'}, status=400)
-
-        from ..models import Usuario
-        usuario = Usuario.objects.get(usuario_id=usuario_id)
+        if not usuario_id or not nueva_password:
+            return JsonResponse({'success': False, 'error': 'Faltan datos'})
         
-        if not usuario.user:
-            return JsonResponse({'success': False, 'error': 'Usuario sin cuenta asociada'}, status=400)
-
-        usuario.user.set_password(ci)
+        if len(nueva_password) < 9:
+            return JsonResponse({'success': False, 'error': 'La contraseña debe tener al menos 9 caracteres'})
+        
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        usuario.user.set_password(nueva_password)
         usuario.user.save()
+        usuario.puede_restablecer_password = False
+        usuario.save()
+        
         logger.info(f"Contraseña restablecida para usuario: {usuario.user.username} por admin: {request.user.username}")
         
         return JsonResponse({'success': True, 'message': 'Contraseña restablecida correctamente'})
         
     except Usuario.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Usuario no encontrado'}, status=404)
+        return JsonResponse({'success': False, 'error': 'Usuario no encontrado'})
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Datos inválidos'}, status=400)
+        return JsonResponse({'success': False, 'error': 'Datos inválidos'})
     except Exception as e:
         logger.error(f"Error al restablecer contraseña: {str(e)}", exc_info=True)
-        return JsonResponse({'success': False, 'error': 'Error interno del servidor'}, status=500)
+        return JsonResponse({'success': False, 'error': 'Error interno del servidor'})
