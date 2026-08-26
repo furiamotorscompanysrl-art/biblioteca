@@ -70,14 +70,14 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ============================================
-# TEMPLATES - CORREGIDO PARA buscar en biblioartdis/templates/
+# TEMPLATES - CORREGIDO
 # ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'biblioartdis', 'templates'),  # ← PRIMERO busca aquí
-            os.path.join(BASE_DIR, 'templates'),  # ← Fallback en raíz
+            BASE_DIR / 'biblioartdis' / 'templates',  # ← PRIMERO busca aquí
+            BASE_DIR / 'templates',                    # ← Fallback en raíz
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -156,11 +156,10 @@ LOGIN_URL = '/'
 WSGI_APPLICATION = 'arteydis.wsgi.application'
 
 # ============================================
-# BASE DE DATOS - CONFIGURACIÓN CORRECTA
+# BASE DE DATOS
 # ============================================
 print("🔧 Configurando base de datos...")
 
-# Usar dj_database_url si está disponible
 try:
     import dj_database_url
     DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -303,3 +302,5 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 100
 DATA_UPLOAD_MAX_FILE_SIZE = 1024 * 1024 * 500
 
 print("🚀 Settings cargados correctamente")
+print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"📁 Ruta de templates: {BASE_DIR / 'biblioartdis' / 'templates'}")
