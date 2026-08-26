@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA SUGERENCIAS DE USUARIO */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    .suggestions-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-header h1 i {
+        color: var(--accent);
+        font-size: 2rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Info Card */
+    .info-card {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02));
+        border-left: 4px solid var(--accent);
+        border-radius: 16px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .info-card i {
+        font-size: 1.8rem;
+        color: var(--accent);
+    }
+
+    .info-card p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Botón sugerir */
+    .btn-suggest {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 40px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        margin-bottom: 2rem;
+    }
+
+    .btn-suggest:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        color: white;
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+    }
+
+    .suggestions-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .suggestions-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .suggestions-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .suggestions-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .suggestions-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Badges de estado */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.3rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .suggestions-container {
+            margin: 1rem auto;
+        }
+        .page-header h1 {
+            font-size: 1.3rem;
+        }
+        .suggestions-table th, .suggestions-table td {
+            padding: 0.75rem;
+        }
+        .info-card {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="suggestions-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>
+            <i class="fas fa-lightbulb"></i>
+            Mis Sugerencias
+        </h1>
+        <p>Gestiona las recomendaciones de libros que has enviado</p>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+        <i class="fas fa-info-circle"></i>
+        <p>
+            Aquí puedes ver tus sugerencias de libros y su estado de respuesta. 
+            Haz clic en <strong>"Sugerir un Nuevo Libro"</strong> para enviarnos tus recomendaciones 
+            y ayudarnos a expandir nuestra biblioteca.
+        </p>
+    </div>
+
+    <!-- Botón sugerir -->
+    <div class="text-center">
+        <a href="{% url 'sugerir_libro' %}" class="btn-suggest">
+            <i class="fas fa-plus-circle"></i> Sugerir un Nuevo Libro
+        </a>
+    </div>
+
+    <!-- Tabla de sugerencias -->
+    <div class="table-wrapper">
+        <table class="suggestions-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Autor</th>
+                    <th>Título</th>
+                    <th>Edición</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sugerencia in sugerencias %}
+                <tr>
+                    <td>{{ sugerencia.id_sugerencia }}</td>
+                    <td>{{ sugerencia.autor_sugerencia }}</td>
+                    <td><strong>{{ sugerencia.titulo_sugerencia }}</strong></td>
+                    <td>{{ sugerencia.edicion|default:"—" }}</td>
+                    <td>{{ sugerencia.fecha_sugerencia|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if sugerencia.estado_respuesta == "Pendiente" %}
+                            <span class="status-badge status-pending">
+                                <i class="fas fa-clock"></i> Pendiente
+                            </span>
+                        {% elif sugerencia.estado_respuesta == "Aprobado" %}
+                            <span class="status-badge status-approved">
+                                <i class="fas fa-check-circle"></i> Aprobado
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-rejected">
+                                <i class="fas fa-times-circle"></i> Rechazado
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay sugerencias disponibles</p>
+                        <a href="{% url 'sugerir_libro' %}" class="btn-suggest" style="display: inline-flex; margin-top: 1rem;">
+                            <i class="fas fa-plus-circle"></i> Enviar mi primera sugerencia
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

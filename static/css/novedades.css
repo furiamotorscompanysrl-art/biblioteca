@@ -1,0 +1,293 @@
+/* Sidebar */
+.sidebar-filters {
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    height: calc(100vh - 2rem);
+    margin: 1rem;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    margin-left: 0.5rem;
+    font-size: 1.25rem;
+    color: #2c3e50;
+}
+
+.sidebar-content {
+    padding-right: 0.5rem;
+}
+
+.search-section {
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+#searchInput {
+    padding-left: 2.5rem;
+}
+
+.filter-sections {
+    margin-top: 1rem;
+}
+
+.filter-section {
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.filter-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+}
+
+.filter-header h3 {
+    margin: 0;
+    margin-left: 0.5rem;
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+.filter-content {
+    padding: 1rem;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #2c3e50;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.filter-item:hover {
+    background: #f8f9fa;
+    color: #0d6efd;
+}
+
+.filter-item.active {
+    background: #e7f1ff;
+    color: #0d6efd;
+}
+
+.filter-item i {
+    margin-right: 0.75rem;
+    width: 20px;
+    text-align: center;
+}
+
+.filter-item .count {
+    margin-left: auto;
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+}
+
+.counter-badges {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.counter-badge {
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+/* Main Content */
+.main-content {
+    padding: 2rem;
+}
+
+.main-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.titulo {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Book Cards */
+.book-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.book-cover-wrapper {
+    position: relative;
+    padding-top: 140%;
+    overflow: hidden;
+}
+
+.book-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: white;
+    cursor: pointer;
+}
+
+.book-cover-container:hover .book-hover-overlay {
+    opacity: 1;
+}
+
+.pdf-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.no-pdf-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: #6c757d;
+}
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: #f8f9fa;
+    border-bottom: none;
+}
+
+.modal-footer {
+    background: #f8f9fa;
+    border-top: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar-filters {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100vh;
+        z-index: 1000;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .sidebar-filters.show {
+        left: 0;
+    }
+}
+
+/* PDF Controls */
+.pdf-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.zoom-controls, .page-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.control-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.control-button:hover {
+    background: #e9ecef;
+}
+
+.page-info {
+    margin: 0 1rem;
+}

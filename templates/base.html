@@ -1,0 +1,730 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biblioteca Digital Arte Plásticas y Diseño Gráfico</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logoBiblio2.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    
+    <style>
+        /* ============================================ */
+        /* VARIABLES DE COLOR                           */
+        /* ============================================ */
+        :root {
+            --primary-dark: #0F2B3D;
+            --primary: #1A3A4F;
+            --primary-light: #234B64;
+            --accent: #F59E0B;
+            --accent-hover: #FBBF24;
+            --accent-dark: #D97706;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --white: #FFFFFF;
+            --hover-bg: rgba(245, 158, 11, 0.12);
+            --active-bg: rgba(245, 158, 11, 0.2);
+            --border-light: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+        }
+
+        /* ============================================ */
+        /* NAVBAR PRINCIPAL                             */
+        /* ============================================ */
+        .navbar-dashboard {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-bottom: 2px solid var(--accent);
+            padding: 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Logo fijo */
+        .navbar-brand-wrapper {
+            flex-shrink: 0;
+            padding: 0.6rem 1.2rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .brand-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--white);
+            white-space: nowrap;
+        }
+
+        /* Contenedor del menú con scroll */
+        .menu-scroll-wrapper {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        .menu-scroll-wrapper::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .menu-scroll-wrapper::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        /* Navegación */
+        .navbar-nav {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            padding: 0.4rem 0;
+            margin: 0;
+            gap: 0.15rem;
+        }
+
+        .nav-item {
+            list-style: none;
+            flex-shrink: 0;
+        }
+
+        /* IMPORTANTE: Dropdown - sin overflow issues */
+        .nav-item.dropdown {
+            position: static;
+        }
+
+        /* Botones scroll */
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 40px;
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .scroll-btn:hover {
+            opacity: 1;
+            color: var(--accent-hover);
+        }
+
+        .scroll-left {
+            left: 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .scroll-right {
+            right: 0;
+            border-radius: 8px 0 0 8px;
+        }
+
+        /* Estilos de NAV-LINK */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .nav-link i {
+            font-size: 0.95rem;
+            width: 18px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .nav-link:hover {
+            background-color: var(--hover-bg);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+
+        .nav-link:hover i {
+            color: var(--accent-hover);
+        }
+
+        .nav-link.active {
+            background: var(--active-bg);
+            color: var(--accent-hover) !important;
+            border-left: 3px solid var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-link.active i {
+            color: var(--accent-hover);
+        }
+
+        .nav-link.dropdown-toggle.show {
+            color: var(--accent-hover);
+            background-color: var(--active-bg);
+        }
+
+        .nav-separator {
+            width: 1px;
+            height: 28px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: auto 0.3rem;
+            flex-shrink: 0;
+        }
+
+        /* ============================================ */
+        /* DROPDOWN FLOTANTE (se renderiza en body)     */
+        /* ============================================ */
+        .dropdown-menu-floating {
+            position: fixed !important;
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            padding: 0.5rem;
+            min-width: 220px;
+            border-top: 3px solid var(--accent);
+            z-index: 9999;
+            display: none;
+        }
+
+        .dropdown-menu-floating.show {
+            display: block;
+        }
+
+        .dropdown-menu-floating::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid var(--accent);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--hover-bg);
+            color: var(--accent-dark);
+            transform: translateX(5px);
+        }
+
+        /* Perfil usuario */
+        .user-wrapper {
+            flex-shrink: 0;
+            padding-right: 1rem;
+            z-index: 10;
+        }
+
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .user-dropdown:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--accent);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--white);
+        }
+
+        .user-role {
+            font-size: 0.65rem;
+            color: var(--accent);
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+
+        /* Contenido principal */
+        .content-wrapper {
+            margin-top: 70px;
+            min-height: calc(100vh - 120px);
+            padding: 1.5rem;
+            background-color: var(--bg-light);
+        }
+
+        .footer-dashboard {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            border-top: 2px solid var(--accent);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .footer-dashboard p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 991px) {
+            .navbar-brand-wrapper {
+                padding: 0.5rem 0.8rem;
+            }
+            .brand-text {
+                font-size: 0.8rem;
+            }
+            .user-name {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .user-role {
+                display: none;
+            }
+            .content-wrapper {
+                margin-top: 65px;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar-dashboard">
+        <div class="navbar-container">
+            <!-- Logo fijo -->
+            <div class="navbar-brand-wrapper">
+                <a class="navbar-brand" href="{% url 'inicio' %}">
+                    <img src="{% static 'images/logoBiblio.png' %}" alt="Logo" class="brand-logo">
+                    <div>
+                        <span class="brand-text">Biblioteca Art-Dis</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Flecha izquierda -->
+            <button class="scroll-btn scroll-left" id="scrollLeftBtn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <!-- Menú con scroll -->
+            <div class="menu-scroll-wrapper" id="menuScrollWrapper">
+                <ul class="navbar-nav" id="mainMenu">
+                    
+                    {% if user.is_authenticated and user.usuario.tipo_usuario == 'Administrador' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'principal' %}">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown" data-dropdown="usuarios">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownUsuarios">
+                                <i class="fas fa-users"></i> Usuarios
+                            </a>
+                        </li>
+
+                        <!-- ✅ NUEVO: Usuarios Activos -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'usuarios_activos' %}">
+                                <i class="fas fa-user-clock"></i> Usuarios Activos
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown" data-dropdown="bibliografia">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownBibliografia">
+                                <i class="fas fa-book"></i> Bibliografía
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown" data-dropdown="revistas">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownRevistas">
+                                <i class="fas fa-newspaper"></i> Revistas
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown" data-dropdown="imagenes">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownImagenes">
+                                <i class="fas fa-images"></i> Imágenes
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'listar_sugerencias' %}">
+                                <i class="fas fa-bell"></i> Sugerencias
+                            </a>
+                        </li>
+
+                        <span class="nav-separator"></span>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'inicio' %}">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'catalogo' %}">
+                                <i class="fas fa-layer-group"></i> Colecciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'galeria_artistica' %}">
+                                <i class="fas fa-palette"></i> Galería
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'chatbot_view' %}">
+                                <i class="fas fa-robot"></i> Asistente
+                            </a>
+                        </li>
+
+                    {% elif user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'inicio' %}">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown" data-dropdown="nivel">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownNivel">
+                                <i class="fas fa-graduation-cap"></i> Nivel
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'catalogo' %}">
+                                <i class="fas fa-layer-group"></i> Colecciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'novedades_libros' %}">
+                                <i class="fas fa-search"></i> Catálogo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'listar_sugerencias_usuario' %}">
+                                <i class="fas fa-lightbulb"></i> Sugerencia
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'galeria_artistica' %}">
+                                <i class="fas fa-palette"></i> Galería
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'chatbot_view' %}">
+                                <i class="fas fa-robot"></i> Asistente
+                            </a>
+                        </li>
+
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'home' %}">
+                                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Flecha derecha -->
+            <button class="scroll-btn scroll-right" id="scrollRightBtn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <!-- Perfil usuario -->
+            {% if user.is_authenticated %}
+            <div class="user-wrapper">
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none">
+                        <img src="{% static 'images/user.png' %}" alt="Avatar" class="user-avatar">
+                        <div class="user-info ms-2">
+                            <span class="user-name">
+                                {{ user.username|cut:"@gmail.com"|cut:"@umsa.bo"|truncatechars:15 }}
+                                {% if user.usuario.tipo_usuario == 'Administrador' %}
+                                    <span class="admin-badge">Admin</span>
+                                {% endif %}
+                            </span>
+                            <span class="user-role">{{ user.usuario.tipo_usuario }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-white ms-1" style="font-size: 10px;"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Contenedor para dropdowns flotantes -->
+    <div id="dropdownContainer"></div>
+
+    <main class="content-wrapper">
+        <div class="container-fluid px-3 px-lg-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer-dashboard">
+        <p>Biblioteca de Artes Plásticas y Diseño Gráfico</p>
+        <p style="font-size: 0.7rem;">© 2024 - Todos los derechos reservados</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // DROPDOWN FLOTANTE - NO SE CORTA NUNCA
+        // ============================================
+        
+        // Contenido de los dropdowns
+        const dropdownContent = {
+            usuarios: `
+                <a class="dropdown-item" href="{% url 'lista_usuarios' %}"><i class="fas fa-list"></i> Lista de Usuarios</a>
+                <a class="dropdown-item" href="{% url 'agregar_usuario' %}"><i class="fas fa-user-plus"></i> Agregar Usuario</a>
+            `,
+            bibliografia: `
+                <a class="dropdown-item" href="{% url 'listar_libros' %}"><i class="fas fa-list"></i> Lista de Libros</a>
+                <a class="dropdown-item" href="{% url 'agregar_libro' %}"><i class="fas fa-plus"></i> Agregar Libro</a>
+            `,
+            revistas: `
+                <a class="dropdown-item" href="{% url 'listar_revistas' %}"><i class="fas fa-list"></i> Lista de Revistas</a>
+                <a class="dropdown-item" href="{% url 'agregar_revista' %}"><i class="fas fa-plus"></i> Agregar Revista</a>
+            `,
+            imagenes: `
+                <a class="dropdown-item" href="{% url 'lista_imagenes' %}"><i class="fas fa-list"></i> Lista de Imágenes</a>
+                <a class="dropdown-item" href="{% url 'agregar_imagen' %}"><i class="fas fa-plus"></i> Agregar Imagen</a>
+            `,
+            nivel: `
+                <a class="dropdown-item" href="{% url 'libros_nivel' 1 %}"><i class="fas fa-1"></i> Nivel 1</a>
+                <a class="dropdown-item" href="{% url 'libros_nivel' 2 %}"><i class="fas fa-2"></i> Nivel 2</a>
+                <a class="dropdown-item" href="{% url 'libros_nivel' 3 %}"><i class="fas fa-3"></i> Nivel 3</a>
+                <a class="dropdown-item" href="{% url 'libros_nivel' 4 %}"><i class="fas fa-4"></i> Nivel 4</a>
+                <a class="dropdown-item" href="{% url 'libros_nivel' 5 %}"><i class="fas fa-ellipsis-h"></i> Otro</a>
+            `,
+            user: `
+                <a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-id-card"></i> Mi Perfil</a>
+                <a class="dropdown-item" href="{% url 'historial_visitas' %}"><i class="fas fa-history"></i> Mi Historial</a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+            `
+        };
+
+        let activeDropdown = null;
+        let floatingMenu = null;
+
+        function createFloatingMenu() {
+            const menu = document.createElement('div');
+            menu.className = 'dropdown-menu-floating';
+            document.body.appendChild(menu);
+            return menu;
+        }
+
+        function showDropdown(dropdownId, triggerElement) {
+            if (!floatingMenu) {
+                floatingMenu = createFloatingMenu();
+            }
+            
+            if (activeDropdown === dropdownId && floatingMenu.classList.contains('show')) {
+                hideDropdown();
+                return;
+            }
+            
+            const content = dropdownContent[dropdownId];
+            if (!content) return;
+            
+            floatingMenu.innerHTML = content;
+            
+            const rect = triggerElement.getBoundingClientRect();
+            floatingMenu.style.top = (rect.bottom + 5) + 'px';
+            floatingMenu.style.left = rect.left + 'px';
+            floatingMenu.classList.add('show');
+            activeDropdown = dropdownId;
+            
+            // Marcar el trigger como activo
+            document.querySelectorAll('.dropdown-toggle').forEach(el => {
+                el.classList.remove('show');
+            });
+            triggerElement.classList.add('show');
+        }
+
+        function hideDropdown() {
+            if (floatingMenu) {
+                floatingMenu.classList.remove('show');
+                document.querySelectorAll('.dropdown-toggle').forEach(el => {
+                    el.classList.remove('show');
+                });
+                activeDropdown = null;
+            }
+        }
+
+        // Configurar triggers de dropdown
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const dropdownId = dropdown.getAttribute('data-dropdown');
+            const trigger = dropdown.querySelector('.dropdown-toggle');
+            
+            if (trigger && dropdownId) {
+                trigger.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showDropdown(dropdownId, trigger);
+                });
+            }
+        });
+
+        // Dropdown de usuario
+        const userTrigger = document.querySelector('#userDropdown');
+        if (userTrigger) {
+            userTrigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showDropdown('user', userTrigger);
+            });
+        }
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (floatingMenu && !floatingMenu.contains(e.target)) {
+                let isTrigger = false;
+                document.querySelectorAll('.dropdown-toggle, #userDropdown').forEach(trigger => {
+                    if (trigger.contains(e.target)) isTrigger = true;
+                });
+                if (!isTrigger) {
+                    hideDropdown();
+                }
+            }
+        });
+
+        // Scroll horizontal con flechas
+        const wrapper = document.getElementById('menuScrollWrapper');
+        const leftBtn = document.getElementById('scrollLeftBtn');
+        const rightBtn = document.getElementById('scrollRightBtn');
+
+        if (wrapper && leftBtn && rightBtn) {
+            const scrollAmount = 200;
+
+            leftBtn.addEventListener('click', () => {
+                wrapper.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            });
+
+            rightBtn.addEventListener('click', () => {
+                wrapper.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            });
+
+            const checkScroll = () => {
+                const hasScroll = wrapper.scrollWidth > wrapper.clientWidth;
+                leftBtn.style.display = hasScroll ? 'flex' : 'none';
+                rightBtn.style.display = hasScroll ? 'flex' : 'none';
+            };
+
+            checkScroll();
+            window.addEventListener('resize', checkScroll);
+        }
+
+        // Marcar enlace activo
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && href !== '/' && currentPath === href) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

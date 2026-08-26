@@ -1,0 +1,547 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA LISTA DE USUARIOS      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .users-container {
+        padding: 1.5rem;
+    }
+
+    /* Header */
+    .users-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .users-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .users-title i {
+        font-size: 2rem;
+        color: var(--accent);
+    }
+
+    .users-title h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .users-title p {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Botón Agregar */
+    .btn-add {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-add:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        color: white;
+    }
+
+    /* Barra de búsqueda */
+    .search-wrapper {
+        background: white;
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .search-wrapper:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .search-wrapper i {
+        color: var(--text-secondary);
+    }
+
+    .search-wrapper input {
+        border: none;
+        outline: none;
+        width: 250px;
+        font-size: 0.85rem;
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .users-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .users-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        white-space: nowrap;
+    }
+
+    .users-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .users-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Badges para tipo de usuario */
+    .badge-user {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .badge-admin {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+    }
+
+    .badge-student {
+        background: #E0F2FE;
+        color: #0284C7;
+    }
+
+    .badge-teacher {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .badge-external {
+        background: #F1F5F9;
+        color: #64748B;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .btn-edit:hover {
+        background: #3B82F6;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-reset {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent);
+    }
+
+    .btn-reset:hover {
+        background: var(--accent);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Paginación */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .pagination-info {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    .page-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .page-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .users-container {
+            padding: 1rem;
+        }
+        .users-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-wrapper input {
+            width: 100%;
+        }
+        .pagination-wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+
+<div class="users-container">
+    <!-- Header -->
+    <div class="users-header">
+        <div class="users-title">
+            <i class="fas fa-users"></i>
+            <div>
+                <h1>Gestión de Usuarios</h1>
+                <p>Administra los usuarios registrados en el sistema</p>
+            </div>
+        </div>
+        <a href="{% url 'agregar_usuario' %}" class="btn-add">
+            <i class="fas fa-user-plus"></i>
+            Agregar Usuario
+        </a>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Buscar por nombre, correo o CI...">
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="table-wrapper">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>CI</th>
+                    <th>Ext.</th>
+                    <th>Correo</th>
+                    <th>Tipo</th>
+                    <th>Celular</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosTableBody">
+                {% for usuario in page_obj %}
+                <tr>
+                    <td>#{{ usuario.usuario_id }}</td>
+                    <td><strong>{{ usuario.nombres }}</strong></td>
+                    <td>{{ usuario.apepat }} {{ usuario.apemat }}</td>
+                    <td>{{ usuario.ci }}</td>
+                    <td>{{ usuario.extension }}</td>
+                    <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis;">{{ usuario.correo }}</td>
+                    <td>
+                        {% if usuario.tipo_usuario == 'Administrador' %}
+                            <span class="badge-user badge-admin">
+                                <i class="fas fa-crown"></i> Admin
+                            </span>
+                        {% elif usuario.tipo_usuario == 'Estudiante' %}
+                            <span class="badge-user badge-student">
+                                <i class="fas fa-graduation-cap"></i> Estudiante
+                            </span>
+                        {% elif usuario.tipo_usuario == 'Docente' %}
+                            <span class="badge-user badge-teacher">
+                                <i class="fas fa-chalkboard-user"></i> Docente
+                            </span>
+                        {% else %}
+                            <span class="badge-user badge-external">
+                                <i class="fas fa-globe"></i> Externo
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ usuario.nro_celular }}</td>
+                    <td class="action-buttons">
+                        <button class="btn-action btn-edit" 
+                                onclick="window.location.href='{% url 'modificar_usuario' usuario.usuario_id %}'"
+                                title="Editar usuario">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action btn-reset" 
+                                onclick="confirmarRestablecerPassword('{{ usuario.usuario_id }}', '{{ usuario.nombres }}', '{{ usuario.ci }}')"
+                                title="Restablecer contraseña">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="btn-action btn-delete" 
+                                onclick="confirmarEliminacion('{{ usuario.usuario_id }}', '{{ usuario.nombres }}')"
+                                title="Eliminar usuario">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-user-slash fa-3x mb-2" style="color: var(--text-secondary);"></i>
+                        <p>No hay usuarios registrados</p>
+                        <a href="{% url 'agregar_usuario' %}" class="btn-add" style="display: inline-flex; margin-top: 1rem;">
+                            <i class="fas fa-user-plus"></i> Agregar el primer usuario
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            <i class="fas fa-chart-simple"></i>
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            | Total: {{ page_obj.paginator.count }} usuarios
+        </div>
+        <div class="pagination-buttons">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+
+            <span class="page-btn" style="background: var(--accent); color: white; border-color: var(--accent);">
+                {{ page_obj.number }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-btn">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Función para obtener el token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Búsqueda en tiempo real
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const input = this.value.toLowerCase();
+    const tbody = document.getElementById('usuariosTableBody');
+    const rows = tbody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(input) ? '' : 'none';
+    }
+});
+
+// Confirmar eliminación
+function confirmarEliminacion(usuarioId, nombreUsuario) {
+    Swal.fire({
+        title: '¿Eliminar usuario?',
+        html: `¿Estás seguro de que deseas eliminar a <strong>${nombreUsuario}</strong>?<br>Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch(`/eliminar_usuario/${usuarioId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#F59E0B'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Error al eliminar', 'error');
+                }
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Ocurrió un error al eliminar el usuario', 'error');
+            });
+        }
+    });
+}
+
+// Confirmar restablecimiento de contraseña
+function confirmarRestablecerPassword(usuarioId, nombreUsuario, ci) {
+    Swal.fire({
+        title: '¿Restablecer contraseña?',
+        html: `Se restablecerá la contraseña de <strong>${nombreUsuario}</strong> a su número de CI: <strong>${ci}</strong>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#F59E0B',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: '<i class="fas fa-key"></i> Sí, restablecer',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch('/restablecer_password/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    usuario_id: usuarioId,
+                    ci: ci
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Contraseña restablecida!',
+                        text: `La nueva contraseña de ${nombreUsuario} es: ${ci}`,
+                        icon: 'success',
+                        confirmButtonColor: '#F59E0B'
+                    });
+                } else {
+                    Swal.fire('Error', data.error || 'Error al restablecer', 'error');
+                }
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Hubo un error al procesar la solicitud', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

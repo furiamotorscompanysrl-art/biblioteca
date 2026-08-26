@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA MODIFICAR REVISTA      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h4 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h4 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Grid de campos */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.9rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+    }
+
+    .form-control, .form-select, textarea {
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Archivos */
+    .current-file {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .current-file-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .current-file-info i {
+        font-size: 1.5rem;
+    }
+
+    .file-upload-area {
+        background: var(--bg-light);
+        border: 2px dashed var(--border-light);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--accent);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .file-upload-area i {
+        font-size: 1.5rem;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+    }
+
+    .file-upload-area p {
+        margin: 0;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .file-preview {
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+
+    .file-preview img {
+        max-width: 120px;
+        border-radius: 8px;
+        border: 2px solid var(--border-light);
+    }
+
+    /* Botones */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-cancel {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-save:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-cancel, .btn-save {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h4>
+                <i class="fas fa-edit"></i>
+                Modificar Revista
+            </h4>
+            <p>Actualice los datos de la revista</p>
+        </div>
+
+        <div class="form-body">
+            <form method="POST" enctype="multipart/form-data" id="revistaForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <!-- Colección -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-layer-group"></i> Colección <span class="required-star">*</span>
+                        </label>
+                        <select name="coleccion" class="form-select" required>
+                            <option value="" disabled>Seleccione una colección</option>
+                            {% for coleccion in form.coleccion.field.queryset %}
+                                <option value="{{ coleccion.id_coleccion }}" 
+                                    {% if coleccion.id_coleccion == form.coleccion.value %}selected{% endif %}>
+                                    {{ coleccion.nomb_colecc }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Número de Revista -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-hashtag"></i> Número de Revista
+                        </label>
+                        <input type="number" name="nro_revista" class="form-control" 
+                               value="{{ form.nro_revista.value|default:'' }}" 
+                               placeholder="Ej: 123">
+                    </div>
+
+                    <!-- URL Externa -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-link"></i> URL Externa
+                        </label>
+                        <input type="url" name="url" class="form-control" 
+                               value="{{ form.url.value|default:'' }}" 
+                               placeholder="https://ejemplo.com/revista">
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Descripción
+                        </label>
+                        <textarea name="descripcion" class="form-control" rows="4" 
+                                  placeholder="Describe el contenido de la revista...">{{ form.descripcion.value|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Portada -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> Imagen de Portada
+                        </label>
+                        {% if revista.img_portada %}
+                            <div class="current-file">
+                                <div class="current-file-info">
+                                    <i class="fas fa-image" style="color: var(--info);"></i>
+                                    <span>Portada actual</span>
+                                </div>
+                                <a href="{{ revista.img_portada.url }}" target="_blank" class="btn-cancel" style="padding: 0.3rem 0.8rem;">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="file-upload-area" onclick="document.getElementById('img_portada').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haga clic para cambiar la portada</p>
+                            <p class="small">Formatos: JPG, PNG. Máx 5MB</p>
+                            <input type="file" id="img_portada" name="img_portada" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                        </div>
+                        <div class="file-preview" id="imagePreview" style="display: none;">
+                            <img id="previewImg" src="" alt="Vista previa">
+                        </div>
+                    </div>
+
+                    <!-- PDF -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-file-pdf"></i> Archivo PDF
+                        </label>
+                        {% if revista.pdf %}
+                            <div class="current-file">
+                                <div class="current-file-info">
+                                    <i class="fas fa-file-pdf" style="color: var(--danger);"></i>
+                                    <span>PDF actual</span>
+                                </div>
+                                <a href="{{ revista.pdf.url }}" target="_blank" class="btn-cancel" style="padding: 0.3rem 0.8rem;">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="file-upload-area" onclick="document.getElementById('pdf').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haga clic para cambiar el PDF</p>
+                            <p class="small">Formato: PDF. Máx 10MB</p>
+                            <input type="file" id="pdf" name="pdf" accept="application/pdf" style="display: none;" onchange="previewPDF(this)">
+                        </div>
+                        <div class="file-preview" id="pdfPreview" style="display: none;">
+                            <div class="current-file-info">
+                                <i class="fas fa-file-pdf" style="color: var(--danger);"></i>
+                                <span id="pdfName"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{% url 'listar_revistas' %}" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn-save" id="submitBtn">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Previsualización de imagen
+    function previewImage(input) {
+        const previewContainer = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('Error', 'La imagen excede el tamaño máximo de 5MB', 'error');
+                input.value = '';
+                previewContainer.style.display = 'none';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Previsualización de PDF
+    function previewPDF(input) {
+        const previewContainer = document.getElementById('pdfPreview');
+        const pdfName = document.getElementById('pdfName');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                Swal.fire('Error', 'El PDF excede el tamaño máximo de 10MB', 'error');
+                input.value = '';
+                previewContainer.style.display = 'none';
+                return;
+            }
+            pdfName.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+            previewContainer.style.display = 'block';
+        }
+    }
+
+    // Envío del formulario
+    document.getElementById('revistaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        
+        const formData = new FormData(this);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Revista actualizada!',
+                    text: data.message || 'Los cambios se han guardado correctamente',
+                    icon: 'success',
+                    confirmButtonColor: '#F59E0B',
+                    confirmButtonText: 'Ir a lista de revistas'
+                }).then(() => {
+                    window.location.href = "{% url 'listar_revistas' %}";
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message || 'Error al actualizar la revista',
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: 'Hubo un problema al procesar la solicitud',
+                icon: 'error',
+                confirmButtonColor: '#EF4444'
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+        });
+    });
+</script>
+{% endblock %}

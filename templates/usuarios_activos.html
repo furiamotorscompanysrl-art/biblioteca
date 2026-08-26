@@ -1,0 +1,646 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA USUARIOS ACTIVOS       */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --online: #10B981;
+        --offline: #9CA3AF;
+        --reading: #F59E0B;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .active-users-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-header h1 i {
+        color: var(--accent);
+        font-size: 2rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem 1.5rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-icon {
+        float: right;
+        font-size: 1.8rem;
+        color: var(--accent);
+        opacity: 0.5;
+    }
+
+    /* Sección de usuarios */
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+    }
+
+    .section-header h2 {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header h2 i {
+        color: var(--accent);
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Tabla de usuarios */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .user-table th {
+        text-align: left;
+        padding: 1rem;
+        background: var(--bg-light);
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border-light);
+    }
+
+    .user-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .user-table tr:hover td {
+        background-color: var(--bg-light);
+    }
+
+    /* Estado en línea */
+    .status-online {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.2rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--online);
+    }
+
+    .status-offline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.2rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(156, 163, 175, 0.1);
+        color: var(--offline);
+    }
+
+    .status-reading {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.2rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--reading);
+    }
+
+    .online-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--success);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.7; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* Badges de rol */
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .role-admin {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+    }
+
+    .role-student {
+        background: #E0F2FE;
+        color: #0284C7;
+    }
+
+    .role-teacher {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .role-external {
+        background: #F1F5F9;
+        color: #64748B;
+    }
+
+    /* Botones */
+    .btn-view {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view:hover {
+        background: var(--info);
+        color: white;
+    }
+
+    /* Últimas visitas - estilo feed */
+    .visits-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .visit-feed-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.8rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .visit-feed-item:hover {
+        transform: translateX(5px);
+        background: white;
+        box-shadow: var(--card-shadow);
+    }
+
+    .visit-user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .visit-avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .visit-details {
+        flex: 1;
+    }
+
+    .visit-user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .visit-book-title {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .visit-time {
+        font-size: 0.7rem;
+        color: var(--accent);
+        white-space: nowrap;
+    }
+
+    /* Libros más leídos */
+    .ranking-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.6rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+    }
+
+    .ranking-number {
+        width: 32px;
+        height: 32px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .ranking-info {
+        flex: 1;
+    }
+
+    .ranking-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+    }
+
+    .ranking-author {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .ranking-count {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    /* Refresh button */
+    .btn-refresh {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-refresh:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .user-table th, .user-table td {
+            padding: 0.75rem;
+        }
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        .visit-feed-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .visit-time {
+            align-self: flex-end;
+        }
+    }
+</style>
+
+<div class="active-users-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1>
+                    <i class="fas fa-users"></i>
+                    Usuarios Activos
+                </h1>
+                <p>Monitorea la actividad de los usuarios en tiempo real</p>
+            </div>
+            <button class="btn-refresh" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Usuarios</div>
+            <div class="stat-number">{{ stats.total_usuarios }}</div>
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Usuarios Activos</div>
+            <div class="stat-number">{{ stats.usuarios_activos }}</div>
+            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Visitas Hoy</div>
+            <div class="stat-number">{{ stats.total_visitas_hoy }}</div>
+            <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Visitas (7 días)</div>
+            <div class="stat-number">{{ stats.total_visitas_semana }}</div>
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        </div>
+    </div>
+
+    <!-- Lista de Usuarios -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-user-friends"></i>
+                Lista de Usuarios
+                <span style="font-size: 0.8rem; font-weight: normal; margin-left: auto;">
+                    <i class="fas fa-circle" style="color: var(--success); font-size: 0.6rem;"></i> En línea
+                    <i class="fas fa-circle" style="color: var(--reading); font-size: 0.6rem; margin-left: 10px;"></i> Leyendo ahora
+                </span>
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="table-wrapper">
+                <table class="user-table" id="userTable">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>CI</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Última Actividad</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="visit-avatar" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                        {{ usuario.nombres|slice:":1" }}{{ usuario.apepat|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ usuario.nombres }} {{ usuario.apepat }}</strong>
+                                        <div class="visit-book-title" style="font-size: 0.7rem;">ID: {{ usuario.usuario_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if usuario.tipo_usuario == 'Administrador' %}
+                                    <span class="role-badge role-admin">👑 Admin</span>
+                                {% elif usuario.tipo_usuario == 'Estudiante' %}
+                                    <span class="role-badge role-student">🎓 Estudiante</span>
+                                {% elif usuario.tipo_usuario == 'Docente' %}
+                                    <span class="role-badge role-teacher">👨‍🏫 Docente</span>
+                                {% else %}
+                                    <span class="role-badge role-external">🌐 Externo</span>
+                                {% endif %}
+                             </td>
+                            <td>{{ usuario.ci }} {{ usuario.extension }} </td>
+                            <td>{{ usuario.correo }} </td>
+                            <td>
+                                {% with ultima_visita=usuario.visitalibro_set.first %}
+                                    {% if ultima_visita %}
+                                        {% with hace_minutos=ultima_visita.fecha_visualizacion|timesince %}
+                                            {% if ultima_visita.fecha_visualizacion|timesince|slice:":2" == "0" %}
+                                                <span class="status-online">
+                                                    <span class="online-dot"></span> En línea
+                                                </span>
+                                            {% elif ultima_visita.fecha_visualizacion|timesince|slice:":2" == "1" and ultima_visita.fecha_visualizacion|timesince|slice:"3:4" == "0" %}
+                                                <span class="status-reading">
+                                                    <i class="fas fa-book-reader"></i> Leyendo ahora
+                                                </span>
+                                            {% else %}
+                                                <span class="status-offline">
+                                                    <i class="fas fa-clock"></i> Offline
+                                                </span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="status-offline">
+                                            <i class="fas fa-clock"></i> Sin actividad
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+                             </td>
+                            <td>
+                                {% with ultima_visita=usuario.visitalibro_set.first %}
+                                    {% if ultima_visita %}
+                                        {{ ultima_visita.fecha_visualizacion|date:"d/m/Y H:i" }}
+                                        <div class="visit-book-title">{{ ultima_visita.libro_visitado.titulo|truncatechars:25 }}</div>
+                                    {% else %}
+                                        <span class="text-muted">Sin actividad</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="{% url 'ver_historial_usuario' usuario.usuario_id %}" class="btn-view">
+                                    <i class="fas fa-history"></i> Historial
+                                </a>
+                             </div>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas Actividades - Feed -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-clock"></i>
+                Actividad Reciente
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="visits-feed">
+                {% for visita in ultimas_visitas %}
+                <div class="visit-feed-item">
+                    <div class="visit-user-info">
+                        <div class="visit-avatar">
+                            {{ visita.visitante.nombres|slice:":1" }}{{ visita.visitante.apepat|slice:":1" }}
+                        </div>
+                        <div class="visit-details">
+                            <div class="visit-user-name">
+                                {{ visita.visitante.nombres }} {{ visita.visitante.apepat }}
+                                <span class="role-badge" style="font-size: 0.6rem; margin-left: 5px;">
+                                    {{ visita.visitante.tipo_usuario }}
+                                </span>
+                            </div>
+                            <div class="visit-book-title">
+                                <i class="fas fa-book"></i> {{ visita.libro_visitado.titulo }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="visit-time">
+                        <i class="fas fa-clock"></i> {{ visita.fecha_visualizacion|timesince }} atrás
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                    <p>No hay actividad reciente</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Libros Más Leídos - Ranking -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-fire"></i>
+                Libros Más Leídos
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="ranking-list">
+                {% for libro in stats.libros_mas_leidos %}
+                <div class="ranking-item">
+                    <div class="ranking-number">{{ forloop.counter }}</div>
+                    <div class="ranking-info">
+                        <div class="ranking-title">{{ libro.titulo }}</div>
+                        <div class="ranking-author">
+                            {% for autor in libro.autores.all %}{{ autor.nombre }}{% if not forloop.last %}, {% endif %}{% empty %}No especificado{% endfor %}
+                        </div>
+                    </div>
+                    <div class="ranking-count">
+                        <i class="fas fa-eye"></i> {{ libro.visitas_count }} visitas
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <p>No hay datos disponibles</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refrescar cada 30 segundos
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

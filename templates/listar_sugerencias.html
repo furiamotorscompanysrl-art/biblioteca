@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA LISTA DE SUGERENCIAS   */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .suggestions-container {
+        padding: 1.5rem;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        font-size: 1.8rem;
+        color: var(--accent);
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .page-title p {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Búsqueda */
+    .search-wrapper {
+        background: white;
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        min-width: 250px;
+    }
+
+    .search-wrapper:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .search-wrapper i {
+        color: var(--text-secondary);
+    }
+
+    .search-wrapper input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+    }
+
+    .suggestions-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .suggestions-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .suggestions-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .suggestions-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .suggestions-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Badges de estado */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.3rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-approve {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .btn-approve:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-reject {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .btn-reject:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    /* Descripción truncada */
+    .desc-preview {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+    }
+
+    .desc-preview:hover {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    /* Paginación */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .pagination-info {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .page-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .page-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .suggestions-container {
+            padding: 1rem;
+        }
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-wrapper {
+            width: 100%;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-action {
+            justify-content: center;
+        }
+        .pagination-wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+
+<div class="suggestions-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <i class="fas fa-lightbulb"></i>
+            <div>
+                <h1>Gestión de Sugerencias</h1>
+                <p>Revisa y gestiona las sugerencias de los usuarios</p>
+            </div>
+        </div>
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por título o solicitante...">
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table class="suggestions-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Solicitante</th>
+                    <th>Autor</th>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Edición</th>
+                    <th>Estado</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="sugerenciasTableBody">
+                {% for sugerencia in sugerencias %}
+                    {% if sugerencia.estado_respuesta != 'Descartado' %}
+                    <tr data-id="{{ sugerencia.id_sugerencia }}">
+                        <td>{{ sugerencia.id_sugerencia }}</td>
+                        <td>{{ sugerencia.solicitante.nombres }} {{ sugerencia.solicitante.apepat|slice:":1" }}.</td>
+                        <td>{{ sugerencia.autor_sugerencia }}</td>
+                        <td><strong>{{ sugerencia.titulo_sugerencia }}</strong></td>
+                        <td class="desc-preview" title="{{ sugerencia.descripcion }}">
+                            {{ sugerencia.descripcion|truncatechars:50|default:"—" }}
+                        </td>
+                        <td>{{ sugerencia.fecha_sugerencia|date:"d/m/Y" }}</td>
+                        <td>{{ sugerencia.edicion|default:"—" }}</td>
+                        <td>
+                            {% if sugerencia.estado_respuesta == 'Pendiente' %}
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-clock"></i> Pendiente
+                                </span>
+                            {% elif sugerencia.estado_respuesta == 'Aprobado' %}
+                                <span class="status-badge status-approved">
+                                    <i class="fas fa-check-circle"></i> Aprobado
+                                </span>
+                            {% elif sugerencia.estado_respuesta == 'Descartado' %}
+                                <span class="status-badge status-rejected">
+                                    <i class="fas fa-times-circle"></i> Descartado
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="action-buttons">
+                            {% if sugerencia.estado_respuesta == 'Pendiente' %}
+                                <button class="btn-action btn-approve" 
+                                        onclick="confirmarAprobacion({{ sugerencia.id_sugerencia }}, '{{ sugerencia.titulo_sugerencia|escapejs }}')"
+                                        title="Aprobar sugerencia">
+                                    <i class="fas fa-check"></i> Aprobar
+                                </button>
+                                <button class="btn-action btn-reject" 
+                                        onclick="confirmarDescarte({{ sugerencia.id_sugerencia }}, '{{ sugerencia.titulo_sugerencia|escapejs }}')"
+                                        title="Descartar sugerencia">
+                                    <i class="fas fa-times"></i> Descartar
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No hay sugerencias pendientes</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if sugerencias.paginator.num_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            <i class="fas fa-chart-simple"></i>
+            Mostrando página {{ sugerencias.number }} de {{ sugerencias.paginator.num_pages }}
+            | Total: {{ sugerencias.paginator.count }} sugerencias
+        </div>
+        <div class="pagination-buttons">
+            {% if sugerencias.has_previous %}
+                <a href="?page=1" class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ sugerencias.previous_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+
+            {% for num in sugerencias.paginator.page_range %}
+                {% if num == sugerencias.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num > sugerencias.number|add:'-3' and num < sugerencias.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if sugerencias.has_next %}
+                <a href="?page={{ sugerencias.next_page_number }}" class="page-btn">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ sugerencias.paginator.num_pages }}" class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#sugerenciasTableBody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
+
+    // Confirmar aprobación
+    function confirmarAprobacion(id, titulo) {
+        Swal.fire({
+            title: '¿Aprobar sugerencia?',
+            html: `¿Estás seguro de que deseas aprobar la sugerencia:<br><strong>${titulo}</strong>?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-check"></i> Sí, aprobar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                enviarFormulario('aprobar', id);
+            }
+        });
+    }
+
+    // Confirmar descarte
+    function confirmarDescarte(id, titulo) {
+        Swal.fire({
+            title: '¿Descartar sugerencia?',
+            html: `¿Estás seguro de que deseas descartar la sugerencia:<br><strong>${titulo}</strong>?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, descartar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                enviarFormulario('descartar', id);
+            }
+        });
+    }
+
+    // Enviar formulario
+    function enviarFormulario(accion, id) {
+        const url = accion === 'aprobar' 
+            ? `{% url 'aprobar_sugerencia' 0 %}`.replace('0', id)
+            : `{% url 'descartar_sugerencia' 0 %}`.replace('0', id);
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}

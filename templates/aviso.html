@@ -1,0 +1,14 @@
+from django.shortcuts import render
+
+def mi_vista(request):
+    context = {
+        'cabeza': '¡Usuario Creado!',
+        'cuerpo': 'El usuario se ha registrado exitosamente.',
+        'tipo': 'success',  # success, error, warning, info
+        'icono': 'fa-user-plus',
+        'url_principal': 'lista_usuarios',
+        'texto_principal': 'Ir a Usuarios',
+        'url_secundaria': 'agregar_usuario',
+        'texto_secundario': 'Agregar otro'
+    }
+    return render(request, 'aviso.html', context)

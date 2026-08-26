@@ -1,0 +1,796 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA LISTA DE LIBROS        */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        font-size: 2rem;
+        color: var(--accent);
+    }
+
+    .page-title h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-add:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Filtros */
+    .filters-bar {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.6rem 1rem 0.6rem 2.5rem;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .order-select {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .order-select label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .order-select select {
+        padding: 0.6rem 1rem;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        background: white;
+        cursor: pointer;
+    }
+
+    .order-select select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+    }
+
+    .books-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .books-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .books-table td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .books-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .books-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Portada */
+    .book-cover {
+        width: 50px;
+        height: 65px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        transition: transform 0.2s;
+    }
+
+    .book-cover:hover {
+        transform: scale(1.05);
+    }
+
+    .cover-placeholder {
+        width: 50px;
+        height: 65px;
+        background: var(--bg-light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border-light);
+    }
+
+    /* Badges */
+    .badge-category {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin: 0.1rem;
+    }
+
+    .badge-level {
+        background: #E0F2FE;
+        color: #0284C7;
+    }
+
+    .badge-tag {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .badge-no-data {
+        background: #F1F5F9;
+        color: #64748B;
+        font-style: italic;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .btn-edit:hover {
+        background: #3B82F6;
+        color: white;
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-restrict {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .btn-restrict:hover {
+        background: var(--warning);
+        color: white;
+    }
+
+    .btn-authorize {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .btn-authorize:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    /* Links de archivos */
+    .file-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.3rem 0.6rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .file-link:hover {
+        background: var(--accent);
+        color: white;
+    }
+
+    .file-link i {
+        font-size: 0.8rem;
+    }
+
+    .btn-download {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .btn-download:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-view {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+
+    .btn-view:hover {
+        background: var(--info);
+        color: white;
+    }
+
+    /* Modal visor PDF */
+    .pdf-modal .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    .pdf-modal .modal-content {
+        background: #1a1a2e;
+        border-radius: 16px;
+        height: 90vh;
+    }
+    
+    .pdf-modal .modal-body {
+        padding: 0;
+        height: calc(90vh - 60px);
+    }
+    
+    .pdf-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0 0 16px 16px;
+    }
+
+    /* Paginación */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .pagination-info {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .page-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .page-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Badge de estado */
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .status-authorized {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .status-restricted {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .order-select {
+            justify-content: space-between;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-action {
+            justify-content: center;
+        }
+        .pdf-modal .modal-dialog {
+            max-width: 100%;
+            margin: 0;
+        }
+        .pdf-modal .modal-content {
+            height: 100vh;
+            border-radius: 0;
+        }
+    }
+</style>
+
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <i class="fas fa-book"></i>
+            <div>
+                <h2>Gestión de Libros</h2>
+                <p class="text-muted small mb-0">Administra el catálogo de libros digitales</p>
+            </div>
+        </div>
+        <a href="{% url 'agregar_libro' %}" class="btn-add">
+            <i class="fas fa-plus"></i> Agregar Libro
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-bar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por título, autor o categoría...">
+        </div>
+        <form method="GET" action="" class="order-select">
+            <label><i class="fas fa-sort"></i> Ordenar por:</label>
+            <select name="ordenar" onchange="this.form.submit()">
+                <option value="">Seleccionar</option>
+                <option value="fecha_asc" {% if ordenar == 'fecha_asc' %}selected{% endif %}>Fecha (más antiguo)</option>
+                <option value="fecha_desc" {% if ordenar == 'fecha_desc' %}selected{% endif %}>Fecha (más reciente)</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table class="books-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Portada</th>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Autor(es)</th>
+                    <th>Edición</th>
+                    <th>Categorías</th>
+                    <th>Fecha</th>
+                    <th>Acceso al Libro</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="librosTableBody">
+                {% for libro in libros %}
+                <tr>
+                    <td>#{{ libro.id_libro }}</td>
+                    <td>
+                        {% if libro.img_portada %}
+                            <img src="{{ libro.img_portada.url }}" 
+                                 class="book-cover" 
+                                 onclick="mostrarPortada('{{ libro.img_portada.url }}', '{{ libro.titulo|escapejs }}')"
+                                 alt="Portada">
+                        {% else %}
+                            <div class="cover-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td style="min-width: 200px;">
+                        <strong>{{ libro.titulo|truncatechars:50 }}</strong>
+                        {% if libro.descarga_autorizada %}
+                            <span class="status-badge status-authorized">
+                                <i class="fas fa-check-circle"></i> Descarga permitida
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-restricted">
+                                <i class="fas fa-eye"></i> Solo lectura
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-category" style="background: #E0F2FE; color: #0284C7;">
+                            <i class="fas fa-tag"></i> {{ libro.tipo }}
+                        </span>
+                    </td>
+                    <td>
+                        {% for autor in libro.autores.all %}
+                            <span class="badge-category" style="background: #F1F5F9;">{{ autor.nombre }}</span>{% if not forloop.last %}{% endif %}
+                        {% empty %}
+                            <span class="badge-category badge-no-data">Sin autor</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ libro.edicion|default:"—" }}</td>
+                    <td>
+                        {% if libro.categoria %}
+                            <span class="badge-category badge-level">
+                                <i class="fas fa-layer-group"></i> {{ libro.categoria }}
+                            </span>
+                        {% endif %}
+                        {% for categoria in libro.categorias.all %}
+                            <span class="badge-category badge-tag">
+                                <i class="fas fa-hashtag"></i> {{ categoria.nom_cat }}
+                            </span>
+                        {% empty %}
+                            {% if not libro.categoria %}
+                                <span class="badge-category badge-no-data">Sin categorías</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ libro.fecha_publicacion|date:"d/m/Y" }}</td>
+                    <!-- Columna de Acceso al Libro -->
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            {% if libro.pdf or libro.pdf_url or libro.google_drive_url %}
+                                {% if libro.descarga_autorizada %}
+                                    <!-- Modo DESCARGAR: enlace directo para descargar -->
+                                    <a href="{% url 'ver_descargar_libro' libro.id_libro %}" 
+                                       class="file-link btn-download" 
+                                       target="_blank">
+                                        <i class="fas fa-download"></i> Descargar PDF
+                                    </a>
+                                {% else %}
+                                    <!-- Modo SOLO LECTURA: abrir en modal/visor del sistema -->
+                                    <button type="button" 
+                                            class="file-link btn-view" 
+                                            onclick="abrirVisorPDF('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}')">
+                                        <i class="fas fa-eye"></i> Leer en línea
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <span class="file-link" style="background: none; color: var(--text-secondary); cursor: not-allowed;">
+                                    <i class="fas fa-ban"></i> No disponible
+                                </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <!-- Columna de Acciones -->
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'editar_libro' libro.id_libro %}" class="btn-action btn-edit" title="Editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <form method="post" action="{% url 'eliminar_libro' libro.id_libro %}" class="d-inline eliminar-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action btn-delete" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                            </form>
+                            <!-- Botón Restringir/Autorizar - SIEMPRE VISIBLE -->
+                            <form method="post" action="{% url 'cambiar_estado_descarga' libro.id_libro %}" class="d-inline">
+                                {% csrf_token %}
+                                {% if libro.descarga_autorizada %}
+                                    <button type="submit" class="btn-action btn-restrict" title="Restringir descarga (solo lectura)">
+                                        <i class="fas fa-lock"></i> Restringir
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn-action btn-authorize" title="Autorizar descarga">
+                                        <i class="fas fa-unlock-alt"></i> Autorizar
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-book-open fa-3x mb-2" style="color: var(--text-secondary);"></i>
+                        <p>No hay libros registrados</p>
+                        <a href="{% url 'agregar_libro' %}" class="btn-add" style="display: inline-flex; margin-top: 1rem;">
+                            <i class="fas fa-plus"></i> Agregar el primer libro
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if libros.paginator.num_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            <i class="fas fa-chart-simple"></i>
+            Mostrando página {{ libros.number }} de {{ libros.paginator.num_pages }}
+            | Total: {{ libros.paginator.count }} libros
+        </div>
+        <div class="pagination-buttons">
+            {% if libros.has_previous %}
+                <a href="?page=1" class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ libros.previous_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+
+            {% for num in libros.paginator.page_range %}
+                {% if num == libros.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num > libros.number|add:'-3' and num < libros.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if libros.has_next %}
+                <a href="?page={{ libros.next_page_number }}" class="page-btn">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ libros.paginator.num_pages }}" class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal para portada -->
+<div id="portadaModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: #1a1a2e; border-radius: 16px;">
+            <div class="modal-header" style="border-bottom: 1px solid #333; background: #1a1a2e;">
+                <h5 class="modal-title" style="color: white;">Portada del Libro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 1rem;">
+                <img id="portadaImagen" class="img-fluid" style="max-height: 70vh; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visor de PDF (solo lectura) -->
+<div id="visorPDFModal" class="modal fade pdf-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-dark); border-bottom: 1px solid var(--accent);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-book-open"></i> <span id="pdfTituloLibro"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-light);">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Modo solo lectura - Para descargar contacta al bibliotecario
+                </small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Variables globales para los modales
+    let portadaModal;
+    let visorPDFModal;
+    
+    // Inicializar modales cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        portadaModal = new bootstrap.Modal(document.getElementById('portadaModal'));
+        visorPDFModal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
+    });
+    
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#librosTableBody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
+    
+    // Mostrar portada en modal
+    window.mostrarPortada = function(url, titulo) {
+        document.getElementById('portadaImagen').src = url;
+        portadaModal.show();
+    };
+    
+    // Abrir visor de PDF (modo solo lectura)
+    window.abrirVisorPDF = function(libroId, titulo) {
+        // Mostrar título en el modal
+        document.getElementById('pdfTituloLibro').innerText = titulo;
+        
+        // Cargar el PDF en el iframe usando la vista protegida con parámetro embed
+        const pdfUrl = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
+        document.getElementById('pdfIframe').src = pdfUrl;
+        
+        // Abrir el modal
+        visorPDFModal.show();
+    };
+    
+    // Limpiar iframe al cerrar el modal para detener la carga
+    document.getElementById('visorPDFModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('pdfIframe').src = '';
+    });
+    
+    // Confirmar eliminación
+    document.querySelectorAll('.eliminar-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Eliminar libro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                        },
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire({
+                                title: '¡Eliminado!',
+                                text: 'El libro ha sido eliminado correctamente.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            throw new Error('Error');
+                        }
+                    }).catch(() => {
+                        Swal.fire('Error', 'No se pudo eliminar el libro.', 'error');
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

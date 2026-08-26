@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA ESTADÍSTICAS DE VISITAS */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    .stats-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .stats-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .stats-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .stats-header h1 i {
+        background: none;
+        -webkit-text-fill-color: var(--accent);
+    }
+
+    .stats-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Layout de dos columnas */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Tarjeta de gráfica */
+    .chart-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .chart-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .chart-header h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chart-header h3 i {
+        color: var(--accent);
+    }
+
+    .chart-body {
+        padding: 1.5rem;
+    }
+
+    canvas {
+        max-height: 400px;
+        width: 100%;
+    }
+
+    /* Tarjeta de resumen */
+    .summary-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .summary-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .summary-header h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .summary-header h3 i {
+        color: var(--accent);
+    }
+
+    .summary-body {
+        padding: 1.5rem;
+    }
+
+    /* Filtros */
+    .filter-section {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .filter-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .filter-header h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-header h3 i {
+        color: var(--accent);
+    }
+
+    .filter-body {
+        padding: 1.5rem;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 1rem;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .filter-group select, .filter-group input {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        background: var(--bg-light);
+        transition: all 0.2s ease;
+    }
+
+    .filter-group select:focus, .filter-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .btn-generate {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-generate:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Estadísticas rápidas */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent);
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tabla de datos */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 0.8rem;
+        background: var(--bg-light);
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border-light);
+    }
+
+    .data-table td {
+        padding: 0.8rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+    }
+
+    .data-table tr:hover td {
+        background: var(--bg-light);
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--border-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .btn-generate {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .quick-stats {
+            grid-template-columns: 1fr;
+        }
+        .stats-header h1 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="stats-container">
+    <!-- Header -->
+    <div class="stats-header">
+        <h1>
+            <i class="fas fa-chart-line"></i>
+            Estadísticas de Visitas
+        </h1>
+        <p>Analiza el comportamiento de los usuarios en la biblioteca digital</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <div class="filter-header">
+            <h3>
+                <i class="fas fa-filter"></i>
+                Filtros de Búsqueda
+            </h3>
+        </div>
+        <div class="filter-body">
+            <form method="post" class="filter-form">
+                {% csrf_token %}
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Mes</label>
+                    {{ form.mes }}
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-alt"></i> Año</label>
+                    {{ form.año }}
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-chart-bar"></i> Vista</label>
+                    {{ form.vista_opcion }}
+                </div>
+                <button type="submit" class="btn-generate">
+                    <i class="fas fa-chart-line"></i> Generar Estadísticas
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <!-- Columna izquierda - Gráfica -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-chart-bar"></i>
+                    Comportamiento de Visitas
+                </h3>
+            </div>
+            <div class="chart-body">
+                {% if labels and data %}
+                    <canvas id="visitasChart"></canvas>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-simple"></i>
+                        <p>Seleccione un período para visualizar la gráfica</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Columna derecha - Resumen -->
+        <div class="summary-card">
+            <div class="summary-header">
+                <h3>
+                    <i class="fas fa-chart-pie"></i>
+                    Resumen de Visitas
+                </h3>
+            </div>
+            <div class="summary-body">
+                {% if visitas_agrupadas_nivel or visitas_agrupadas_unitarias %}
+                    <!-- Estadísticas rápidas -->
+                    <div class="quick-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">
+                                {% if vista_opcion == 'unitarias' %}
+                                    {{ visitas_agrupadas_nivel|length }}
+                                {% else %}
+                                    {{ visitas_agrupadas_unitarias|length }}
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Elementos registrados</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">
+                                {% if vista_opcion == 'unitarias' %}
+                                    {% with total=0 %}
+                                        {% for _, total_visitas in visitas_agrupadas_nivel.items %}
+                                            {% cycle total total_visitas as total silent %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                {% else %}
+                                    {% with total=0 %}
+                                        {% for _, total_visitas in visitas_agrupadas_unitarias.items %}
+                                            {% cycle total total_visitas as total silent %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                {% endif %}
+                                {{ visitas_agrupadas_nivel|length|add:visitas_agrupadas_unitarias|length }}
+                            </div>
+                            <div class="stat-label">Total de visitas</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de datos -->
+                    {% if vista_opcion == 'unitarias' %}
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-layer-group"></i> Categoría</th>
+                                    <th><i class="fas fa-eye"></i> Visitas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for categoria, total in visitas_agrupadas_nivel.items %}
+                                <tr>
+                                    <td>{{ categoria }}</td>
+                                    <td><span class="stat-number" style="font-size: 1rem;">{{ total }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="2" class="empty-state">No hay datos disponibles</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% elif vista_opcion == 'nivel' %}
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-book"></i> Título</th>
+                                    <th><i class="fas fa-eye"></i> Visitas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for titulo, total in visitas_agrupadas_unitarias.items %}
+                                <tr>
+                                    <td>{{ titulo|truncatechars:40 }}</td>
+                                    <td><span class="stat-number" style="font-size: 1rem;">{{ total }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="2" class="empty-state">No hay datos disponibles</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-simple"></i>
+                        <p>Seleccione una opción para ver los datos</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if labels and data %}
+            var ctx = document.getElementById('visitasChart').getContext('2d');
+            var visitasChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ labels|safe }},
+                    datasets: [{
+                        label: 'Visitas',
+                        data: {{ data|safe }},
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#F59E0B',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            titleColor: '#F59E0B',
+                            bodyColor: '#F3F4F6',
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#E5E7EB', drawBorder: false },
+                            title: {
+                                display: true,
+                                text: 'Número de Visitas',
+                                color: '#6B7280',
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        {% endif %}
+    });
+</script>
+{% endblock %}

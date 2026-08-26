@@ -1,0 +1,504 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ingresar | Biblioteca Digital ARTyDIS</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* ============================================ */
+        /* ESTILOS MODERNOS PARA LOGIN - VERSIÓN CLARA  */
+        /* ============================================ */
+        :root {
+            --primary-dark: #0F2B3D;
+            --primary: #1A3A4F;
+            --accent: #F59E0B;
+            --accent-hover: #FBBF24;
+            --success: #10B981;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            --bg-light: #F0F4F8;
+            --bg-white: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-light: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #E8EDF2 0%, #DCE3E9 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Patrón decorativo de fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23F59E0B' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+            background-size: cover;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* Tarjeta principal */
+        .login-card {
+            max-width: 480px;
+            width: 100%;
+            background: var(--bg-white);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Header de la tarjeta */
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 100px;
+            margin-bottom: 1rem;
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        .card-header-custom h4 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-header-custom p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            margin: 0.5rem 0 0;
+        }
+
+        /* Cuerpo de la tarjeta */
+        .card-body-custom {
+            padding: 2rem;
+        }
+
+        /* Campos de formulario */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-label i {
+            color: var(--accent);
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            font-size: 1rem;
+            z-index: 2;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            border: 1.5px solid var(--border-light);
+            border-radius: 16px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background-color: var(--bg-light);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            background-color: white;
+        }
+
+        .form-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        /* Botón principal */
+        .btn-login {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Separador */
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .separator::before {
+            margin-right: 1rem;
+        }
+
+        .separator::after {
+            margin-left: 1rem;
+        }
+
+        /* Info text */
+        .info-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+
+        .info-text i {
+            color: var(--accent);
+            margin-right: 5px;
+        }
+
+        /* Botón de registro */
+        .btn-register {
+            width: 100%;
+            padding: 0.75rem;
+            background: white;
+            border: 1.5px solid var(--border-light);
+            color: var(--text-secondary);
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .btn-register:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        /* Alertas */
+        .alert-custom {
+            border-radius: 16px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent);
+            border-left: 4px solid var(--accent);
+        }
+
+        .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.6;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* Modal */
+        .modal-modern .modal-content {
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .modal-modern .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .modal-modern .modal-title {
+            color: white;
+            font-weight: 600;
+        }
+
+        .modal-modern .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 576px) {
+            .login-card {
+                margin: 1rem;
+            }
+            .card-body-custom {
+                padding: 1.5rem;
+            }
+            .card-header-custom h4 {
+                font-size: 1.2rem;
+            }
+            .logo {
+                max-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <!-- Header -->
+        <div class="card-header-custom">
+            <img src="{% static 'images/artdis.jpg' %}" alt="Logo" class="logo">
+            <h4>Biblioteca Digital ARTyDIS</h4>
+            <p>Accede a nuestra colección de recursos académicos</p>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body-custom">
+            <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-custom alert-{{ message.tags }}">
+                        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Formulario -->
+            <form method="post" action="{% url 'home' %}" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-envelope"></i> Correo institucional
+                    </label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" class="form-control" id="correo" name="correo" 
+                               placeholder="ejemplo@umsa.bo" required autofocus>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i> Solo se permiten correos @umsa.bo
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-paper-plane"></i> Enviar código de verificación
+                </button>
+            </form>
+
+            <div class="separator">
+                <span>Acceso seguro</span>
+            </div>
+
+            <div class="info-text">
+                <i class="fas fa-shield-alt"></i> Recibirás un código de 6 dígitos a tu correo para ingresar
+            </div>
+
+            <!-- Botón de registro -->
+            <button type="button" class="btn-register" onclick="toggleRegistrationInfo()">
+                <i class="fas fa-user-plus"></i> ¿Cómo registrarse?
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de información de registro -->
+    <div class="modal fade modal-modern" id="registrationInfo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle"></i> Registro de Usuarios
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-id-card fa-3x" style="color: var(--accent);"></i>
+                    </div>
+                    <p class="text-center">
+                        <strong>¡Importante!</strong> Para registrarte como usuario en la Biblioteca Digital ARTyDIS, 
+                        debes acercarte personalmente a nuestras instalaciones de la carrera con tu matrícula o cédula de identidad.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn-login" style="width: auto; padding: 0.5rem 1.5rem;" data-bs-dismiss="modal">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación del formulario
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const correo = document.getElementById('correo');
+            
+            if (!correo.value) {
+                showNotification('⚠️ Por favor ingresa tu correo electrónico', 'error');
+                correo.classList.add('is-invalid');
+                e.preventDefault();
+            } 
+            // ✅ MODO DESARROLLO: Permitir @umsa.bo y @gmail.com
+            else if (correo.value.endsWith('@umsa.bo') || correo.value.endsWith('@gmail.com')) {
+                // Válido - no hacer nada
+                correo.classList.remove('is-invalid');
+            } 
+            else {
+                showNotification('❌ Solo se permiten correos institucionales @umsa.bo (o @gmail.com para pruebas)', 'error');
+                correo.classList.add('is-invalid');
+                e.preventDefault();
+            }
+        });
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-custom alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+                <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            const container = document.querySelector('.card-body-custom');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                if (alertDiv) alertDiv.remove();
+            }, 5000);
+        }
+
+        // Función para mostrar el modal de registro
+        function toggleRegistrationInfo() {
+            const modal = new bootstrap.Modal(document.getElementById('registrationInfo'));
+            modal.show();
+        }
+
+        // Cerrar alertas con el botón de cierre
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+    </script>
+</body>
+</html>

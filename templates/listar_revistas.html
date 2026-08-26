@@ -1,0 +1,733 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA COLECCIONES Y REVISTAS */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .collections-container {
+        padding: 1.5rem;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        font-size: 1.8rem;
+        color: var(--accent);
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-add:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Sección */
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .section-header h2 {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header h2 i {
+        color: var(--accent);
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Tablas */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .modern-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 0.8rem 1rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .modern-table td {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Badges */
+    .badge-desc {
+        display: inline-block;
+        max-width: 250px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: var(--bg-light);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Portada */
+    .revista-cover {
+        width: 50px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        transition: transform 0.2s;
+    }
+
+    .revista-cover:hover {
+        transform: scale(1.05);
+    }
+
+    .cover-placeholder {
+        width: 50px;
+        height: 60px;
+        background: var(--bg-light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border-light);
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+
+    .btn-edit:hover {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    /* Links de archivos */
+    .file-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.3rem 0.6rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .file-link:hover {
+        background: var(--info);
+        color: white;
+    }
+
+    .file-link i {
+        font-size: 0.8rem;
+    }
+
+    /* Sortable handle */
+    .sort-handle {
+        cursor: grab;
+        color: var(--text-secondary);
+        margin-right: 10px;
+    }
+
+    .sort-handle:active {
+        cursor: grabbing;
+    }
+
+    /* Modal */
+    .modal-custom .modal-content {
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .modal-custom .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-custom .modal-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .collections-container {
+            padding: 1rem;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-action {
+            justify-content: center;
+        }
+        .badge-desc {
+            max-width: 150px;
+        }
+    }
+</style>
+
+<div class="collections-container">
+    <!-- ============================================ -->
+    <!-- SECCIÓN DE COLECCIONES                       -->
+    <!-- ============================================ -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-layer-group"></i>
+                Colecciones
+                <span style="font-size: 0.8rem; font-weight: normal; margin-left: auto;">
+                    <i class="fas fa-arrows-alt"></i> Arrastra para reordenar
+                </span>
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn-add" id="btnNuevaColeccion">
+                    <i class="fas fa-plus"></i> Nueva Colección
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>ID</th>
+                            <th>Nombre de Colección</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="colecciones-container">
+                        {% for coleccion in colecciones %}
+                        <tr data-id="{{ coleccion.id_coleccion }}">
+                            <td class="sort-handle">
+                                <i class="fas fa-grip-vertical"></i>
+                            </td>
+                            <td>#{{ coleccion.id_coleccion }}</td>
+                            <td>
+                                <strong>{{ coleccion.nomb_colecc }}</strong>
+                                {% if coleccion.descripcion %}
+                                    <br>
+                                    <span class="badge-desc">
+                                        <i class="fas fa-align-left"></i> {{ coleccion.descripcion|truncatechars:60 }}
+                                    </span>
+                                {% endif %}
+                             </td>
+                            <td style="text-align: center;">
+                                <div class="action-buttons">
+                                    <a href="{% url 'modificar_coleccion' coleccion.id_coleccion %}" 
+                                       class="btn-action btn-edit">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <button class="btn-action btn-delete" 
+                                            data-id="{{ coleccion.id_coleccion }}"
+                                            data-nombre="{{ coleccion.nomb_colecc|escapejs }}"
+                                            onclick="eliminarColeccion(this)">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-layer-group fa-2x mb-2" style="color: var(--text-secondary);"></i>
+                                <p>No hay colecciones registradas</p>
+                                <button class="btn-add" id="btnNuevaColeccionEmpty" style="display: inline-flex;">
+                                    <i class="fas fa-plus"></i> Crear primera colección
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECCIÓN DE REVISTAS                          -->
+    <!-- ============================================ -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-newspaper"></i>
+                Revistas
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{% url 'agregar_revista' %}" class="btn-add">
+                    <i class="fas fa-plus"></i> Nueva Revista
+                </a>
+            </div>
+            <div class="table-wrapper">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Portada</th>
+                            <th>Número</th>
+                            <th>Colección</th>
+                            <th>Descripción</th>
+                            <th>Archivo</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for revista in revistas %}
+                        <tr>
+                            <td>#{{ revista.id_revista }}</td>
+                            <td>
+                                {% if revista.img_portada %}
+                                    <img src="{{ revista.img_portada.url }}" 
+                                         class="revista-cover" 
+                                         onclick="mostrarPortada('{{ revista.img_portada.url }}', '{{ revista.nro_revista }}')"
+                                         alt="Portada">
+                                {% else %}
+                                    <div class="cover-placeholder">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-category" style="background: #E0F2FE; color: #0284C7;">
+                                    <i class="fas fa-hashtag"></i> {{ revista.nro_revista|default:"Sin número" }}
+                                </span>
+                            </td>
+                            <td>{{ revista.coleccion.nomb_colecc }}</td>
+                            <td>
+                                {% if revista.descripcion %}
+                                    <span class="badge-desc" data-bs-toggle="tooltip" title="{{ revista.descripcion }}">
+                                        <i class="fas fa-align-left"></i> {{ revista.descripcion|truncatechars:50 }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge-desc">Sin descripción</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    {% if revista.pdf %}
+                                        <a href="{{ revista.pdf.url }}" target="_blank" class="file-link">
+                                            <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
+                                        </a>
+                                    {% endif %}
+                                    {% if revista.url %}
+                                        <a href="{{ revista.url }}" target="_blank" class="file-link">
+                                            <i class="fas fa-external-link-alt" style="color: var(--info);"></i> Enlace externo
+                                        </a>
+                                    {% endif %}
+                                    {% if not revista.pdf and not revista.url %}
+                                        <span class="file-link" style="background: none; color: var(--text-secondary);">
+                                            <i class="fas fa-ban"></i> No disponible
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-buttons">
+                                    <a href="{% url 'modificar_revista' revista.id_revista %}" 
+                                       class="btn-action btn-edit">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <button class="btn-action btn-delete" 
+                                            data-id="{{ revista.id_revista }}"
+                                            data-numero="{{ revista.nro_revista|escapejs }}"
+                                            onclick="eliminarRevista(this)">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-newspaper fa-2x mb-2" style="color: var(--text-secondary);"></i>
+                                <p>No hay revistas registradas</p>
+                                <a href="{% url 'agregar_revista' %}" class="btn-add" style="display: inline-flex;">
+                                    <i class="fas fa-plus"></i> Agregar primera revista
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nueva Colección -->
+<div class="modal fade modal-custom" id="coleccionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-layer-group"></i>
+                    Nueva Colección
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <form id="coleccionForm">
+                    {% csrf_token %}
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-tag"></i> Nombre de la Colección
+                        </label>
+                        <input type="text" class="form-control" id="nomb_colecc" name="nomb_colecc" 
+                               placeholder="Ej: Arte Contemporáneo" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" 
+                                  rows="3" placeholder="Descripción opcional..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-action btn-delete" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-action btn-edit" onclick="guardarColeccion()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // ============================================
+    // SORTABLE - REORDENAR COLECCIONES
+    // ============================================
+    $(function() {
+        $('#colecciones-container').sortable({
+            handle: '.sort-handle',
+            update: function(event, ui) {
+                actualizarOrdenColecciones();
+            }
+        });
+    });
+
+    function actualizarOrdenColecciones() {
+        let coleccionIds = [];
+        $('#colecciones-container tr').each(function() {
+            coleccionIds.push($(this).data('id'));
+        });
+
+        $.ajax({
+            url: "{% url 'actualizar_orden_colecciones' %}",
+            method: "POST",
+            data: {
+                coleccion_ids: coleccionIds,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({
+                        title: 'Orden actualizado',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            }
+        });
+    }
+
+    // ============================================
+    // MOSTRAR PORTADA EN MODAL
+    // ============================================
+    function mostrarPortada(url, titulo) {
+        Swal.fire({
+            title: `Portada - Revista ${titulo}`,
+            imageUrl: url,
+            imageWidth: 400,
+            imageHeight: 'auto',
+            imageAlt: 'Portada de la revista',
+            showCloseButton: true,
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#F59E0B'
+        });
+    }
+
+    // ============================================
+    // ELIMINAR COLECCIÓN
+    // ============================================
+    function eliminarColeccion(element) {
+        const id = element.dataset.id;
+        const nombre = element.dataset.nombre;
+        
+        Swal.fire({
+            title: '¿Eliminar colección?',
+            html: `¿Deseas eliminar la colección <strong>${nombre}</strong>?<br>Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`{% url 'eliminar_coleccion' 0 %}`.replace('0', id), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Eliminada!',
+                            text: 'La colección ha sido eliminada correctamente.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', 'No se pudo eliminar la colección.', 'error');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
+                });
+            }
+        });
+    }
+
+    // ============================================
+    // ELIMINAR REVISTA
+    // ============================================
+    function eliminarRevista(element) {
+        const id = element.dataset.id;
+        const numero = element.dataset.numero;
+        
+        Swal.fire({
+            title: '¿Eliminar revista?',
+            html: `¿Deseas eliminar la revista número <strong>${numero || 'sin número'}</strong>?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`{% url 'eliminar_revista' 0 %}`.replace('0', id), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Eliminada!',
+                            text: 'La revista ha sido eliminada correctamente.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', 'No se pudo eliminar la revista.', 'error');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
+                });
+            }
+        });
+    }
+
+    // ============================================
+    // MODAL NUEVA COLECCIÓN
+    // ============================================
+    document.querySelectorAll('#btnNuevaColeccion, #btnNuevaColeccionEmpty').forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const modal = new bootstrap.Modal(document.getElementById('coleccionModal'));
+                modal.show();
+            });
+        }
+    });
+
+    function guardarColeccion() {
+        const formData = new FormData(document.getElementById('coleccionForm'));
+        
+        fetch("{% url 'agregar_coleccion' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Creada!',
+                    text: 'Colección creada correctamente',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.message || 'Error al crear la colección', 'error');
+            }
+        })
+        .catch(() => {
+            Swal.fire('Error', 'Hubo un problema al crear la colección', 'error');
+        });
+    }
+
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

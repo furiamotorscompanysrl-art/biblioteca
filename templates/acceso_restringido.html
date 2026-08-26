@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .restricted-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--bg-light) 0%, #e2e8f0 100%);
+    }
+
+    .restricted-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+        max-width: 550px;
+        width: 100%;
+        overflow: hidden;
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Header del card */
+    .restricted-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .restricted-header i {
+        font-size: 4rem;
+        color: var(--accent);
+        background: rgba(245, 158, 11, 0.2);
+        padding: 1rem;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+    }
+
+    .restricted-header h2 {
+        color: white;
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .restricted-header .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Cuerpo del card */
+    .restricted-body {
+        padding: 2rem;
+    }
+
+    /* Información del libro */
+    .book-info {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--accent);
+    }
+
+    .book-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .book-title i {
+        color: var(--accent);
+        font-size: 1.2rem;
+    }
+
+    .book-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+    }
+
+    .detail-item i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    /* Mensaje de restricción */
+    .restriction-message {
+        background: #FEF3C7;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border: 1px solid #FDE68A;
+    }
+
+    .restriction-message i {
+        color: var(--warning);
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .restriction-message p {
+        margin: 0;
+        color: #92400E;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Información de contacto */
+    .contact-info {
+        background: #EFF6FF;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #BFDBFE;
+    }
+
+    .contact-info i {
+        color: var(--info);
+        font-size: 1.2rem;
+    }
+
+    .contact-info p {
+        margin: 0;
+        color: #1E40AF;
+        font-size: 0.9rem;
+    }
+
+    .contact-info a {
+        color: var(--info);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .contact-info a:hover {
+        text-decoration: underline;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-secondary {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+    }
+
+    .btn-secondary:hover {
+        background: var(--border-light);
+        transform: translateY(-2px);
+    }
+
+    .btn-request {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+    }
+
+    .btn-request:hover {
+        background: var(--accent);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Sugerencia */
+    .suggestion-box {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
+        text-align: center;
+    }
+
+    .suggestion-box p {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .restricted-container {
+            padding: 1rem;
+        }
+        
+        .restricted-header {
+            padding: 1.5rem;
+        }
+        
+        .restricted-header i {
+            font-size: 3rem;
+        }
+        
+        .restricted-header h2 {
+            font-size: 1.4rem;
+        }
+        
+        .restricted-body {
+            padding: 1.5rem;
+        }
+        
+        .book-title {
+            font-size: 1.1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            justify-content: center;
+        }
+    }
+
+    /* Animación de pulso para el ícono */
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    .restricted-header i {
+        animation: pulse 2s ease-in-out infinite;
+    }
+</style>
+
+<div class="restricted-container">
+    <div class="restricted-card">
+        <!-- Header -->
+        <div class="restricted-header">
+            <i class="fas fa-lock"></i>
+            <h2>Acceso Restringido</h2>
+            <div class="subtitle">
+                <i class="fas fa-shield-alt"></i> Verificación de permisos
+            </div>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="restricted-body">
+            <!-- Información del libro -->
+            <div class="book-info">
+                <div class="book-title">
+                    <i class="fas fa-book"></i>
+                    {{ libro.titulo }}
+                </div>
+                <div class="book-details">
+                    {% if libro.autores.all %}
+                    <span class="detail-item">
+                        <i class="fas fa-user"></i>
+                        {% for autor in libro.autores.all %}
+                            {{ autor.nombre }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </span>
+                    {% endif %}
+                    
+                    {% if libro.tipo %}
+                    <span class="detail-item">
+                        <i class="fas fa-tag"></i>
+                        {{ libro.tipo }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if libro.edicion %}
+                    <span class="detail-item">
+                        <i class="fas fa-code-branch"></i>
+                        {{ libro.edicion }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if libro.fecha_publicacion %}
+                    <span class="detail-item">
+                        <i class="fas fa-calendar"></i>
+                        {{ libro.fecha_publicacion|date:"d/m/Y" }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mensaje de restricción -->
+            <div class="restriction-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>
+                    <strong>⚠️ Este libro tiene restringida su descarga.</strong><br>
+                    {{ mensaje|default:"El bibliotecario ha configurado este libro solo para lectura dentro del sistema. No está permitida su descarga." }}
+                </p>
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="contact-info">
+                <i class="fas fa-envelope"></i>
+                <p>
+                    Si necesitas acceder a este contenido o solicitar autorización para descargarlo, 
+                    por favor contacta al <strong>bibliotecario</strong>.
+                    <br>
+                    <i class="fas fa-phone-alt"></i> Extensión 1234 | 
+                    <i class="fas fa-inbox"></i> <a href="mailto:biblioteca@tusistema.com">biblioteca@tusistema.com</a>
+                </p>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="action-buttons">
+                <a href="javascript:history.back()" class="btn-action btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al catálogo
+                </a>
+                <a href="{% url 'listar_libros' %}" class="btn-action btn-primary">
+                    <i class="fas fa-book"></i> Ver otros libros
+                </a>
+                <button class="btn-action btn-request" onclick="solicitarAutorizacion()">
+                    <i class="fas fa-paper-plane"></i> Solicitar autorización
+                </button>
+            </div>
+
+            <!-- Sugerencia -->
+            <div class="suggestion-box">
+                <p>
+                    <i class="fas fa-info-circle"></i> 
+                    ¿No encuentras lo que buscas? 
+                    <a href="{% url 'sugerir_libro' %}" style="color: var(--accent);">Sugiere un libro</a> o 
+                    <a href="#" style="color: var(--accent);">contacta al soporte</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Función para solicitar autorización
+    function solicitarAutorizacion() {
+        Swal.fire({
+            title: 'Solicitar autorización',
+            html: `
+                <p style="text-align: left;">Estás solicitando acceso al libro:</p>
+                <p style="text-align: left; font-weight: bold; background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                    <i class="fas fa-book"></i> {{ libro.titulo|escapejs }}
+                </p>
+                <div style="text-align: left;">
+                    <label for="motivo" style="display: block; margin-bottom: 5px; font-weight: 600;">Motivo de la solicitud:</label>
+                    <textarea id="motivo" class="swal2-textarea" rows="3" placeholder="Ej: Necesito este libro para mi investigación..."></textarea>
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#F59E0B',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar solicitud',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const motivo = document.getElementById('motivo').value;
+                if (!motivo) {
+                    Swal.showValidationMessage('Por favor, escribe un motivo para tu solicitud');
+                }
+                return { motivo: motivo };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí puedes enviar la solicitud al servidor
+                // Por ahora mostramos un mensaje de éxito simulado
+                Swal.fire({
+                    title: '¡Solicitud enviada!',
+                    html: `
+                        <i class="fas fa-check-circle" style="color: #10B981; font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Tu solicitud ha sido enviada al bibliotecario.</p>
+                        <p class="text-muted" style="font-size: 0.85rem;">Recibirás una respuesta en tu correo electrónico.</p>
+                    `,
+                    icon: 'success',
+                    confirmButtonColor: '#1A3A4F',
+                    confirmButtonText: 'Entendido'
+                });
+                
+                // Opcional: enviar datos al servidor mediante fetch
+                // fetch('/solicitar-autorizacion/', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                //     },
+                //     body: JSON.stringify({
+                //         libro_id: {{ libro.id_libro }},
+                //         motivo: result.value.motivo
+                //     })
+                // });
+            }
+        });
+    }
+    
+    // También puedes agregar un atajo de teclado (ESC para volver)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.history.back();
+        }
+    });
+</script>
+
+{% endblock %}

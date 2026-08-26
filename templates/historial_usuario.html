@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .history-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-light);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        text-decoration: none;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+        background: var(--accent);
+        color: white;
+    }
+
+    .user-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .user-info h2 {
+        margin: 0 0 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-info h2 i {
+        color: var(--accent);
+    }
+
+    .user-avatar-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        border: 3px solid var(--accent);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        background: white;
+        box-shadow: var(--card-shadow);
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent);
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .visits-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+
+    .visits-table th {
+        background: var(--bg-light);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .visits-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .visits-table tr:hover td {
+        background-color: var(--bg-light);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-link {
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-secondary);
+    }
+
+    .page-link.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.2rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-reading {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+        .user-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .visits-table th, .visits-table td {
+            padding: 0.75rem;
+        }
+    }
+</style>
+
+<div class="history-container">
+    <a href="{% url 'usuarios_activos' %}" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver a Usuarios Activos
+    </a>
+
+    <div class="user-header">
+        <div class="user-info">
+            <h2>
+                <i class="fas fa-user-circle"></i>
+                {{ usuario.nombres }} {{ usuario.apepat }} {{ usuario.apemat }}
+            </h2>
+            <p><i class="fas fa-envelope"></i> {{ usuario.correo }}</p>
+            <p><i class="fas fa-id-card"></i> CI: {{ usuario.ci }} {% if usuario.extension %}({{ usuario.extension }}){% endif %}</p>
+            <p><i class="fas fa-tag"></i> Tipo: {{ usuario.tipo_usuario }}</p>
+        </div>
+        <div class="user-avatar-large">
+            <i class="fas fa-user"></i>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_visitas }}</div>
+            <div class="stat-label">Total Visitas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.libros_distintos }}</div>
+            <div class="stat-label">Libros Distintos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.ultimo_libro|truncatechars:20 }}</div>
+            <div class="stat-label">Último Libro</div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="visits-table">
+            <thead>
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Libro</th>
+                    <th>Autor(es)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visita in visitas %}
+                <tr>
+                    <td>
+                        {{ visita.fecha_visualizacion|date:"d/m/Y H:i:s" }}
+                        <div class="status-badge status-reading" style="margin-top: 4px; display: inline-block;">
+                            <i class="fas fa-clock"></i> {{ visita.fecha_visualizacion|timesince }} atrás
+                        </div>
+                    </td>
+                    <td><strong>{{ visita.libro_visitado.titulo }}</strong></td>
+                    <td>
+                        {% for autor in visita.libro_visitado.autores.all %}
+                            {{ autor.nombre }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            No especificado
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center py-4">
+                        <i class="fas fa-book-open fa-2x text-muted mb-2"></i>
+                        <p>No hay visitas registradas para este usuario</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if visitas.has_other_pages %}
+    <div class="pagination">
+        {% if visitas.has_previous %}
+            <a href="?page={{ visitas.previous_page_number }}" class="page-link">&laquo;</a>
+        {% endif %}
+        {% for num in visitas.paginator.page_range %}
+            <a href="?page={{ num }}" class="page-link {% if visitas.number == num %}active{% endif %}">{{ num }}</a>
+        {% endfor %}
+        {% if visitas.has_next %}
+            <a href="?page={{ visitas.next_page_number }}" class="page-link">&raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

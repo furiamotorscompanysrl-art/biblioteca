@@ -1,0 +1,778 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA NOVEDADES DE LIBROS    */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Layout principal */
+    .novedades-container {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* ============================================ */
+    /* SIDEBAR DE FILTROS                           */
+    /* ============================================ */
+    .filters-sidebar {
+        width: 300px;
+        flex-shrink: 0;
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        position: sticky;
+        top: 90px;
+        height: fit-content;
+    }
+
+    .filters-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .filters-header h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filters-header h3 i {
+        color: var(--accent);
+    }
+
+    .clear-filters {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 0.3rem 0.6rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .clear-filters:hover {
+        background: var(--accent);
+    }
+
+    /* Buscador */
+    .search-box {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.7rem 1rem 0.7rem 2.5rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 40px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    /* Secciones de filtros */
+    .filter-section {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .filter-section:last-child {
+        border-bottom: none;
+    }
+
+    .filter-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        margin-bottom: 0.8rem;
+    }
+
+    .filter-title i {
+        color: var(--accent);
+        transition: transform 0.2s ease;
+    }
+
+    .filter-title.collapsed i {
+        transform: rotate(-90deg);
+    }
+
+    .filter-items {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.5rem 0.5rem 0;
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+    }
+
+    .filter-item:hover {
+        color: var(--accent);
+        background: rgba(245, 158, 11, 0.05);
+        padding-left: 0.5rem;
+    }
+
+    .filter-item.active {
+        color: var(--accent);
+        font-weight: 500;
+    }
+
+    .filter-count {
+        background: var(--bg-light);
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* ============================================ */
+    /* CONTENIDO PRINCIPAL                          */
+    /* ============================================ */
+    .main-content {
+        flex: 1;
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .content-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .content-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .content-header h1 i {
+        color: var(--accent);
+    }
+
+    .content-header p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Pestañas */
+    .tabs-container {
+        padding: 1rem 1.5rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .nav-tabs-custom {
+        display: flex;
+        gap: 0.5rem;
+        border: none;
+    }
+
+    .tab-btn {
+        padding: 0.6rem 1.2rem;
+        background: none;
+        border: none;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tab-btn i {
+        margin-right: 6px;
+    }
+
+    .tab-btn.active {
+        background: var(--accent);
+        color: white;
+    }
+
+    .tab-btn:hover:not(.active) {
+        background: var(--bg-light);
+        color: var(--accent);
+    }
+
+    /* Grid de libros */
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.2rem;
+        padding: 1.5rem;
+    }
+
+    /* Tarjeta de libro */
+    .book-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-light);
+    }
+
+    .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .book-image {
+        position: relative;
+        height: 220px;
+        overflow: hidden;
+        background: var(--bg-light);
+        cursor: pointer;
+    }
+
+    .book-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .book-card:hover .book-image img {
+        transform: scale(1.05);
+    }
+
+    .auth-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--success);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        padding: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .book-image:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .image-overlay span {
+        color: white;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .book-info {
+        padding: 1rem;
+    }
+
+    .book-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .book-meta {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.3rem;
+    }
+
+    .book-meta i {
+        color: var(--accent);
+        width: 18px;
+    }
+
+    .btn-view {
+        width: 100%;
+        padding: 0.5rem;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 0.5rem;
+    }
+
+    .btn-view:hover {
+        background: var(--accent-hover);
+    }
+
+    /* Galería de imágenes */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.2rem;
+        padding: 1.5rem;
+    }
+
+    .art-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .art-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .art-image {
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .art-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .art-card:hover .art-image img {
+        transform: scale(1.05);
+    }
+
+    .art-info {
+        padding: 0.8rem;
+        text-align: center;
+    }
+
+    .art-info h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .art-info p {
+        font-size: 0.7rem;
+        color: var(--accent);
+    }
+
+    /* Modal de imágenes */
+    .modal-modern .modal-content {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .modal-modern .modal-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .modal-modern .modal-title {
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .novedades-container {
+            flex-direction: column;
+            padding: 1rem;
+        }
+        .filters-sidebar {
+            width: 100%;
+            position: static;
+            margin-bottom: 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .books-grid, .gallery-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .tabs-container {
+            padding: 0.5rem 1rem;
+        }
+        .tab-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+
+<div class="novedades-container">
+    <!-- Sidebar de filtros -->
+    <aside class="filters-sidebar">
+        <div class="filters-header">
+            <h3><i class="fas fa-filter"></i> Filtros</h3>
+            <button class="clear-filters" id="clearFilters">
+                <i class="fas fa-undo-alt"></i> Limpiar
+            </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar por título...">
+            </div>
+        </div>
+
+        <!-- Categorías -->
+        <div class="filter-section">
+            <div class="filter-title" data-target="categorias">
+                <span><i class="fas fa-tags"></i> Categorías</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="filter-items" id="categorias-items">
+                <a href="{% url 'novedades_libros' %}" class="filter-item {% if not request.GET.categoria %}active{% endif %}">
+                    <span>Todas</span>
+                    <span class="filter-count">{{ total_libros|default:0 }}</span>
+                </a>
+                {% for categoria in categorias %}
+                <a href="?categoria={{ categoria.id_categoria }}" class="filter-item {% if request.GET.categoria == categoria.id_categoria|stringformat:'s' %}active{% endif %}">
+                    <span>{{ categoria.nom_cat }}</span>
+                    <span class="filter-count">{{ categoria_counts|get:categoria.id_categoria|get:'libros'|default:0 }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tipos -->
+        <div class="filter-section">
+            <div class="filter-title" data-target="tipos">
+                <span><i class="fas fa-book-open"></i> Tipos</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="filter-items" id="tipos-items">
+                <a href="{% url 'novedades_libros' %}" class="filter-item {% if not request.GET.tipo %}active{% endif %}">
+                    <span>Todos</span>
+                    <span class="filter-count">{{ total_libros|default:0 }}</span>
+                </a>
+                {% for tipo in tipos %}
+                <a href="?tipo={{ tipo.0 }}" class="filter-item {% if request.GET.tipo == tipo.0 %}active{% endif %}">
+                    <span>{{ tipo.1 }}</span>
+                    <span class="filter-count">{{ tipo.2|default:0 }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Autores -->
+        <div class="filter-section">
+            <div class="filter-title" data-target="autores">
+                <span><i class="fas fa-users"></i> Autores</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="filter-items" id="autores-items">
+                <a href="{% url 'novedades_libros' %}" class="filter-item {% if not request.GET.autor %}active{% endif %}">
+                    <span>Todos</span>
+                    <span class="filter-count">{{ total_libros|default:0 }}</span>
+                </a>
+                {% for autor in autores %}
+                <a href="?autor={{ autor.id_autor }}" class="filter-item {% if request.GET.autor|stringformat:'s' == autor.id_autor|stringformat:'s' %}active{% endif %}">
+                    <span>{{ autor.nombre }}</span>
+                    <span class="filter-count">{{ autor_counts|get:autor.id_autor|default:0 }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Estado de descarga -->
+        <div class="filter-section">
+            <div class="filter-title" data-target="descarga">
+                <span><i class="fas fa-download"></i> Descarga</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="filter-items" id="descarga-items">
+                <a href="{% url 'novedades_libros' %}" class="filter-item {% if not request.GET.descarga %}active{% endif %}">
+                    <span>Todos</span>
+                    <span class="filter-count">{{ total_libros|default:0 }}</span>
+                </a>
+                <a href="?descarga=1" class="filter-item {% if request.GET.descarga == '1' %}active{% endif %}">
+                    <span><i class="fas fa-check-circle" style="color: var(--success);"></i> Autorizada</span>
+                    <span class="filter-count">{{ descarga_counts.autorizada|default:0 }}</span>
+                </a>
+                <a href="?descarga=0" class="filter-item {% if request.GET.descarga == '0' %}active{% endif %}">
+                    <span><i class="fas fa-ban" style="color: var(--danger);"></i> No autorizada</span>
+                    <span class="filter-count">{{ descarga_counts.no_autorizada|default:0 }}</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="content-header">
+            <h1>
+                <i class="fas fa-book-open"></i>
+                Biblioteca Digital
+            </h1>
+            <p>Explora nuestra colección de recursos digitales para arte y diseño</p>
+        </div>
+
+        <div class="tabs-container">
+            <div class="nav-tabs-custom">
+                <button class="tab-btn active" data-tab="libros">
+                    <i class="fas fa-book"></i> Libros
+                    <span class="filter-count ms-1">{{ libros|length }}</span>
+                </button>
+                <button class="tab-btn" data-tab="imagenes">
+                    <i class="fas fa-images"></i> Imágenes
+                    <span class="filter-count ms-1">{{ imagenes|length }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabla de libros -->
+        <div id="tab-libros" class="tab-content active">
+            <div class="books-grid" id="bookList">
+                {% for libro in libros %}
+                <div class="book-card">
+                    <div class="book-image" onclick="verPdf('{% if libro.pdf %}{{ libro.pdf.url }}{% endif %}', '{{ libro.id_libro }}', {{ libro.descarga_autorizada|lower }})">
+                        {% if libro.archivo_autorizacion %}
+                            <div class="auth-badge">
+                                <i class="fas fa-check-circle"></i> Autorizado
+                            </div>
+                        {% endif %}
+                        {% if libro.img_portada %}
+                            <img src="{{ libro.img_portada.url }}" alt="{{ libro.titulo }}">
+                        {% else %}
+                            <img src="{% static 'images/default-book.png' %}" alt="Sin portada">
+                        {% endif %}
+                        <div class="image-overlay">
+                            <span><i class="fas fa-eye"></i> Ver detalles</span>
+                        </div>
+                    </div>
+                    <div class="book-info">
+                        <h4 class="book-title">{{ libro.titulo|truncatechars:50 }}</h4>
+                        <div class="book-meta">
+                            <i class="fas fa-user"></i>
+                            {% for autor in libro.autores.all %}
+                                {{ autor.nombre }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Autor no especificado
+                            {% endfor %}
+                        </div>
+                        {% if libro.edicion %}
+                        <div class="book-meta">
+                            <i class="fas fa-tag"></i> {{ libro.edicion }}
+                        </div>
+                        {% endif %}
+                        <button class="btn-view" onclick="verPdf('{% if libro.pdf %}{{ libro.pdf.url }}{% endif %}', '{{ libro.id_libro }}', {{ libro.descarga_autorizada|lower }})">
+                            <i class="fas fa-file-pdf"></i> Ver PDF
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <p>No hay libros disponibles</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tabla de imágenes -->
+        <div id="tab-imagenes" class="tab-content" style="display: none;">
+            <div class="gallery-grid">
+                {% for imagen in imagenes %}
+                <div class="art-card" data-bs-toggle="modal" data-bs-target="#imagenModal{{ imagen.id_Imagen }}">
+                    <div class="art-image">
+                        <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}">
+                    </div>
+                    <div class="art-info">
+                        <h4>{{ imagen.titulo|truncatechars:40 }}</h4>
+                        <p>{{ imagen.autorImg }}</p>
+                    </div>
+                </div>
+
+                <!-- Modal de imagen -->
+                <div class="modal fade modal-modern" id="imagenModal{{ imagen.id_Imagen }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ imagen.titulo }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}" class="img-fluid mb-3" style="max-height: 60vh;">
+                                <p><strong>Autor:</strong> {{ imagen.autorImg }}</p>
+                                {% if imagen.descripcion %}
+                                <p><strong>Descripción:</strong> {{ imagen.descripcion }}</p>
+                                {% endif %}
+                                {% if imagen.pdf %}
+                                <a href="{{ imagen.pdf.url }}" class="btn-view" style="display: inline-block; width: auto; padding: 0.5rem 1rem;" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> Ver PDF
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                    <p>No hay imágenes disponibles</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Toggle de secciones de filtros
+    document.querySelectorAll('.filter-title').forEach(title => {
+        title.addEventListener('click', () => {
+            const targetId = title.dataset.target;
+            const items = document.getElementById(`${targetId}-items`);
+            if (items) {
+                items.classList.toggle('collapsed');
+                title.classList.toggle('collapsed');
+            }
+        });
+    });
+
+    // Pestañas
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = {
+        libros: document.getElementById('tab-libros'),
+        imagenes: document.getElementById('tab-imagenes')
+    };
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            Object.values(tabContents).forEach(content => {
+                if (content) content.style.display = 'none';
+            });
+            if (tabContents[tabId]) tabContents[tabId].style.display = 'block';
+        });
+    });
+
+    // Limpiar filtros
+    document.getElementById('clearFilters').addEventListener('click', () => {
+        window.location.href = "{% url 'novedades_libros' %}";
+    });
+
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const bookCards = document.querySelectorAll('#tab-libros .book-card');
+        
+        bookCards.forEach(card => {
+            const title = card.querySelector('.book-title')?.textContent.toLowerCase() || '';
+            const author = card.querySelector('.book-meta')?.textContent.toLowerCase() || '';
+            card.style.display = (title.includes(searchTerm) || author.includes(searchTerm)) ? '' : 'none';
+        });
+    });
+
+    // Función para ver PDF
+    function verPdf(pdfUrl, libroId, tienePermiso) {
+        if (!pdfUrl || pdfUrl === 'None' || pdfUrl === '') {
+            Swal.fire('Error', 'No hay PDF disponible para este libro', 'error');
+            return;
+        }
+        
+        // Registrar visita
+        fetch("{% url 'registrar_visita_libro' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'libro_id=' + encodeURIComponent(libroId)
+        }).catch(error => console.error('Error:', error));
+        
+        if (tienePermiso) {
+            window.open(pdfUrl, '_blank');
+        } else {
+            Swal.fire('Información', 'Este libro no tiene autorización de descarga. Solo puede visualizarse online.', 'info');
+            window.open(pdfUrl, '_blank');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA MODIFICAR USUARIO      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    .form-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header del formulario */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h4 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h4 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Cuerpo del formulario */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Secciones */
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-light);
+        display: inline-block;
+    }
+
+    .section-title i {
+        color: var(--accent);
+        margin-right: 8px;
+    }
+
+    /* Grid de campos */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        font-weight: 500;
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+        font-size: 0.7rem;
+    }
+
+    .form-control, .form-select {
+        border: 1.5px solid var(--border-light);
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        outline: none;
+        background-color: white;
+    }
+
+    .form-control:hover, .form-select:hover {
+        border-color: var(--accent);
+    }
+
+    /* Checkbox personalizado */
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.6rem 0;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--accent);
+    }
+
+    .form-check-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    /* Botones */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-cancel {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Mensajes de alerta */
+    .alert-custom {
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: none;
+    }
+
+    .alert-success-custom {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border-left: 4px solid var(--success);
+    }
+
+    .alert-error-custom {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border-left: 4px solid var(--danger);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-cancel, .btn-save {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h4>
+                <i class="fas fa-user-edit"></i>
+                {{ titulo }}
+            </h4>
+            <p>Actualice los datos del usuario en el sistema</p>
+        </div>
+
+        <div class="form-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-custom {% if message.tags == 'success' %}alert-success-custom{% else %}alert-error-custom{% endif %}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" id="editUserForm" novalidate>
+                {% csrf_token %}
+                
+                <!-- Sección: Datos Personales -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user"></i> Datos Personales
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-signature"></i> Nombres <span class="required-star">*</span>
+                            </label>
+                            <input type="text" name="nombres" value="{{ usuario.nombres }}" 
+                                   class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-tag"></i> Apellido Paterno
+                            </label>
+                            <input type="text" name="apepat" value="{{ usuario.apepat }}" 
+                                   class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-tag"></i> Apellido Materno
+                            </label>
+                            <input type="text" name="apemat" value="{{ usuario.apemat }}" 
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Documentación -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-id-card"></i> Documentación
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-id-card"></i> CI <span class="required-star">*</span>
+                            </label>
+                            <input type="text" name="ci" value="{{ usuario.ci }}" 
+                                   class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Extensión
+                            </label>
+                            <select name="extension" class="form-select">
+                                {% for codigo, nombre in opciones_extensiones %}
+                                    <option value="{{ codigo }}" {% if usuario.extension == codigo %}selected{% endif %}>
+                                        {{ nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-pen-alt"></i> Complemento
+                            </label>
+                            <input type="text" name="complemento" value="{{ usuario.complemento }}" 
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Contacto -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-envelope"></i> Contacto
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-envelope"></i> Correo Electrónico <span class="required-star">*</span>
+                            </label>
+                            <input type="email" name="correo" value="{{ form.correo.value|default:usuario.correo }}" 
+                                   class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-phone-alt"></i> Número de Celular
+                            </label>
+                            <input type="text" name="nro_celular" value="{{ usuario.nro_celular }}" 
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Información Académica -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-graduation-cap"></i> Información Académica
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-shield"></i> Tipo de Usuario
+                            </label>
+                            <select name="tipo_usuario" class="form-select">
+                                {% for tipo, nombre in opciones_usuarios %}
+                                    <option value="{{ tipo }}" {% if usuario.tipo_usuario == tipo %}selected{% endif %}>
+                                        {{ nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-graduation-cap"></i> RU
+                            </label>
+                            <input type="text" name="ru" value="{{ usuario.ru }}" 
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Estado -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user-clock"></i> Estado
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Fecha de Baja
+                            </label>
+                            <input type="datetime-local" name="fecha_baja" 
+                                   value="{{ usuario.fecha_baja|date:'Y-m-d\TH:i' }}" 
+                                   class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" name="esta_activo" class="form-check-input" 
+                                       id="esta_activo" {% if usuario.esta_activo %}checked{% endif %}>
+                                <label class="form-check-label" for="esta_activo">
+                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                    Usuario Activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="form-actions">
+                    <a href="{% url 'lista_usuarios' %}" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn-save" id="submitBtn">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editUserForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validaciones básicas
+        const nombres = form.querySelector('[name="nombres"]').value.trim();
+        const ci = form.querySelector('[name="ci"]').value.trim();
+        const correo = form.querySelector('[name="correo"]').value.trim();
+        
+        if (!nombres) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campo requerido',
+                text: 'El nombre del usuario es obligatorio',
+                confirmButtonColor: '#F59E0B'
+            });
+            return;
+        }
+        
+        if (!ci || ci.length < 5) {
+            Swal.fire({
+                icon: 'error',
+                title: 'CI inválido',
+                text: 'El CI debe tener al menos 5 dígitos',
+                confirmButtonColor: '#F59E0B'
+            });
+            return;
+        }
+        
+        if (!correo || !correo.includes('@')) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Correo inválido',
+                text: 'Ingrese un correo electrónico válido',
+                confirmButtonColor: '#F59E0B'
+            });
+            return;
+        }
+        
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        
+        // Crear FormData
+        const formData = new FormData(form);
+        
+        // Obtener token CSRF
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Enviar formulario vía AJAX
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Usuario actualizado!',
+                    text: data.message,
+                    confirmButtonColor: '#F59E0B',
+                    confirmButtonText: '<i class="fas fa-check"></i> Aceptar'
+                }).then(() => {
+                    window.location.href = data.redirect_url;
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Hubo un problema al actualizar el usuario',
+                    confirmButtonColor: '#EF4444'
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor. Intente nuevamente.',
+                confirmButtonColor: '#EF4444'
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+        });
+    });
+});
+</script>
+{% endblock %}

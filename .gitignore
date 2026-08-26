@@ -55,21 +55,28 @@ logs/
 nohup.out
 
 # ============================================
-# 📁 MEDIA Y ARCHIVOS SUBIDOS
+# 📁 MEDIA Y ARCHIVOS SUBIDOS (SOLO EXCLUIR ARCHIVOS, NO HTML)
 # ============================================
 media/
 staticfiles/
-static/
 static_root/
 media_root/
 uploads/
+
+# Solo excluir archivos multimedia, NO HTML
 *.png
 *.jpg
 *.jpeg
 *.gif
-*.pdf
 *.mp4
 *.mp3
+*.ico
+*.svg
+*.webp
+*.bmp
+
+# PDF SOLO si son subidos por usuarios (NO excluir templates)
+# *.pdf  # ← DESCOMENTAR SI EXCLUYES PDFS SUBIDOS
 
 # ============================================
 # 🔐 CREDENCIALES Y TOKENS - ¡IMPORTANTE!
@@ -110,7 +117,7 @@ get_token.py
 regenerate_token.py
 force_new_token.py
 
-# Directorio de secrets (donde guardas tokens localmente)
+# Directorio de secrets
 .secrets/
 secrets/
 .credentials/
@@ -125,13 +132,14 @@ credentials/
 .env.development
 .env.staging
 .env.test
-.env.example  # Si quieres compartir el ejemplo, no lo ignores
-!.env.example
 config.ini
 settings_local.py
 local_settings.py
 secrets.py
 secrets.json
+
+# ✅ PERMITIR .env.example (es un ejemplo)
+!.env.example
 
 # ============================================
 # 🚀 DEPLOYMENT
@@ -143,7 +151,6 @@ docker-compose.yml
 *.pid
 *.pid.lock
 .railway/
-Procfile
 
 # ============================================
 # 🔧 IDE Y EDITORES
@@ -211,8 +218,6 @@ package-lock.json
 docs/_build/
 *.doctest
 *.man
-*.pdf
-*.html
 site/
 
 # ============================================
@@ -306,7 +311,7 @@ tmp_*
 *.swo
 
 # ============================================
-# 🌐 NODE (si usas frontend)
+# 🌐 NODE
 # ============================================
 node_modules/
 npm-debug.log*
@@ -324,3 +329,17 @@ docker-compose.*.yml
 *.container
 *.image
 *.tar
+
+# ============================================
+# 🛠️ HERRAMIENTAS LOCALES
+# ============================================
+*.pyproj
+*.user
+*.suo
+*.userprefs
+*.sln
+*.csproj
+*.vbproj
+*.fsproj
+*.njsproj
+*.xproj

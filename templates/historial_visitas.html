@@ -1,0 +1,641 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA HISTORIAL DE VISITAS   */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .history-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .history-header {
+        margin-bottom: 2rem;
+    }
+
+    .history-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .history-header h1 i {
+        color: var(--accent);
+        font-size: 2rem;
+    }
+
+    .history-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
+    }
+
+    /* Tarjeta principal */
+    .history-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .card-header-custom h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-header-custom h3 i {
+        color: var(--accent);
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .history-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .history-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .history-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .history-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Fecha */
+    .date-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .date-day {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .date-time {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* Portada */
+    .book-cover {
+        width: 50px;
+        height: 65px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        transition: transform 0.2s;
+    }
+
+    .book-cover:hover {
+        transform: scale(1.05);
+    }
+
+    .cover-placeholder {
+        width: 50px;
+        height: 65px;
+        background: var(--bg-light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border-light);
+    }
+
+    /* Título */
+    .book-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .book-meta {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* Botones */
+    .btn-view {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    .btn-link {
+        background: var(--info);
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-link:hover {
+        background: #2563EB;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+    }
+
+    /* Modal de portada */
+    .modal-modern .modal-content {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .modal-modern .modal-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .modal-modern .modal-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-modern .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .history-container {
+            margin: 1rem auto;
+        }
+        .history-header h1 {
+            font-size: 1.3rem;
+        }
+        .history-table th, .history-table td {
+            padding: 0.75rem;
+        }
+        .btn-view, .btn-link {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="history-container">
+    <!-- Header -->
+    <div class="history-header">
+        <h1>
+            <i class="fas fa-history"></i>
+            Historial de Lecturas
+        </h1>
+        <p>Registro de todos los materiales que has consultado</p>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="history-card">
+        <div class="card-header-custom">
+            <h3>
+                <i class="fas fa-book-open"></i>
+                Libros Consultados
+            </h3>
+        </div>
+
+        <div class="table-wrapper">
+            {% if visitas %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Portada</th>
+                        <th>Título</th>
+                        <th style="text-align: center;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visita in visitas %}
+                    <tr>
+                        <td>
+                            <div class="date-cell">
+                                <span class="date-day">{{ visita.fecha_visualizacion|date:"d/m/Y" }}</span>
+                                <span class="date-time">{{ visita.fecha_visualizacion|date:"H:i" }} hrs</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if visita.libro_visitado.img_portada %}
+                                <img src="{{ visita.libro_visitado.img_portada.url }}" 
+                                     alt="{{ visita.libro_visitado.titulo }}" 
+                                     class="book-cover"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#portadaModal{{ visita.libro_visitado.id_libro }}">
+                            {% else %}
+                                <div class="cover-placeholder">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="book-title">{{ visita.libro_visitado.titulo }}</div>
+                            <div class="book-meta">
+                                {% if visita.libro_visitado.autores.all %}
+                                    <i class="fas fa-user"></i> 
+                                    {% for autor in visita.libro_visitado.autores.all %}
+                                        {{ autor.nombre }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="d-flex gap-2 justify-content-center">
+                                {% if visita.libro_visitado.pdf %}
+                                    <button class="btn-view" 
+                                            onclick="verPdf('{{ visita.libro_visitado.pdf.url|safe }}', '{{ visita.libro_visitado.id_libro }}')">
+                                        <i class="fas fa-file-pdf"></i> Ver PDF
+                                    </button>
+                                {% endif %}
+                                {% if visita.libro_visitado.pdf_url %}
+                                    <a href="{{ visita.libro_visitado.pdf_url }}" 
+                                       class="btn-link" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i> Enlace
+                                    </a>
+                                {% endif %}
+                                {% if not visita.libro_visitado.pdf and not visita.libro_visitado.pdf_url %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-ban"></i> No disponible
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de portada -->
+                    {% if visita.libro_visitado.img_portada %}
+                    <div class="modal fade modal-modern" id="portadaModal{{ visita.libro_visitado.id_libro }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">{{ visita.libro_visitado.titulo }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center p-0">
+                                    <img src="{{ visita.libro_visitado.img_portada.url }}" 
+                                         alt="{{ visita.libro_visitado.titulo }}"
+                                         class="img-fluid">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-book-open"></i>
+                <p>No has realizado ninguna visita aún.</p>
+                <p class="small">Explora el catálogo y comienza a descubrir nuevos libros.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar PDF -->
+<div class="modal fade modal-modern" id="pdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+        <div class="modal-content" style="min-height: 80vh;">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf text-danger"></i>
+                    Visualizando PDF
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row g-0" style="min-height: 70vh;">
+                    <!-- Barra lateral de controles -->
+                    <div class="col-lg-auto d-none d-lg-block bg-light border-end" style="width: 250px;">
+                        <div class="p-3">
+                            <div class="mb-4">
+                                <label class="form-label small text-muted mb-2">Navegación</label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button id="prevPage" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <input type="number" id="currentPage" class="form-control form-control-sm text-center" style="width: 70px;" min="1">
+                                    <span class="align-self-center small">de <span id="pageCount">0</span></span>
+                                    <button id="nextPage" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small text-muted mb-2">Zoom</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button id="zoomOut" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <span id="zoomLevel" class="small" style="min-width: 50px;">100%</span>
+                                    <button id="zoomIn" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visor PDF -->
+                    <div class="col" style="background: #f1f5f9; min-height: 70vh;">
+                        <div id="pdfContainer" class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+                            <div id="loadingMessage" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Cargando documento...</p>
+                            </div>
+                            <canvas id="pdfViewer" style="display: none; max-width: 100%; height: auto;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles móviles -->
+                <div class="d-lg-none p-2 bg-light border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            <button id="prevPageMobile" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <input type="number" id="currentPageMobile" class="form-control form-control-sm text-center" style="width: 60px;" min="1">
+                            <span class="small align-self-center">/ <span id="pageCountMobile">0</span></span>
+                            <button id="nextPageMobile" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button id="zoomOutMobile" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <span id="zoomLevelMobile" class="small" style="min-width: 50px;">100%</span>
+                            <button id="zoomInMobile" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+    // Configurar PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.0;
+
+    function verPdf(pdfUrl, libroId) {
+        // Registrar visita
+        fetch('{% url "registrar_visita_libro" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'libro_id=' + encodeURIComponent(libroId)
+        }).catch(error => console.error('Error al registrar visita:', error));
+
+        // Abrir modal y cargar PDF
+        const modal = new bootstrap.Modal(document.getElementById('pdfModal'));
+        modal.show();
+        
+        // Resetear variables
+        currentPage = 1;
+        scale = 1.0;
+        document.getElementById('zoomLevel').textContent = '100%';
+        document.getElementById('zoomLevelMobile').textContent = '100%';
+        
+        cargarPdf(pdfUrl);
+    }
+
+    function cargarPdf(pdfUrl) {
+        const loadingMessage = document.getElementById('loadingMessage');
+        const canvas = document.getElementById('pdfViewer');
+        
+        loadingMessage.style.display = 'block';
+        canvas.style.display = 'none';
+        
+        pdfjsLib.getDocument(pdfUrl).promise
+            .then(function(pdf) {
+                pdfDoc = pdf;
+                document.getElementById('pageCount').textContent = pdf.numPages;
+                document.getElementById('pageCountMobile').textContent = pdf.numPages;
+                document.getElementById('currentPage').max = pdf.numPages;
+                document.getElementById('currentPageMobile').max = pdf.numPages;
+                
+                loadingMessage.style.display = 'none';
+                canvas.style.display = 'block';
+                renderPage(currentPage);
+            })
+            .catch(function(error) {
+                console.error('Error al cargar PDF:', error);
+                loadingMessage.innerHTML = '<p class="text-danger">Error al cargar el PDF</p>';
+            });
+    }
+
+    function renderPage(pageNum) {
+        if (!pdfDoc) return;
+        
+        pdfDoc.getPage(pageNum).then(function(page) {
+            const canvas = document.getElementById('pdfViewer');
+            const context = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: scale });
+            
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            page.render(renderContext);
+            document.getElementById('currentPage').value = pageNum;
+            document.getElementById('currentPageMobile').value = pageNum;
+        });
+    }
+
+    // Controles desktop
+    document.getElementById('prevPage')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('nextPage')?.addEventListener('click', () => {
+        if (pdfDoc && currentPage < pdfDoc.numPages) {
+            currentPage++;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('currentPage')?.addEventListener('change', (e) => {
+        const page = parseInt(e.target.value);
+        if (pdfDoc && page >= 1 && page <= pdfDoc.numPages) {
+            currentPage = page;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('zoomIn')?.addEventListener('click', () => {
+        scale += 0.25;
+        document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+        document.getElementById('zoomLevelMobile').textContent = Math.round(scale * 100) + '%';
+        renderPage(currentPage);
+    });
+    document.getElementById('zoomOut')?.addEventListener('click', () => {
+        if (scale > 0.25) {
+            scale -= 0.25;
+            document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+            document.getElementById('zoomLevelMobile').textContent = Math.round(scale * 100) + '%';
+            renderPage(currentPage);
+        }
+    });
+
+    // Controles móviles
+    document.getElementById('prevPageMobile')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('nextPageMobile')?.addEventListener('click', () => {
+        if (pdfDoc && currentPage < pdfDoc.numPages) {
+            currentPage++;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('currentPageMobile')?.addEventListener('change', (e) => {
+        const page = parseInt(e.target.value);
+        if (pdfDoc && page >= 1 && page <= pdfDoc.numPages) {
+            currentPage = page;
+            renderPage(currentPage);
+        }
+    });
+    document.getElementById('zoomInMobile')?.addEventListener('click', () => {
+        scale += 0.25;
+        document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+        document.getElementById('zoomLevelMobile').textContent = Math.round(scale * 100) + '%';
+        renderPage(currentPage);
+    });
+    document.getElementById('zoomOutMobile')?.addEventListener('click', () => {
+        if (scale > 0.25) {
+            scale -= 0.25;
+            document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+            document.getElementById('zoomLevelMobile').textContent = Math.round(scale * 100) + '%';
+            renderPage(currentPage);
+        }
+    });
+
+    // Limpiar al cerrar modal
+    document.getElementById('pdfModal').addEventListener('hidden.bs.modal', function() {
+        pdfDoc = null;
+        currentPage = 1;
+        scale = 1.0;
+        const canvas = document.getElementById('pdfViewer');
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
+        document.getElementById('loadingMessage').style.display = 'block';
+        document.getElementById('loadingMessage').innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando documento...</p>
+        `;
+    });
+</script>
+{% endblock %}

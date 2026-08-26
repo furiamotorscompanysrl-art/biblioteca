@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA GALERÍA ARTÍSTICA      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .gallery-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* Header */
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .gallery-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .gallery-header h1 i {
+        background: none;
+        -webkit-text-fill-color: var(--accent);
+    }
+
+    .gallery-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Filtros */
+    .filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        padding: 0.5rem 1.2rem;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .filter-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Grid de imágenes */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* Tarjeta de obra */
+    .art-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    .art-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .art-image {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        background: var(--bg-light);
+    }
+
+    .art-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .art-card:hover .art-image img {
+        transform: scale(1.08);
+    }
+
+    .art-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .art-card:hover .art-overlay {
+        opacity: 1;
+    }
+
+    .art-overlay span {
+        color: white;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .art-info {
+        padding: 1rem;
+    }
+
+    .art-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+    }
+
+    .art-info .artist {
+        font-size: 0.8rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .art-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .category-badge {
+        background: var(--bg-light);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+    }
+
+    /* Modal moderno */
+    .modal-modern .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .modal-modern .modal-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .modal-modern .modal-title {
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-modern .modal-title i {
+        color: var(--accent);
+    }
+
+    .modal-modern .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .artwork-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .artwork-image {
+        background: var(--bg-light);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        min-height: 400px;
+    }
+
+    .artwork-image img {
+        max-width: 100%;
+        max-height: 450px;
+        object-fit: contain;
+        border-radius: 12px;
+    }
+
+    .artwork-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .artwork-info h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .info-section {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .info-label i {
+        color: var(--accent);
+    }
+
+    .info-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+
+    .description-text {
+        line-height: 1.6;
+    }
+
+    .pdf-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--accent);
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 40px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .pdf-link:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Estado vacío */
+    .empty-gallery {
+        text-align: center;
+        padding: 3rem;
+        background: var(--bg-light);
+        border-radius: 20px;
+    }
+
+    .empty-gallery i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .empty-gallery p {
+        color: var(--text-secondary);
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .artwork-details {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        .artwork-image {
+            min-height: 300px;
+        }
+        .artwork-image img {
+            max-height: 300px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .gallery-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .art-image {
+            height: 240px;
+        }
+        .gallery-header h1 {
+            font-size: 1.5rem;
+        }
+        .filter-container {
+            gap: 0.3rem;
+        }
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="gallery-container">
+    <!-- Header -->
+    <div class="gallery-header">
+        <h1>
+            <i class="fas fa-palette"></i>
+            Galería de Arte
+        </h1>
+        <p>Explora las obras de arte de nuestra colección</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-container">
+        <button class="filter-btn active" data-filter="all">Todas las Obras</button>
+        {% for categoria in categorias %}
+            <button class="filter-btn" data-filter="{{ categoria.nom_cat|slugify }}">{{ categoria.nom_cat }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Grid de imágenes -->
+    <div class="gallery-grid" id="galleryGrid">
+        {% for imagen in imagenes %}
+        <div class="art-card" data-categories="{% for cat in imagen.categorias.all %}{{ cat.nom_cat|slugify }} {% endfor %}">
+            <div class="art-image">
+                <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}" loading="lazy">
+                <div class="art-overlay">
+                    <span><i class="fas fa-expand"></i> Ver detalles</span>
+                </div>
+            </div>
+            <div class="art-info">
+                <h3>{{ imagen.titulo|truncatechars:40 }}</h3>
+                <div class="artist">
+                    <i class="fas fa-user"></i> {{ imagen.autorImg }}
+                </div>
+                <div class="art-categories">
+                    {% for categoria in imagen.categorias.all %}
+                        <span class="category-badge">{{ categoria.nom_cat }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade modal-modern" id="modal{{ imagen.id_Imagen }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-palette"></i>
+                            Detalles de la Obra
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="artwork-details">
+                        <div class="artwork-image">
+                            <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}">
+                        </div>
+                        <div class="artwork-info">
+                            <h2>{{ imagen.titulo }}</h2>
+                            
+                            <div class="info-section">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> Artista
+                                </div>
+                                <div class="info-value">{{ imagen.autorImg }}</div>
+                            </div>
+                            
+                            {% if imagen.descripcion %}
+                            <div class="info-section">
+                                <div class="info-label">
+                                    <i class="fas fa-align-left"></i> Descripción
+                                </div>
+                                <div class="info-value description-text">{{ imagen.descripcion }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="info-section">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> Fecha de registro
+                                </div>
+                                <div class="info-value">{{ imagen.fecha_subida|date:"d/m/Y" }}</div>
+                            </div>
+                            
+                            {% if imagen.categorias.all %}
+                            <div class="info-section">
+                                <div class="info-label">
+                                    <i class="fas fa-tags"></i> Categorías
+                                </div>
+                                <div class="info-value">
+                                    {% for categoria in imagen.categorias.all %}
+                                        <span class="category-badge">{{ categoria.nom_cat }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if imagen.pdf %}
+                            <a href="{{ imagen.pdf.url }}" class="pdf-link" target="_blank">
+                                <i class="fas fa-file-pdf"></i> Descargar documentación
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-gallery">
+            <i class="fas fa-images"></i>
+            <p>No hay imágenes disponibles en la galería</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Filtrado de imágenes
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const artCards = document.querySelectorAll('.art-card');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Actualizar botón activo
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            const filterValue = button.getAttribute('data-filter');
+            
+            artCards.forEach(card => {
+                const categories = card.getAttribute('data-categories') || '';
+                
+                if (filterValue === 'all' || categories.includes(filterValue)) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeInUp 0.4s ease-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Abrir modal al hacer clic en la tarjeta
+    document.querySelectorAll('.art-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Evitar que el modal se abra si se hizo clic en un enlace dentro
+            if (!e.target.closest('a')) {
+                const modalId = card.nextElementSibling?.id;
+                if (modalId) {
+                    const modal = new bootstrap.Modal(document.getElementById(modalId));
+                    modal.show();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

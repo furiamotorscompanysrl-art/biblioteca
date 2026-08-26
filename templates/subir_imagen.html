@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA SUBIR IMAGEN           */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Grid de campos */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.9rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+    }
+
+    .form-control, .form-select, textarea {
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Área de subida de archivos */
+    .file-upload-area {
+        background: var(--bg-light);
+        border: 2px dashed var(--border-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--accent);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .file-upload-area i {
+        font-size: 2.5rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-area h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .file-upload-area p {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin: 0.3rem 0 0;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .file-preview img {
+        max-width: 150px;
+        border-radius: 12px;
+        border: 2px solid var(--border-light);
+    }
+
+    /* Selector múltiple de categorías */
+    .multi-select-container {
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1.5px solid var(--border-light);
+        overflow: hidden;
+    }
+
+    .multi-select {
+        width: 100%;
+        min-height: 120px;
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+    }
+
+    .multi-select option {
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin-bottom: 2px;
+    }
+
+    .multi-select option:checked {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+    }
+
+    /* Botón submit */
+    .btn-submit {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1.5rem;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Información */
+    .info-note {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02));
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .info-note i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-note p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-cloud-upload-alt"></i>
+                Subir Imagen
+            </h1>
+            <p>Complete el formulario para añadir una nueva imagen a la galería</p>
+        </div>
+
+        <div class="form-body">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <!-- Título -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-heading"></i> Título de la imagen <span class="required-star">*</span>
+                        </label>
+                        {{ form.titulo|add_class:"form-control" }}
+                        <div class="form-text">Un título descriptivo y conciso</div>
+                    </div>
+
+                    <!-- Autor -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Autor de la imagen <span class="required-star">*</span>
+                        </label>
+                        {{ form.autorImg|add_class:"form-control" }}
+                        <div class="form-text">Nombre del autor o creador de la imagen</div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Descripción
+                        </label>
+                        {{ form.descripcion|add_class:"form-control" }}
+                        <div class="form-text">La descripción ayuda a otros a entender mejor el contenido</div>
+                    </div>
+
+                    <!-- Imagen de Portada -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> Imagen de Portada <span class="required-star">*</span>
+                        </label>
+                        <div class="file-upload-area" onclick="document.getElementById('id_img_portada').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h4>Subir imagen</h4>
+                            <p>Formatos: JPG, PNG, GIF. Máx 5MB</p>
+                            {{ form.img_portada|add_class:"form-control"|attr:"style:display: none;" }}
+                        </div>
+                        <div class="file-preview" id="imagePreview" style="display: none;">
+                            <img id="previewImg" src="" alt="Vista previa">
+                        </div>
+                    </div>
+
+                    <!-- PDF -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-file-pdf"></i> Documento PDF relacionado
+                        </label>
+                        <div class="file-upload-area" onclick="document.getElementById('id_pdf').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h4>Subir PDF</h4>
+                            <p>Formato: PDF. Máx 10MB</p>
+                            {{ form.pdf|add_class:"form-control"|attr:"style:display: none;" }}
+                        </div>
+                        <div class="file-preview" id="pdfPreview" style="display: none;">
+                            <div class="file-info">
+                                <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 2rem;"></i>
+                                <span id="pdfName"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-tags"></i> Categorías
+                        </label>
+                        <div class="multi-select-container">
+                            {{ form.categorias|add_class:"multi-select" }}
+                        </div>
+                        <div class="form-text">Selecciona una o más categorías para la imagen (Ctrl+clic para múltiples)</div>
+                    </div>
+                </div>
+
+                <!-- Nota informativa -->
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>Información:</strong> Los campos marcados con <span class="required-star">*</span> son obligatorios.
+                        Una vez subida la imagen, podrás agregar marcas de agua y gestionar sus detalles.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-upload"></i> Subir Imagen
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Previsualización de imagen
+    const imgInput = document.getElementById('id_img_portada');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+
+    if (imgInput) {
+        imgInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire('Error', 'La imagen excede el tamaño máximo de 5MB', 'error');
+                    e.target.value = '';
+                    imagePreview.style.display = 'none';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImg.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+    }
+
+    // Previsualización de PDF
+    const pdfInput = document.getElementById('id_pdf');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const pdfName = document.getElementById('pdfName');
+
+    if (pdfInput) {
+        pdfInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    Swal.fire('Error', 'El PDF excede el tamaño máximo de 10MB', 'error');
+                    e.target.value = '';
+                    pdfPreview.style.display = 'none';
+                    return;
+                }
+                pdfName.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+                pdfPreview.style.display = 'block';
+            } else {
+                pdfPreview.style.display = 'none';
+            }
+        });
+    }
+
+    // Envío del formulario
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validaciones
+        const titulo = document.getElementById('id_titulo')?.value.trim();
+        const autor = document.getElementById('id_autorImg')?.value.trim();
+        const imagen = document.getElementById('id_img_portada')?.files[0];
+        
+        if (!titulo) {
+            Swal.fire('Error', 'El título es obligatorio', 'error');
+            return;
+        }
+        
+        if (!autor) {
+            Swal.fire('Error', 'El autor es obligatorio', 'error');
+            return;
+        }
+        
+        if (!imagen) {
+            Swal.fire('Error', 'Debe seleccionar una imagen', 'error');
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Imagen subida!',
+                    text: 'La imagen se ha agregado correctamente a la galería',
+                    icon: 'success',
+                    confirmButtonColor: '#F59E0B',
+                    confirmButtonText: 'Ver lista de imágenes'
+                }).then(() => {
+                    window.location.href = "{% url 'lista_imagenes' %}";
+                });
+            } else {
+                throw new Error(data.error || 'Error al subir la imagen');
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'Hubo un problema al subir la imagen',
+                icon: 'error',
+                confirmButtonColor: '#EF4444'
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-upload"></i> Subir Imagen';
+        }
+    });
+</script>
+{% endblock %}

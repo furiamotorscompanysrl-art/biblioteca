@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA LISTA DE IMÁGENES      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .images-container {
+        padding: 1.5rem;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        font-size: 1.8rem;
+        color: var(--accent);
+    }
+
+    .page-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .page-title p {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-add:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Barra de búsqueda */
+    .search-wrapper {
+        background: white;
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-wrapper:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .search-wrapper i {
+        color: var(--text-secondary);
+    }
+
+    .search-wrapper input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    /* Tabla */
+    .table-wrapper {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    .images-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .images-table th {
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid var(--border-light);
+        white-space: nowrap;
+    }
+
+    .images-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        vertical-align: middle;
+    }
+
+    .images-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .images-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    /* Imagen miniatura */
+    .image-thumb {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        transition: transform 0.2s;
+    }
+
+    .image-thumb:hover {
+        transform: scale(1.05);
+    }
+
+    /* Badges de categorías */
+    .category-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        background: var(--bg-light);
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin: 0.1rem;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-watermark {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .btn-watermark:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+
+    .btn-edit:hover {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    /* Paginación */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pagination-info {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .page-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .page-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Modal */
+    .modal-modern .modal-content {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .modal-modern .modal-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .modal-modern .modal-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-modern .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .images-container {
+            padding: 1rem;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-action {
+            justify-content: center;
+        }
+        .pagination-wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+
+<div class="images-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <i class="fas fa-images"></i>
+            <div>
+                <h1>Galería de Imágenes</h1>
+                <p>Administra las imágenes de la colección artística</p>
+            </div>
+        </div>
+        <a href="{% url 'agregar_imagen' %}" class="btn-add">
+            <i class="fas fa-plus"></i> Agregar Imagen
+        </a>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Buscar por título, autor o descripción...">
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table class="images-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Imagen</th>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>Descripción</th>
+                    <th>PDF</th>
+                    <th>Fecha</th>
+                    <th>Categorías</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="imagenesTableBody">
+                {% for imagen in page_obj %}
+                <tr>
+                    <td>#{{ imagen.id_Imagen }}</td>
+                    <td>
+                        <img src="{{ imagen.img_portada.url }}" 
+                             class="image-thumb" 
+                             onclick="mostrarPortada('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
+                             alt="{{ imagen.titulo }}">
+                    </td>
+                    <td><strong>{{ imagen.titulo|truncatechars:40 }}</strong></td>
+                    <td>{{ imagen.autorImg|default:"—" }}</td>
+                    <td>{{ imagen.descripcion|truncatechars:50|default:"—" }}</td>
+                    <td>
+                        {% if imagen.pdf %}
+                            <a href="{{ imagen.pdf.url }}" target="_blank" class="file-link">
+                                <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
+                            </a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ imagen.fecha_subida|date:"d/m/Y" }}</td>
+                    <td>
+                        {% for categoria in imagen.categorias.all %}
+                            <span class="category-badge">{{ categoria.nom_cat }}</span>
+                        {% empty %}
+                            <span class="text-muted">—</span>
+                        {% endfor %}
+                    </td>
+                    <td style="text-align: center;">
+                        <div class="action-buttons">
+                            <a href="{% url 'editar_marca' imagen.id_Imagen %}" class="btn-action btn-watermark" title="Agregar marca de agua">
+                                <i class="fas fa-watermark"></i> Marca
+                            </a>
+                            <a href="{% url 'editar_imagen' imagen.id_Imagen %}" class="btn-action btn-edit" title="Editar imagen">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <button onclick="confirmarEliminacion({{ imagen.id_Imagen }})" class="btn-action btn-delete" title="Eliminar imagen">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-images fa-3x mb-2" style="color: var(--text-secondary);"></i>
+                        <p>No hay imágenes registradas</p>
+                        <a href="{% url 'agregar_imagen' %}" class="btn-add" style="display: inline-flex; margin-top: 1rem;">
+                            <i class="fas fa-plus"></i> Agregar primera imagen
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            <i class="fas fa-chart-simple"></i>
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            | Total: {{ page_obj.paginator.count }} imágenes
+        </div>
+        <div class="pagination-buttons">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-btn">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal para portada -->
+<div class="modal fade modal-modern" id="portadaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="portadaModalLabel">Vista de Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="portadaImagen" class="img-fluid" style="max-height: 80vh; width: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Mostrar portada en modal
+    function mostrarPortada(url, titulo) {
+        const modal = new bootstrap.Modal(document.getElementById('portadaModal'));
+        document.getElementById('portadaModalLabel').textContent = titulo || 'Vista de Imagen';
+        document.getElementById('portadaImagen').src = url;
+        modal.show();
+    }
+
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const input = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#imagenesTableBody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    });
+
+    // Confirmar eliminación
+    function confirmarEliminacion(idImagen) {
+        Swal.fire({
+            title: '¿Eliminar imagen?',
+            text: "Esta acción no se puede deshacer.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`{% url 'eliminar_imagen' 0 %}`.replace('0', idImagen), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: '¡Eliminada!',
+                            text: 'La imagen ha sido eliminada correctamente.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        throw new Error('Error');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'No se pudo eliminar la imagen.', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

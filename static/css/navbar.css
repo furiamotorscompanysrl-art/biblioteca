@@ -1,0 +1,133 @@
+.nav-link {
+  transition: color 0.3s ease;
+  padding: 0.5rem 1rem;
+  margin: 0 0.2rem;
+  border-radius: 4px;
+}
+
+.nav-link:hover {
+  color: #ee8414 !important;
+  background-color: rgba(238, 132, 20, 0.1);
+}
+
+.nav-link.active {
+  position: relative;
+  color: #ee8414 !important;
+  background-color: rgba(238, 132, 20, 0.15);
+  border-bottom: 2px solid #ee8414;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  min-height: 76px;
+}
+
+.navbar {
+  padding: 0.5rem 1rem;
+}
+
+.navbar-brand {
+  font-size: 1.2rem;
+  white-space: nowrap;
+}
+
+.navbar-brand img {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-brand {
+      font-size: 1rem;
+  }
+  .navbar-brand img {
+      width: 50px;
+      height: 50px;
+  }
+  .navbar-nav {
+      padding: 1rem 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar-brand-text {
+      font-size: 0.9rem;
+  }
+  .navbar-brand img {
+      width: 40px;
+      height: 40px;
+  }
+}
+
+.login-btn {
+    background: linear-gradient(45deg, #2196F3, #1976D2);
+    border: none;
+    border-radius: 25px;
+    padding: 8px 20px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.login-btn:hover {
+    background: linear-gradient(45deg, #1976D2, #1565C0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.login-btn .fas {
+    transition: transform 0.3s ease;
+}
+
+.login-btn:hover .fas {
+    transform: translateX(3px);
+}
+
+.login-prompt {
+    transition: all 0.3s ease;
+}
+
+.login-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid #fff;
+}
+
+.login-btn:hover {
+    background-color: #fff;
+    color: #212529;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.login-prompt span {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* Animación suave para el mensaje */
+.login-prompt span i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .login-btn {
+        padding: 6px 15px;
+        font-size: 0.9rem;
+    }
+}

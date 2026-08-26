@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA PERFIL DE USUARIO      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    .profile-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .profile-header h1 i {
+        background: none;
+        -webkit-text-fill-color: var(--accent);
+    }
+
+    .profile-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Tarjeta principal */
+    .profile-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Avatar */
+    .avatar-section {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 2rem;
+        text-align: center;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        border: 3px solid var(--accent);
+    }
+
+    .avatar-circle i {
+        font-size: 3rem;
+        color: white;
+    }
+
+    .avatar-section h2 {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    .avatar-section .role-badge {
+        display: inline-block;
+        background: rgba(245, 158, 11, 0.2);
+        padding: 0.2rem 1rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        color: var(--accent);
+        margin-top: 0.5rem;
+    }
+
+    /* Cuerpo */
+    .profile-body {
+        padding: 2rem;
+    }
+
+    /* Secciones */
+    .info-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-light);
+    }
+
+    .section-title i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .section-title h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    /* Grid de información */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .info-item {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 0.3rem;
+    }
+
+    .info-label i {
+        color: var(--accent);
+        font-size: 0.7rem;
+    }
+
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    /* Credenciales */
+    .credentials-section {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .credential-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .credential-item:last-child {
+        border-bottom: none;
+    }
+
+    .credential-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .credential-label i {
+        color: var(--accent);
+    }
+
+    /* Nota informativa */
+    .info-note {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .info-note i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-note p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-container {
+            margin: 1rem auto;
+        }
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+        }
+        .profile-body {
+            padding: 1.5rem;
+        }
+        .credential-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>
+            <i class="fas fa-user-circle"></i>
+            Mi Perfil
+        </h1>
+        <p>Información personal y datos de acceso</p>
+    </div>
+
+    <div class="profile-card">
+        <!-- Avatar -->
+        <div class="avatar-section">
+            <div class="avatar-circle">
+                <i class="fas fa-user"></i>
+            </div>
+            <h2>{{ usuario.nombres }} {{ usuario.apepat }}</h2>
+            <span class="role-badge">
+                <i class="fas fa-tag"></i> {{ usuario.tipo_usuario }}
+            </span>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="profile-body">
+            <!-- Credenciales de acceso -->
+            <div class="credentials-section">
+                <div class="credential-item">
+                    <div class="credential-label">
+                        <i class="fas fa-envelope"></i> Correo Electrónico
+                    </div>
+                    <div>{{ usuario.correo }}</div>
+                </div>
+            </div>
+
+            <!-- Nota informativa sobre el acceso -->
+            <div class="info-note">
+                <i class="fas fa-shield-alt"></i>
+                <p>
+                    <strong>Acceso seguro:</strong> El acceso a la plataforma se realiza mediante 
+                    <strong>código de verificación</strong> enviado a su correo electrónico. 
+                    No es necesario recordar contraseñas.
+                </p>
+            </div>
+
+            <!-- Información Personal -->
+            <div class="info-section">
+                <div class="section-title">
+                    <i class="fas fa-id-card"></i>
+                    <h3>Información Personal</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-user"></i> Nombres
+                        </div>
+                        <div class="info-value">{{ usuario.nombres }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-user-tag"></i> Apellido Paterno
+                        </div>
+                        <div class="info-value">{{ usuario.apepat }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-user-tag"></i> Apellido Materno
+                        </div>
+                        <div class="info-value">{{ usuario.apemat }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-id-card"></i> CI
+                        </div>
+                        <div class="info-value">{{ usuario.ci }} {% if usuario.extension %}({{ usuario.extension }}){% endif %}</div>
+                    </div>
+                    {% if usuario.complemento %}
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-pen-alt"></i> Complemento
+                        </div>
+                        <div class="info-value">{{ usuario.complemento }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-phone-alt"></i> Celular
+                        </div>
+                        <div class="info-value">{{ usuario.nro_celular }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Académica -->
+            {% if usuario.ru or usuario.tipo_usuario == 'Estudiante' %}
+            <div class="info-section">
+                <div class="section-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Información Académica</h3>
+                </div>
+                <div class="info-grid">
+                    {% if usuario.ru %}
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-id-badge"></i> Registro Universitario
+                        </div>
+                        <div class="info-value">{{ usuario.ru }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Registro
+                        </div>
+                        <div class="info-value">{{ usuario.fecha_alta|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

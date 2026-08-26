@@ -1,0 +1,898 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA CHATBOT                */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --chat-user-bg: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        --chat-bot-bg: #F3F4F6;
+    }
+
+    .chatbot-container {
+        max-width: 1400px;
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header */
+    .chatbot-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chatbot-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .chatbot-header h2 i {
+        color: var(--accent);
+        font-size: 2rem;
+    }
+
+    .chatbot-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Estilos para el contenido del chat */
+    .message-bubble {
+        word-wrap: break-word;
+    }
+    
+    .message-bubble p {
+        margin: 0;
+    }
+    
+    .message-bubble strong {
+        color: var(--accent);
+    }
+    
+    .message-bubble code {
+        background: var(--bg-light);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+    
+    .resultado-libro {
+        margin-bottom: 8px;
+    }
+    
+    .resultado-libro strong {
+        color: var(--primary-dark);
+    }
+
+    /* Chat Container */
+    .chat-main-container {
+        display: flex;
+        gap: 1.5rem;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        min-height: 600px;
+    }
+
+    /* ============================================ */
+    /* SIDEBARS                                     */
+    /* ============================================ */
+    .chat-sidebar {
+        width: 280px;
+        background: var(--bg-light);
+        padding: 1.2rem;
+        transition: all 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .chat-sidebar.left {
+        border-right: 1px solid var(--border-light);
+    }
+
+    .chat-sidebar.right {
+        border-left: 1px solid var(--border-light);
+    }
+
+    .sidebar-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .sidebar-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sidebar-title i {
+        color: var(--accent);
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.8rem;
+        background: white;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+        text-align: left;
+    }
+
+    .action-btn:hover {
+        border-color: var(--accent);
+        background: rgba(245, 158, 11, 0.05);
+        transform: translateX(5px);
+    }
+
+    .action-btn i {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-light);
+        border-radius: 10px;
+        color: var(--accent);
+        font-size: 1rem;
+    }
+
+    .action-btn-info {
+        flex: 1;
+    }
+
+    .action-btn-info span {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: block;
+    }
+
+    .action-btn-info small {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* ============================================ */
+    /* CHAT PRINCIPAL                               */
+    /* ============================================ */
+    .chat-main-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+    }
+
+    /* Mensajes */
+    .chat-messages {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+        max-height: 500px;
+        min-height: 500px;
+    }
+
+    .message {
+        display: flex;
+        margin-bottom: 1rem;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .message.user {
+        justify-content: flex-end;
+    }
+
+    .message.bot {
+        justify-content: flex-start;
+    }
+
+    .message-bubble {
+        max-width: 70%;
+        padding: 0.8rem 1.2rem;
+        border-radius: 18px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .message.user .message-bubble {
+        background: var(--chat-user-bg);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.bot .message-bubble {
+        background: var(--chat-bot-bg);
+        color: var(--text-primary);
+        border-bottom-left-radius: 4px;
+    }
+
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+    }
+
+    .message.user .message-avatar {
+        order: 2;
+        background: var(--primary);
+        color: white;
+    }
+
+    .message.bot .message-avatar {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* Input area */
+    .chat-input-area {
+        padding: 1rem 1.5rem 1.5rem;
+        border-top: 1px solid var(--border-light);
+        background: white;
+    }
+
+    .input-group-custom {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+        background: var(--bg-light);
+        border-radius: 60px;
+        padding: 0.3rem 0.3rem 0.3rem 1rem;
+        border: 1px solid var(--border-light);
+        transition: all 0.2s ease;
+    }
+
+    .input-group-custom:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .input-group-custom input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 0.8rem 0;
+        font-size: 0.9rem;
+        outline: none;
+    }
+
+    .voice-btn {
+        background: none;
+        border: none;
+        color: var(--accent);
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .voice-btn:hover {
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .send-btn {
+        background: var(--accent);
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .send-btn:hover {
+        background: var(--accent-hover);
+        transform: scale(1.05);
+    }
+
+    /* Input hint */
+    .input-hint {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 0.8rem;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* Toggle buttons para móvil */
+    .sidebar-toggle {
+        display: none;
+        position: fixed;
+        bottom: 100px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: var(--card-shadow);
+    }
+
+    .sidebar-toggle.left-toggle {
+        left: 20px;
+    }
+
+    .sidebar-toggle.right-toggle {
+        right: 20px;
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Scrollbar personalizada */
+    .chat-messages::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: var(--bg-light);
+        border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 3px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .chat-sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            width: 280px;
+            background: white;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chat-sidebar.left.active {
+            transform: translateX(0);
+        }
+
+        .chat-sidebar.right.active {
+            transform: translateX(0);
+            right: 0;
+            left: auto;
+        }
+
+        .sidebar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-main-area {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .message-bubble {
+            max-width: 85%;
+        }
+        .chatbot-header h2 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="chatbot-container">
+    <div class="chatbot-header">
+        <h2>
+            <i class="fas fa-robot"></i>
+            Asistente Virtual
+        </h2>
+        <p>Consulta nuestro catálogo de libros, revistas y recursos bibliográficos</p>
+    </div>
+
+    <div class="chat-main-container">
+        <!-- Sidebar Izquierdo - Preguntas Frecuentes -->
+        <div class="chat-sidebar left" id="leftSidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-lightbulb"></i> Preguntas Frecuentes
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="enviarPregunta('¿Cómo busco un libro?')">
+                        <i class="fas fa-book"></i>
+                        <div class="action-btn-info">
+                            <span>¿Cómo buscar un libro?</span>
+                            <small>Guía rápida de búsqueda</small>
+                        </div>
+                    </button>
+                    <button class="action-btn" onclick="enviarPregunta('¿Qué tipos de libros hay disponibles?')">
+                        <i class="fas fa-list"></i>
+                        <div class="action-btn-info">
+                            <span>Tipos de libros</span>
+                            <small>Ver categorías disponibles</small>
+                        </div>
+                    </button>
+                    <button class="action-btn" onclick="enviarPregunta('Muéstrame las novedades')">
+                        <i class="fas fa-star"></i>
+                        <div class="action-btn-info">
+                            <span>Novedades</span>
+                            <small>Últimas adiciones</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-life-ring"></i> Ayuda y Soporte
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="mostrarAyuda()">
+                        <i class="fas fa-graduation-cap"></i>
+                        <div class="action-btn-info">
+                            <span>Guía Rápida</span>
+                            <small>Consejos de ayuda</small>
+                        </div>
+                    </button>
+                    <button class="action-btn" onclick="mostrarFAQ()">
+                        <i class="fas fa-question-circle"></i>
+                        <div class="action-btn-info">
+                            <span>Centro de Ayuda</span>
+                            <small>Dudas comunes</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Principal -->
+        <div class="chat-main-area">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-bubble">
+                        🤖 ¡Hola! Soy el asistente virtual de la Biblioteca ARTyDIS.<br><br>
+                        Puedo ayudarte a buscar libros, recomendar lecturas y responder preguntas.<br><br>
+                        <strong>Ejemplos de preguntas:</strong><br>
+                        • 📚 "Muéstrame libros de arte"<br>
+                        • ✍️ "Busca libros del autor García Márquez"<br>
+                        • 🔍 "tipo:REVISTA"<br>
+                        • 💡 "Recomiéndame algo para leer"<br>
+                        • 📖 "¿Qué novedades hay?"
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-group-custom">
+                    <input type="text" id="chatInput" placeholder="Escribe tu consulta aquí..." autocomplete="off">
+                    <button class="voice-btn" onclick="toggleVoiceInput()" title="Entrada por voz">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="send-btn" onclick="enviarMensaje()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="input-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Presiona Enter para enviar | <i class="fas fa-microphone"></i> Usa el micrófono para dictar
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Derecho - Acciones Rápidas -->
+        <div class="chat-sidebar right" id="rightSidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-bolt"></i> Acciones Rápidas
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="limpiarChat()">
+                        <i class="fas fa-broom"></i>
+                        <div class="action-btn-info">
+                            <span>Limpiar Chat</span>
+                            <small>Reiniciar conversación</small>
+                        </div>
+                    </button>
+                    <button class="action-btn" onclick="window.location.href='/historial_visitas'">
+                        <i class="fas fa-history"></i>
+                        <div class="action-btn-info">
+                            <span>Historial de Visitas</span>
+                            <small>Libros consultados</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-search"></i> Búsqueda Avanzada
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="buscarExterno()">
+                        <i class="fab fa-google"></i>
+                        <div class="action-btn-info">
+                            <span>Búsqueda Externa</span>
+                            <small>Google Académico</small>
+                        </div>
+                    </button>
+                    <button class="action-btn" onclick="recursosVirtuales()">
+                        <i class="fas fa-university"></i>
+                        <div class="action-btn-info">
+                            <span>Recursos Virtuales</span>
+                            <small>Plataformas digitales</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones toggle para móvil -->
+<button class="sidebar-toggle left-toggle" id="leftToggleBtn">
+    <i class="fas fa-chevron-right"></i>
+</button>
+<button class="sidebar-toggle right-toggle" id="rightToggleBtn">
+    <i class="fas fa-chevron-left"></i>
+</button>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // ============================================
+    // ELEMENTOS DEL DOM
+    // ============================================
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const leftSidebar = document.getElementById('leftSidebar');
+    const rightSidebar = document.getElementById('rightSidebar');
+    const leftToggle = document.getElementById('leftToggleBtn');
+    const rightToggle = document.getElementById('rightToggleBtn');
+
+    // ============================================
+    // FUNCIONES DEL CHAT
+    // ============================================
+    
+    // Formatear texto para mejor legibilidad
+    function formatearRespuesta(texto) {
+        if (!texto) return '';
+        
+        // Convertir markdown básico a HTML
+        let formateado = texto;
+        
+        // Reemplazar **texto** por <strong>texto</strong>
+        formateado = formateado.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Reemplazar *texto* por <em>texto</em>
+        formateado = formateado.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Convertir saltos de línea a <br>
+        formateado = formateado.replace(/\n/g, '<br>');
+        
+        // Mejorar listas numeradas
+        formateado = formateado.replace(/(\d+)\.\s/g, '<br><strong>$1.</strong> ');
+        
+        // Mejorar listas con viñetas
+        formateado = formateado.replace(/•\s/g, '<br>• ');
+        
+        return formateado;
+    }
+    
+    function agregarMensaje(texto, esUsuario) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${esUsuario ? 'user' : 'bot'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = esUsuario ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        
+        if (typeof texto === 'object' && texto.html) {
+            bubble.innerHTML = texto.html;
+        } else if (esUsuario) {
+            bubble.textContent = texto;
+        } else {
+            // Formatear la respuesta del bot
+            bubble.innerHTML = formatearRespuesta(texto);
+        }
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+        chatMessages.appendChild(messageDiv);
+        
+        // Scroll al final
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function mostrarCargando() {
+        let loading = document.getElementById('loadingMessage');
+        if (loading) loading.remove();
+        
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'message bot';
+        loadingDiv.id = 'loadingMessage';
+        loadingDiv.innerHTML = `
+            <div class="message-avatar"><i class="fas fa-robot"></i></div>
+            <div class="message-bubble">
+                <i class="fas fa-spinner fa-spin"></i> Pensando...
+            </div>
+        `;
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function quitarCargando() {
+        const loading = document.getElementById('loadingMessage');
+        if (loading) loading.remove();
+    }
+
+    // Palabras clave para búsqueda local
+    const palabrasBusquedaLocal = ['libro', 'buscar', 'encuentra', 'título', 'autor', 'tipo:', 'novedades', 'recomienda', 'muéstrame', 'dame', 'muestrame'];
+
+    async function usarIA(texto) {
+        mostrarCargando();
+        try {
+            const response = await fetch('/chat-gemini/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ message: texto })
+            });
+            
+            const data = await response.json();
+            quitarCargando();
+            
+            if (data.success) {
+                agregarMensaje(data.response, false);
+            } else {
+                agregarMensaje("Lo siento, el asistente no está disponible en este momento. Por favor, intenta más tarde.", false);
+            }
+        } catch (error) {
+            quitarCargando();
+            console.error('Error en IA:', error);
+            agregarMensaje("Lo siento, hubo un problema de conexión con el asistente.", false);
+        }
+    }
+
+    async function enviarMensaje() {
+        const texto = chatInput.value.trim();
+        if (!texto) return;
+        
+        agregarMensaje(texto, true);
+        chatInput.value = '';
+        mostrarCargando();
+        
+        // Determinar si es búsqueda local
+        const esBusquedaLocal = palabrasBusquedaLocal.some(palabra => 
+            texto.toLowerCase().includes(palabra)
+        );
+        
+        try {
+            if (esBusquedaLocal) {
+                // Buscar en la biblioteca local
+                const response = await fetch(`/buscar_libros/?q=${encodeURIComponent(texto)}`);
+                const data = await response.json();
+                quitarCargando();
+                
+                if (Array.isArray(data) && data.length > 0 && data[0].titulo) {
+                    let librosMostrados = 0;
+                    data.forEach(item => {
+                        if (item.titulo && librosMostrados < 5) {
+                            const html = `
+                                <div class="resultado-libro" style="border-bottom: 1px solid #eee; padding: 8px 0;">
+                                    <strong>📖 ${item.titulo}</strong><br>
+                                    ${item.autores ? `✍️ ${item.autores}<br>` : ''}
+                                    ${item.descripcion ? `📝 ${item.descripcion.substring(0, 150)}...<br>` : ''}
+                                    ${item.pdf ? `<a href="${item.pdf}" target="_blank" style="color: var(--accent);">📄 Ver PDF</a>` : ''}
+                                </div>
+                            `;
+                            agregarMensaje({ html: html }, false);
+                            librosMostrados++;
+                        }
+                    });
+                    if (librosMostrados === 0) {
+                        await usarIA(texto);
+                    }
+                } else {
+                    await usarIA(texto);
+                }
+            } else {
+                // Consulta general, usar IA directamente
+                await usarIA(texto);
+            }
+        } catch (error) {
+            quitarCargando();
+            console.error('Error:', error);
+            await usarIA(texto);
+        }
+    }
+
+    // Mantener las funciones existentes
+    function enviarPregunta(pregunta) {
+        chatInput.value = pregunta;
+        enviarMensaje();
+        if (window.innerWidth <= 992) {
+            leftSidebar.classList.remove('active');
+            rightSidebar.classList.remove('active');
+        }
+    }
+
+    function limpiarChat() {
+        chatMessages.innerHTML = '';
+        const mensajeBienvenida = `
+            🤖 ¡Hola! Soy el asistente virtual de la Biblioteca ARTyDIS.<br><br>
+            Puedo ayudarte a buscar libros, recomendar lecturas y responder preguntas.<br><br>
+            <strong>Ejemplos de preguntas:</strong><br>
+            • 📚 "Muéstrame libros de arte"<br>
+            • ✍️ "Busca libros del autor García Márquez"<br>
+            • 🔍 "tipo:REVISTA"<br>
+            • 💡 "Recomiéndame algo para leer"<br>
+            • 📖 "¿Qué novedades hay?"
+        `;
+        agregarMensaje(mensajeBienvenida, false);
+    }
+
+    function mostrarAyuda() {
+        const ayuda = `
+            <strong>🔍 Guía Rápida de Búsqueda:</strong><br><br>
+            • Para buscar por tipo: <code>tipo:LIBRO</code> o <code>tipo:REVISTA</code><br>
+            • Para buscar por autor: <code>autor:nombre</code><br>
+            • Para ver novedades: <code>novedades</code><br>
+            • Para recomendaciones: <code>recomendaciones</code><br><br>
+            <strong>Ejemplos:</strong><br>
+            • "libros de arte"<br>
+            • "tipo:REVISTA"<br>
+            • "autor:García Márquez"
+        `;
+        agregarMensaje(ayuda, false);
+    }
+
+    function mostrarFAQ() {
+        const faq = `
+            <strong>❓ Preguntas Frecuentes:</strong><br><br>
+            <strong>¿Cómo busco un libro?</strong><br>
+            Simplemente escribe el título, autor o tema que buscas.<br><br>
+            <strong>¿Puedo ver PDFs online?</strong><br>
+            Sí, los materiales que tienen PDF disponible pueden verse online.<br><br>
+            <strong>¿Qué tipos de materiales hay?</strong><br>
+            Libros, revistas, artículos, tesis y más.<br><br>
+            <strong>¿Cómo sugiero un libro?</strong><br>
+            Ve a la sección "Sugerencias" en el menú principal.
+        `;
+        agregarMensaje(faq, false);
+    }
+
+    function toggleVoiceInput() {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.start();
+            
+            recognition.onresult = (event) => {
+                const texto = event.results[0][0].transcript;
+                chatInput.value = texto;
+                enviarMensaje();
+            };
+        } else {
+            Swal.fire('No compatible', 'Tu navegador no soporta entrada por voz', 'warning');
+        }
+    }
+
+    function buscarExterno() {
+        window.open('https://scholar.google.com/', '_blank');
+    }
+
+    function recursosVirtuales() {
+        Swal.fire({
+            title: 'Recursos Virtuales',
+            html: `
+                <p>Plataformas recomendadas:</p>
+                <ul style="text-align: left;">
+                    <li>📚 Google Académico</li>
+                    <li>📖 SciELO</li>
+                    <li>🔍 Redalyc</li>
+                    <li>📘 DOAJ</li>
+                </ul>
+            `,
+            icon: 'info',
+            confirmButtonColor: '#F59E0B'
+        });
+    }
+
+    // ============================================
+    // TOGGLE SIDEBARS (MÓVIL)
+    // ============================================
+    leftToggle.addEventListener('click', () => {
+        leftSidebar.classList.toggle('active');
+        rightSidebar.classList.remove('active');
+    });
+
+    rightToggle.addEventListener('click', () => {
+        rightSidebar.classList.toggle('active');
+        leftSidebar.classList.remove('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 992) {
+            if (!leftSidebar.contains(e.target) && !leftToggle.contains(e.target)) {
+                leftSidebar.classList.remove('active');
+            }
+            if (!rightSidebar.contains(e.target) && !rightToggle.contains(e.target)) {
+                rightSidebar.classList.remove('active');
+            }
+        }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            enviarMensaje();
+        }
+    });
+</script>
+{% endblock %}

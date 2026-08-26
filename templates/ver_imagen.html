@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA VER IMAGEN             */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .image-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .image-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+        text-align: center;
+    }
+
+    .image-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .image-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .image-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .image-body {
+        padding: 2rem;
+    }
+
+    /* Layout de dos columnas */
+    .image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Columna izquierda - Imagen */
+    .image-preview {
+        background: var(--bg-light);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .main-image {
+        max-width: 100%;
+        max-height: 500px;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        object-fit: contain;
+    }
+
+    /* Columna derecha - Información */
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .info-card {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.2rem;
+    }
+
+    .info-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .info-title i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-title h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        width: 120px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .info-label i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .description-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Categorías */
+    .categories-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .category-badge {
+        background: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-download {
+        flex: 1;
+        padding: 0.8rem;
+        background: var(--success);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-download:hover {
+        background: #0D9488;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .btn-back {
+        flex: 1;
+        padding: 0.8rem;
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+        background: var(--bg-light);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .image-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .image-container {
+            margin: 1rem auto;
+        }
+        .image-body {
+            padding: 1.5rem;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-label {
+            width: auto;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="image-container">
+    <div class="image-card">
+        <div class="image-header">
+            <h1>
+                <i class="fas fa-image"></i>
+                {{ imagen.titulo }}
+            </h1>
+            <p>Detalles de la obra</p>
+        </div>
+
+        <div class="image-body">
+            <div class="image-grid">
+                <!-- Columna izquierda - Imagen -->
+                <div class="image-preview">
+                    <img src="{{ imagen.img_portada.url }}" class="main-image" alt="{{ imagen.titulo }}">
+                </div>
+
+                <!-- Columna derecha - Información -->
+                <div class="info-section">
+                    <!-- Información básica -->
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Información de la Obra</h3>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-user"></i> Autor
+                            </div>
+                            <div class="info-value">{{ imagen.autorImg }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-calendar"></i> Fecha de Subida
+                            </div>
+                            <div class="info-value">{{ imagen.fecha_subida|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        {% if imagen.fecha_subida|date:"Y" != imagen.fecha_subida|date:"Y" %}
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-calendar-alt"></i> Año
+                            </div>
+                            <div class="info-value">{{ imagen.fecha_subida|date:"Y" }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Descripción -->
+                    {% if imagen.descripcion %}
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-align-left"></i>
+                            <h3>Descripción</h3>
+                        </div>
+                        <p class="description-text">{{ imagen.descripcion }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Categorías -->
+                    {% if imagen.categorias.all %}
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-tags"></i>
+                            <h3>Categorías</h3>
+                        </div>
+                        <div class="categories-list">
+                            {% for categoria in imagen.categorias.all %}
+                                <span class="category-badge">{{ categoria.nom_cat }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Acciones -->
+                    <div class="action-buttons">
+                        {% if imagen.pdf %}
+                            <a href="{{ imagen.pdf.url }}" class="btn-download" download>
+                                <i class="fas fa-download"></i> Descargar PDF
+                            </a>
+                        {% else %}
+                            <div class="btn-download" style="background: #9CA3AF; cursor: not-allowed;">
+                                <i class="fas fa-ban"></i> PDF no disponible
+                            </div>
+                        {% endif %}
+                        <a href="javascript:history.back()" class="btn-back">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

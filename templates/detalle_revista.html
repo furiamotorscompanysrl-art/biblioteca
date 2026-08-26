@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA DETALLE DE REVISTA     */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .detail-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* Header */
+    .detail-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.8rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .detail-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .detail-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .detail-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .detail-body {
+        padding: 2rem;
+    }
+
+    /* Layout de dos columnas */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Columna izquierda - Imagen */
+    .image-section {
+        background: var(--bg-light);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .revista-cover {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        object-fit: contain;
+    }
+
+    .watermark-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(245, 158, 11, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 40px;
+        margin-top: 1rem;
+        font-size: 0.8rem;
+        color: var(--accent);
+    }
+
+    /* Columna derecha - Información */
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .info-card {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    .info-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .info-title i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-title h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        width: 120px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .description-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-pdf {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-pdf:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-url {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-url:hover {
+        background: #2563EB;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-watermark {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-watermark:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-back {
+        background: var(--bg-light);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-light);
+    }
+
+    .btn-back:hover {
+        background: var(--border-light);
+        transform: translateY(-2px);
+    }
+
+    /* Animación */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .detail-body {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .detail-container {
+            margin: 1rem auto;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-label {
+            width: auto;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-action {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <h1>
+                <i class="fas fa-newspaper"></i>
+                Detalle de la Revista
+            </h1>
+            <p>Información completa de la publicación</p>
+        </div>
+
+        <div class="detail-body">
+            <div class="detail-grid">
+                <!-- Columna Izquierda - Imagen -->
+                <div class="image-section">
+                    {% if revista.img_portada %}
+                        <img src="{{ revista.img_portada.url }}" alt="{{ revista }}" class="revista-cover">
+                    {% else %}
+                        <div style="background: var(--border-light); border-radius: 16px; padding: 3rem; text-align: center;">
+                            <i class="fas fa-image fa-4x" style="color: var(--text-secondary);"></i>
+                            <p style="margin-top: 1rem; color: var(--text-secondary);">Sin imagen de portada</p>
+                        </div>
+                    {% endif %}
+                    <div class="watermark-badge">
+                        <i class="fas fa-watermark"></i>
+                        <span>Marca de agua disponible</span>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha - Información -->
+                <div class="info-section">
+                    <!-- Información básica -->
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>Información General</h3>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-hashtag"></i> Número:
+                            </div>
+                            <div class="info-value">{{ revista.nro_revista|default:"No especificado" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-layer-group"></i> Colección:
+                            </div>
+                            <div class="info-value">{{ revista.coleccion.nomb_colecc }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="fas fa-calendar"></i> Fecha registro:
+                            </div>
+                            <div class="info-value">{{ revista.fecha_registro|date:"d/m/Y H:i"|default:"No especificada" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    {% if revista.descripcion %}
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-align-left"></i>
+                            <h3>Descripción</h3>
+                        </div>
+                        <p class="description-text">{{ revista.descripcion }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Acciones -->
+                    <div class="info-card">
+                        <div class="info-title">
+                            <i class="fas fa-cogs"></i>
+                            <h3>Acciones</h3>
+                        </div>
+                        <div class="action-buttons">
+                            {% if revista.pdf %}
+                            <a href="{{ revista.pdf.url }}" class="btn-action btn-pdf" download>
+                                <i class="fas fa-download"></i> Descargar PDF
+                            </a>
+                            {% endif %}
+                            {% if revista.url %}
+                            <a href="{{ revista.url }}" class="btn-action btn-url" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Ver Online
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'agregar_marca_de_agua' revista.id_revista %}" class="btn-action btn-watermark">
+                                <i class="fas fa-watermark"></i> Agregar Marca de Agua
+                            </a>
+                            <a href="{% url 'listar_revistas' %}" class="btn-action btn-back">
+                                <i class="fas fa-arrow-left"></i> Volver al listado
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Animación de entrada suave
+    document.addEventListener('DOMContentLoaded', function() {
+        const detailCard = document.querySelector('.detail-card');
+        if (detailCard) {
+            detailCard.style.opacity = '0';
+            detailCard.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                detailCard.style.transition = 'all 0.4s ease-out';
+                detailCard.style.opacity = '1';
+                detailCard.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    });
+</script>
+{% endblock %}

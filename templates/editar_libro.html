@@ -1,0 +1,897 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA EDITAR LIBRO           */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --warning: #F59E0B;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 1100px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h3 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h3 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    .form-body {
+        padding: 2rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title i {
+        font-size: 1.3rem;
+        color: var(--accent);
+    }
+
+    .section-title h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+    }
+
+    .form-control, .form-select, textarea {
+        padding: 0.7rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    .keywords-container {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 0.8rem;
+        border: 1.5px solid var(--border-light);
+    }
+
+    .keywords-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+        min-height: 40px;
+    }
+
+    .keyword-badge {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+        padding: 0.3rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .keyword-badge .remove-keyword {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 0.7rem;
+        opacity: 0.7;
+    }
+
+    .keyword-badge .remove-keyword:hover {
+        opacity: 1;
+    }
+
+    .keyword-input-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .keyword-input-group input {
+        flex: 1;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        background: white;
+    }
+
+    .keyword-input-group button {
+        padding: 0.5rem 1rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .multi-select-container {
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1.5px solid var(--border-light);
+        overflow: hidden;
+    }
+
+    .multi-select {
+        width: 100%;
+        min-height: 150px;
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+    }
+
+    .multi-select option {
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin-bottom: 2px;
+    }
+
+    .multi-select option:checked {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+    }
+
+    .multi-select-buttons {
+        display: flex;
+        gap: 8px;
+        padding: 0.8rem;
+        border-top: 1px solid var(--border-light);
+        background: white;
+    }
+
+    .multi-select-buttons .btn-sm {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-custom {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-warning-custom {
+        background: var(--warning);
+        color: white;
+    }
+
+    .btn-danger-custom {
+        background: var(--danger);
+        color: white;
+    }
+
+    .file-upload-area {
+        background: var(--bg-light);
+        border: 2px dashed var(--border-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--accent);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .file-upload-area i {
+        font-size: 2rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-area h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .file-upload-area p {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin: 0.3rem 0 0;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .file-preview img {
+        max-width: 120px;
+        border-radius: 8px;
+        border: 2px solid var(--border-light);
+    }
+
+    .current-file {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .current-file-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .current-file-info i {
+        font-size: 1.5rem;
+    }
+
+    .btn-remove {
+        background: var(--danger);
+        color: white;
+        border: none;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        cursor: pointer;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .text-muted {
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .multi-select-buttons {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h3>
+                <i class="fas fa-edit"></i>
+                Editar Libro
+            </h3>
+            <p>Modifique la información del material bibliográfico</p>
+        </div>
+
+        <div class="form-body">
+            <form method="post" enctype="multipart/form-data" id="libroForm">
+                {% csrf_token %}
+                
+                <!-- Información Básica -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <h4>Información Básica</h4>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                <i class="fas fa-heading"></i> Título <span class="required-star">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   value="{{ libro.titulo }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-tag"></i> Edición
+                            </label>
+                            <input type="text" class="form-control" id="edicion" name="edicion" 
+                                   value="{{ libro.edicion }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-layer-group"></i> Tipo de Material <span class="required-star">*</span>
+                            </label>
+                            <select id="tipo" name="tipo" class="form-select" required>
+                                <option value="LIBRO" {% if libro.tipo == 'LIBRO' %}selected{% endif %}>Libro</option>
+                                <option value="ARTICULO" {% if libro.tipo == 'ARTICULO' %}selected{% endif %}>Artículo</option>
+                                <option value="REVISTA" {% if libro.tipo == 'REVISTA' %}selected{% endif %}>Revista</option>
+                                <option value="TESIS" {% if libro.tipo == 'TESIS' %}selected{% endif %}>Tesis</option>
+                                <option value="DICCIONARIO" {% if libro.tipo == 'DICCIONARIO' %}selected{% endif %}>Diccionario</option>
+                                <option value="MONOGRAFIA" {% if libro.tipo == 'MONOGRAFIA' %}selected{% endif %}>Monografía</option>
+                                <option value="FOLLETO" {% if libro.tipo == 'FOLLETO' %}selected{% endif %}>Folleto</option>
+                                <option value="INFORME" {% if libro.tipo == 'INFORME' %}selected{% endif %}>Informe</option>
+                                <option value="OTRO" {% if libro.tipo == 'OTRO' %}selected{% endif %}>Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" 
+                                      rows="3">{{ libro.descripcion }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clasificación -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-tags"></i>
+                        <h4>Clasificación</h4>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-chart-line"></i> Nivel
+                            </label>
+                            <select id="categoria" name="categoria" class="form-select">
+                                <option value="">Seleccione un nivel</option>
+                                <option value="NIVEL 1" {% if libro.categoria == "NIVEL 1" %}selected{% endif %}>Nivel 1</option>
+                                <option value="NIVEL 2" {% if libro.categoria == "NIVEL 2" %}selected{% endif %}>Nivel 2</option>
+                                <option value="NIVEL 3" {% if libro.categoria == "NIVEL 3" %}selected{% endif %}>Nivel 3</option>
+                                <option value="NIVEL 4" {% if libro.categoria == "NIVEL 4" %}selected{% endif %}>Nivel 4</option>
+                                <option value="OTRO" {% if libro.categoria == "OTRO" %}selected{% endif %}>Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                <i class="fas fa-key"></i> Palabras Clave
+                            </label>
+                            <div class="keywords-container">
+                                <div class="keywords-list" id="keywordsList">
+                                    {% for palabra in palabras_claves %}
+                                        <span class="keyword-badge">
+                                            {{ palabra }}
+                                            <button type="button" class="remove-keyword" onclick="removeKeyword('{{ palabra }}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                                <div class="keyword-input-group">
+                                    <input type="text" id="keywordInput" placeholder="Escriba una palabra clave y presione Enter">
+                                    <button type="button" id="addKeywordBtn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <input type="hidden" id="palabras_claves" name="palabras_claves" value="{{ libro.palabra_clave }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Autores y Categorías -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i>
+                        <h4>Autores y Categorías</h4>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-pen"></i> Autores
+                            </label>
+                            <div class="multi-select-container">
+                                <select multiple id="autores" name="autores" class="multi-select" size="6">
+                                    {% for autor in autores %}
+                                        <option value="{{ autor.id_autor }}" {% if autor in libro.autores.all %}selected{% endif %}>
+                                            {{ autor.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="multi-select-buttons">
+                                    <input type="text" id="nuevo_autor" class="form-control" placeholder="Nuevo autor..." style="flex: 1;">
+                                    <button type="button" class="btn-sm btn-primary-custom" id="agregarAutorBtn">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-folder-open"></i> Categorías
+                            </label>
+                            <div class="multi-select-container">
+                                <select multiple id="categorias" name="categorias" class="multi-select" size="6">
+                                    {% for categoria in categorias %}
+                                        <option value="{{ categoria.id_categoria }}" {% if categoria in libro.categorias.all %}selected{% endif %}>
+                                            {{ categoria.nom_cat }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="multi-select-buttons">
+                                    <input type="text" id="nueva_categoria" class="form-control" placeholder="Nueva categoría..." style="flex: 1;">
+                                    <button type="button" class="btn-sm btn-primary-custom" id="agregarCategoriaBtn">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archivos -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-file-upload"></i>
+                        <h4>Archivos</h4>
+                    </div>
+                    <div class="form-grid">
+                        <!-- Portada -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-image"></i> Portada
+                            </label>
+                            {% if libro.img_portada %}
+                                <div class="current-file">
+                                    <div class="current-file-info">
+                                        <i class="fas fa-image" style="color: var(--info);"></i>
+                                        <span>Portada actual</span>
+                                    </div>
+                                    <a href="{{ libro.img_portada.url }}" target="_blank" class="btn-sm btn-primary-custom" style="text-decoration: none; padding: 0.3rem 0.8rem; border-radius: 8px;">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                </div>
+                            {% endif %}
+                            <div class="file-upload-area" onclick="document.getElementById('portada').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h5>Cambiar portada</h5>
+                                <p>Formatos: JPG, PNG. Máx 5MB</p>
+                                <input type="file" id="portada" name="portada" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="file-preview" id="portadaPreviewContainer" style="display: none;">
+                                <img id="portadaPreview" src="" alt="Vista previa">
+                            </div>
+                        </div>
+
+                        <!-- PDF -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-pdf"></i> PDF del Material
+                            </label>
+                            {% if libro.pdf %}
+                                <div class="current-file">
+                                    <div class="current-file-info">
+                                        <i class="fas fa-file-pdf" style="color: var(--danger);"></i>
+                                        <span>PDF actual</span>
+                                    </div>
+                                    <a href="{{ libro.pdf.url }}" target="_blank" class="btn-sm btn-primary-custom" style="text-decoration: none; padding: 0.3rem 0.8rem; border-radius: 8px;">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                </div>
+                            {% endif %}
+                            <div class="file-upload-area" onclick="document.getElementById('pdf').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h5>Cambiar PDF</h5>
+                                <p>Formato: PDF. Máx 10MB</p>
+                                <input type="file" id="pdf" name="pdf" accept="application/pdf" style="display: none;">
+                            </div>
+                            
+                            <div class="form-group mt-2">
+                                <label class="form-label">
+                                    <i class="fas fa-link"></i> URL del PDF (opcional)
+                                </label>
+                                <input type="url" class="form-control" id="pdf_url" name="pdf_url" 
+                                       value="{{ libro.pdf_url }}" placeholder="https://ejemplo.com/documento.pdf">
+                            </div>
+                            
+                            <div class="form-group mt-2">
+                                <label class="form-label">
+                                    <i class="fab fa-google-drive"></i> Google Drive URL (para PDFs grandes)
+                                </label>
+                                <input type="url" class="form-control" id="google_drive_url" name="google_drive_url" 
+                                       value="{{ libro.google_drive_url }}" placeholder="https://drive.google.com/file/d/.../preview">
+                                <small class="text-muted">Use esta opción para PDFs mayores a 10MB. Obtenga el enlace de vista previa desde Google Drive.</small>
+                            </div>
+                        </div>
+
+                        <!-- Autorización -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-contract"></i> Autorización
+                            </label>
+                            {% if libro.archivo_autorizacion %}
+                                <div class="current-file">
+                                    <div class="current-file-info">
+                                        <i class="fas fa-file-contract" style="color: var(--success);"></i>
+                                        <span>Autorización actual</span>
+                                    </div>
+                                    <div>
+                                        <a href="{{ libro.archivo_autorizacion.url }}" target="_blank" class="btn-sm btn-primary-custom" style="text-decoration: none; padding: 0.3rem 0.8rem; border-radius: 8px;">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                        <button type="button" class="btn-sm btn-danger-custom" id="eliminarAutorizacionBtn" data-libro-id="{{ libro.id_libro }}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="file-upload-area" onclick="document.getElementById('autorizacion').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h5>Subir nueva autorización</h5>
+                                <p>Formato: PDF. Máx 5MB</p>
+                                <input type="file" id="autorizacion" name="autorizacion" accept="application/pdf" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón de envío -->
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // ============================================
+    // PALABRAS CLAVE
+    // ============================================
+    let keywords = [
+        {% for palabra in palabras_claves %}
+            "{{ palabra }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    function renderKeywords() {
+        const container = document.getElementById('keywordsList');
+        container.innerHTML = keywords.map((kw, i) => `
+            <span class="keyword-badge">
+                ${kw}
+                <button type="button" class="remove-keyword" onclick="removeKeywordByIndex(${i})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </span>
+        `).join('');
+        document.getElementById('palabras_claves').value = keywords.join(',');
+    }
+
+    function removeKeywordByIndex(index) {
+        keywords.splice(index, 1);
+        renderKeywords();
+    }
+
+    window.removeKeyword = function(palabra) {
+        const index = keywords.indexOf(palabra);
+        if (index > -1) {
+            keywords.splice(index, 1);
+            renderKeywords();
+        }
+    };
+
+    function addKeyword() {
+        const input = document.getElementById('keywordInput');
+        const keyword = input.value.trim();
+        if (keyword && !keywords.includes(keyword)) {
+            keywords.push(keyword);
+            renderKeywords();
+            input.value = '';
+        }
+    }
+
+    document.getElementById('keywordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addKeyword();
+        }
+    });
+    document.getElementById('addKeywordBtn').addEventListener('click', addKeyword);
+    renderKeywords();
+
+    // ============================================
+    // PREVIEW DE PORTADA
+    // ============================================
+    document.getElementById('portada').addEventListener('change', function(e) {
+        const container = document.getElementById('portadaPreviewContainer');
+        const preview = document.getElementById('portadaPreview');
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                preview.src = event.target.result;
+                container.style.display = 'block';
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // ============================================
+    // AGREGAR AUTOR
+    // ============================================
+    document.getElementById('agregarAutorBtn').addEventListener('click', async () => {
+        const nombre = document.getElementById('nuevo_autor').value.trim();
+        if (!nombre) {
+            Swal.fire('Error', 'Ingrese un nombre de autor', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('{% url "agregar_autor" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `nombre=${encodeURIComponent(nombre)}`
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                const select = document.getElementById('autores');
+                const option = new Option(data.nombre, data.id_autor);
+                select.add(option);
+                document.getElementById('nuevo_autor').value = '';
+                Swal.fire('Éxito', 'Autor agregado correctamente', 'success');
+            } else {
+                Swal.fire('Error', data.error || 'Error al agregar autor', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Error de conexión', 'error');
+        }
+    });
+
+    // ============================================
+    // AGREGAR CATEGORÍA
+    // ============================================
+    document.getElementById('agregarCategoriaBtn').addEventListener('click', async () => {
+        const nombre = document.getElementById('nueva_categoria').value.trim();
+        if (!nombre) {
+            Swal.fire('Error', 'Ingrese un nombre de categoría', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('{% url "agregar_categoria" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `nombre_categoria=${encodeURIComponent(nombre)}`
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                const select = document.getElementById('categorias');
+                const option = new Option(data.nombre, data.id_categoria);
+                select.add(option);
+                document.getElementById('nueva_categoria').value = '';
+                Swal.fire('Éxito', 'Categoría agregada correctamente', 'success');
+            } else {
+                Swal.fire('Error', data.error || 'Error al agregar categoría', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Error de conexión', 'error');
+        }
+    });
+
+    // ============================================
+    // ELIMINAR AUTORIZACIÓN
+    // ============================================
+    document.getElementById('eliminarAutorizacionBtn')?.addEventListener('click', async () => {
+        const libroId = document.getElementById('eliminarAutorizacionBtn').getAttribute('data-libro-id');
+        
+        Swal.fire({
+            title: '¿Eliminar autorización?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/eliminar_autorizacion/${libroId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Eliminado', 'Autorización eliminada correctamente', 'success');
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', data.message || 'Error al eliminar', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Error de conexión', 'error');
+                }
+            }
+        });
+    });
+
+    // ============================================
+    // ENVÍO DEL FORMULARIO
+    // ============================================
+    document.getElementById('libroForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando cambios...';
+        
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('{% url "editar_libro" libro.id_libro %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Cambios guardados!',
+                    text: 'El libro se ha actualizado correctamente',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ver lista de libros',
+                    cancelButtonText: 'Seguir editando'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{% url "listar_libros" %}';
+                    } else {
+                        location.reload();
+                    }
+                });
+            } else {
+                Swal.fire('Error', data.error || 'Ocurrió un error al guardar', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+        }
+    });
+</script>
+{% endblock %}

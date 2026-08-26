@@ -1,0 +1,56 @@
+{% extends 'base.html' %}  {# Si tienes un template base #}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">Cambiar Contraseña</h2>
+                    
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password_actual.id_for_label }}" class="form-label">
+                                Contraseña Actual
+                            </label>
+                            {{ form.password_actual }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password_nuevo.id_for_label }}" class="form-label">
+                                Nueva Contraseña
+                            </label>
+                            {{ form.password_nuevo }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password_confirmacion.id_for_label }}" class="form-label">
+                                Confirmar Nueva Contraseña
+                            </label>
+                            {{ form.password_confirmacion }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                Cambiar Contraseña
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

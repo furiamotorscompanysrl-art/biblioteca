@@ -1,0 +1,689 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA INICIO                 */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        position: relative;
+        overflow: hidden;
+        padding: 3rem 0;
+        margin-top: -1.5rem;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23F59E0B' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+        background-size: cover;
+        opacity: 0.3;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #FFFFFF, var(--accent-hover));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-text {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .search-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .search-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .search-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 0.8rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .search-btn {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .search-btn:hover {
+        background: var(--accent);
+    }
+
+    .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .filter-btn {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        padding: 0.4rem 1rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .filter-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .book-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .book-image {
+        position: relative;
+        height: 260px;
+        overflow: hidden;
+        background: var(--bg-light);
+    }
+
+    .book-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .book-card:hover .book-image img {
+        transform: scale(1.05);
+    }
+
+    .book-ribbon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+
+    .ribbon-authorize {
+        background: var(--success);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .book-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .book-card:hover .book-overlay {
+        opacity: 1;
+    }
+
+    .book-overlay span {
+        color: white;
+        font-size: 0.7rem;
+    }
+
+    .book-info {
+        padding: 1rem;
+    }
+
+    .book-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .book-author {
+        font-size: 0.75rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .book-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .badge-custom {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 500;
+    }
+
+    .badge-level {
+        background: #E0F2FE;
+        color: #0284C7;
+    }
+
+    .badge-edition {
+        background: #F1F5F9;
+        color: #64748B;
+    }
+
+    .badge-download {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .badge-nodownload {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .book-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+
+    .views-count {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .book-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-book {
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-pdf {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-pdf:hover {
+        background: var(--accent-hover);
+    }
+
+    .btn-link-external {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-link-external:hover {
+        background: #2563EB;
+    }
+
+    .pagination-custom {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .page-link-custom {
+        padding: 0.4rem 0.8rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 10px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .page-link-custom:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .page-link-custom.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    /* Modal PDF */
+    .pdf-modal .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    .pdf-modal .modal-content {
+        background: #1a1a2e;
+        border-radius: 16px;
+        height: 90vh;
+    }
+    
+    .pdf-modal .modal-body {
+        padding: 0;
+        height: calc(90vh - 60px);
+    }
+    
+    .pdf-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0 0 16px 16px;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 1.8rem;
+        }
+        .books-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .book-image {
+            height: 220px;
+        }
+        .search-input-group {
+            flex-direction: column;
+        }
+        .search-btn {
+            padding: 0.8rem;
+        }
+        .pdf-modal .modal-dialog {
+            max-width: 100%;
+            margin: 0;
+        }
+        .pdf-modal .modal-content {
+            height: 100vh;
+            border-radius: 0;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-white">
+                <h1 class="hero-title">Biblioteca Digital</h1>
+                <p class="hero-text">
+                    Explora nuestra colección de libros digitales y descubre nuevo conocimiento. 
+                    Accede a miles de recursos académicos desde cualquier lugar.
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="search-card">
+                    <div class="card-body">
+                        <form method="GET" id="searchForm" class="mb-3">
+                            <div class="search-input-group">
+                                <input type="text" class="search-input" name="q" 
+                                       placeholder="Buscar por título, autor o palabras clave..." 
+                                       value="{{ buscar_por }}" id="searchInput">
+                                <button type="submit" class="search-btn">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                            
+                            <div class="filter-buttons">
+                                <a href="#" class="filter-btn" data-filtro="recientes">
+                                    <i class="fas fa-clock"></i> Recientes
+                                </a>
+                                <a href="#" class="filter-btn" data-filtro="populares">
+                                    <i class="fas fa-fire"></i> Más leídos
+                                </a>
+                                <a href="{% url 'novedades_libros' %}" class="filter-btn">
+                                    <i class="fas fa-star"></i> Novedades
+                                </a>
+                                <a href="?" class="filter-btn" id="limpiarFiltros">
+                                    <i class="fas fa-times"></i> Limpiar
+                                </a>
+                            </div>
+                            
+                            <input type="hidden" name="filtro" id="filtroInput" value="{{ filtro_actual }}">
+                            <input type="hidden" name="categoria" id="categoriaInput" value="{{ categoria_id }}">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados de búsqueda -->
+<div class="container my-5">
+    {% if libros %}
+    <div class="books-grid">
+        {% for libro in libros %}
+        <div class="book-card">
+            <div class="book-image">
+                {% if libro.img_portada %}
+                    <img src="{{ libro.img_portada.url }}" alt="{{ libro.titulo }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <i class="fas fa-book fa-3x text-muted"></i>
+                    </div>
+                {% endif %}
+                <div class="book-overlay">
+                    <span><i class="fas fa-eye"></i> Ver detalles</span>
+                </div>
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">{{ libro.titulo|truncatechars:50 }}</h3>
+                <div class="book-author">
+                    <i class="fas fa-user"></i> 
+                    {% for autor in libro.autores.all %}
+                        {{ autor.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Autor no especificado
+                    {% endfor %}
+                </div>
+                <div class="book-badges">
+                    {% if libro.categoria %}
+                        <span class="badge-custom badge-level">{{ libro.categoria }}</span>
+                    {% endif %}
+                    {% if libro.edicion %}
+                        <span class="badge-custom badge-edition">{{ libro.edicion }}</span>
+                    {% endif %}
+                    {% if libro.descarga_autorizada %}
+                        <span class="badge-custom badge-download">
+                            <i class="fas fa-download"></i> Descarga permitida
+                        </span>
+                    {% else %}
+                        <span class="badge-custom badge-nodownload">
+                            <i class="fas fa-lock"></i> Solo lectura
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="book-stats">
+                    <span class="views-count">
+                        <i class="fas fa-eye"></i> {{ libro.visitalibro_set.count }} lecturas
+                    </span>
+                    <div class="book-actions">
+                        {% if libro.google_drive_url or libro.pdf or libro.pdf_url %}
+                            {% if libro.descarga_autorizada %}
+                                <button class="btn-book btn-pdf" 
+                                        onclick="abrirLibro('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', true)">
+                                    <i class="fas fa-download"></i> Descargar
+                                </button>
+                            {% else %}
+                                <button class="btn-book btn-pdf" 
+                                        onclick="abrirLibro('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', false)">
+                                    <i class="fas fa-book-open"></i> Leer en línea
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button class="btn-book" style="background: #ccc; color: #666; cursor: not-allowed;" disabled>
+                                <i class="fas fa-ban"></i> No disponible
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if libros.paginator.num_pages > 1 %}
+    <div class="pagination-custom">
+        {% if libros.has_previous %}
+            <a href="?page=1{% if buscar_por %}&q={{ buscar_por }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}" class="page-link-custom">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a href="?page={{ libros.previous_page_number }}{% if buscar_por %}&q={{ buscar_por }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}" class="page-link-custom">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        {% endif %}
+        
+        <span class="page-link-custom active">{{ libros.number }}</span>
+        
+        {% if libros.has_next %}
+            <a href="?page={{ libros.next_page_number }}{% if buscar_por %}&q={{ buscar_por }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}" class="page-link-custom">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="?page={{ libros.paginator.num_pages }}{% if buscar_por %}&q={{ buscar_por }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}" class="page-link-custom">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No se encontraron resultados</h3>
+        <p class="text-muted">Intenta con diferentes términos de búsqueda o ajusta los filtros</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal para visor de PDF (solo lectura) -->
+<div class="modal fade pdf-modal" id="visorPDFModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-dark); border-bottom: 1px solid var(--accent);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-book-open"></i> <span id="pdfTituloLibro"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="pdfLoadingSpinner" class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-white">Cargando documento...</p>
+                </div>
+                <iframe id="pdfIframe" class="pdf-iframe" src="" style="display: none;" allow="fullscreen"></iframe>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-light);">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Modo solo lectura
+                </small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ============================================
+// FUNCIONES PARA ABRIR LIBROS
+// ============================================
+
+function abrirLibro(libroId, titulo, permitirDescarga) {
+    // Registrar la visita
+    fetch('{% url "registrar_visita_libro" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `libro_id=${libroId}`
+    }).then(() => {
+        if (permitirDescarga) {
+            // Si tiene permiso de descarga, abrir en nueva pestaña
+            window.open("{% url 'ver_descargar_libro' 0 %}".replace('0', libroId), '_blank');
+        } else {
+            // Modo solo lectura: mostrar en modal en la misma página
+            const modal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
+            const iframe = document.getElementById('pdfIframe');
+            const spinner = document.getElementById('pdfLoadingSpinner');
+            
+            document.getElementById('pdfTituloLibro').innerText = titulo;
+            
+            // Resetear vista
+            iframe.style.display = 'none';
+            spinner.style.display = 'block';
+            
+            // Cargar PDF en iframe con embed=true
+            const url = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
+            iframe.src = url;
+            
+            iframe.onload = () => {
+                spinner.style.display = 'none';
+                iframe.style.display = 'block';
+            };
+            
+            modal.show();
+        }
+    }).catch(error => console.error('Error registrando visita:', error));
+}
+
+// ============================================
+// MANEJO DE FILTROS CON JAVASCRIPT
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const urlParams = new URLSearchParams(window.location.search);
+    const filtroActual = urlParams.get('filtro') || '';
+    const busquedaActual = urlParams.get('q') || '';
+    const categoriaActual = urlParams.get('categoria') || '';
+    
+    if (searchInput) {
+        searchInput.value = busquedaActual;
+    }
+    
+    document.querySelectorAll('.filter-btn[data-filtro]').forEach(btn => {
+        const filtro = btn.getAttribute('data-filtro');
+        if (filtro === filtroActual) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const nuevoFiltro = this.getAttribute('data-filtro');
+            let params = new URLSearchParams();
+            if (busquedaActual) params.set('q', busquedaActual);
+            if (categoriaActual) params.set('categoria', categoriaActual);
+            if (nuevoFiltro) params.set('filtro', nuevoFiltro);
+            window.location.href = '?' + params.toString();
+        });
+    });
+    
+    const limpiarBtn = document.getElementById('limpiarFiltros');
+    if (limpiarBtn) {
+        limpiarBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = window.location.pathname;
+        });
+    }
+    
+    // Limpiar iframe al cerrar el modal
+    document.getElementById('visorPDFModal')?.addEventListener('hidden.bs.modal', function() {
+        const iframe = document.getElementById('pdfIframe');
+        if (iframe) {
+            iframe.src = '';
+            iframe.style.display = 'none';
+        }
+        const spinner = document.getElementById('pdfLoadingSpinner');
+        if (spinner) spinner.style.display = 'block';
+    });
+});
+</script>
+{% endblock %}

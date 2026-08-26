@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA EDITAR IMAGEN          */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h2 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h2 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Grid de campos */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.9rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+        font-size: 0.8rem;
+    }
+
+    .form-control, .form-select, textarea {
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    .form-text {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    /* Campo requerido */
+    .required-field {
+        border-left: 4px solid var(--danger);
+    }
+
+    /* Selector múltiple */
+    .multi-select-container {
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1.5px solid var(--border-light);
+        overflow: hidden;
+    }
+
+    .multi-select {
+        width: 100%;
+        min-height: 120px;
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+    }
+
+    .multi-select option {
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin-bottom: 2px;
+    }
+
+    .multi-select option:checked {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: white;
+    }
+
+    .categoria-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .btn-cat {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-cat-add {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-cat-edit {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-cat-delete {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-cat:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Preview de imagen */
+    .image-preview {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .image-preview img {
+        max-height: 200px;
+        border-radius: 8px;
+        border: 2px solid var(--border-light);
+    }
+
+    /* Botón submit */
+    .btn-submit {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .categoria-buttons {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2>
+                <i class="fas fa-edit"></i>
+                Editar Imagen
+            </h2>
+            <p>Modifique los detalles de la imagen</p>
+        </div>
+
+        <div class="form-body">
+            <form method="post" enctype="multipart/form-data" id="imagenForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <!-- Título -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-heading"></i> Título de la imagen <span class="required-star">*</span>
+                        </label>
+                        <input type="text" class="form-control required-field" id="titulo" name="titulo" 
+                               value="{{ imagen.titulo }}" required>
+                        <div class="form-text">Un título descriptivo y conciso</div>
+                    </div>
+
+                    <!-- Autor -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Autor de la imagen <span class="required-star">*</span>
+                        </label>
+                        <input type="text" class="form-control required-field" id="autorImg" name="autorImg" 
+                               value="{{ imagen.autorImg }}" required>
+                        <div class="form-text">Nombre del autor o creador de la imagen</div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ imagen.descripcion }}</textarea>
+                        <div class="form-text">La descripción ayuda a otros a entender mejor el contenido</div>
+                    </div>
+
+                    <!-- Imagen de Portada -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> Imagen de Portada
+                        </label>
+                        <input type="file" class="form-control" id="img_portada" name="img_portada" 
+                               accept="image/*" onchange="previewImage(this);">
+                        <div class="form-text">Formatos aceptados: JPG, PNG, GIF. Máx 5MB</div>
+                        <div id="imagePreview" class="image-preview">
+                            {% if imagen.img_portada %}
+                                <img src="{{ imagen.img_portada.url }}" alt="Vista previa">
+                            {% else %}
+                                <p class="text-muted">No hay imagen de portada</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- PDF -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-file-pdf"></i> Documento PDF relacionado
+                        </label>
+                        <input type="file" class="form-control" id="pdf" name="pdf" accept=".pdf">
+                        {% if imagen.pdf %}
+                            <div class="form-text">
+                                <i class="fas fa-paperclip"></i> PDF actual: 
+                                <a href="{{ imagen.pdf.url }}" target="_blank" style="color: var(--info);">Ver PDF</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-tags"></i> Categorías
+                        </label>
+                        <div class="multi-select-container">
+                            <select multiple id="categorias" name="categorias" class="multi-select">
+                                {% for categoria in categorias %}
+                                    <option value="{{ categoria.id_categoria }}"
+                                        {% if categoria in imagen.categorias.all %}selected{% endif %}>
+                                        {{ categoria.nom_cat }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="categoria-buttons">
+                            <button type="button" class="btn-cat btn-cat-add" data-bs-toggle="modal" data-bs-target="#categoriaModal" data-action="add">
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                            <button type="button" class="btn-cat btn-cat-edit" data-bs-toggle="modal" data-bs-target="#categoriaModal" data-action="edit">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button type="button" class="btn-cat btn-cat-delete" data-bs-toggle="modal" data-bs-target="#categoriaModal" data-action="delete">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                        <div class="form-text">Selecciona una o más categorías para la imagen</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-save"></i> Guardar cambios
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Categorías -->
+<div class="modal fade" id="categoriaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);">
+                <h5 class="modal-title" id="categoriaModalLabel" style="color: white;"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <form id="categoriaForm" method="post">
+                    {% csrf_token %}
+                    <p id="nombreEliminarCategoria" class="text-danger" style="display: none;"></p>
+                    <div class="mb-3" id="nombreCategoriaField">
+                        <label for="nombre_categoria" class="form-label">Nombre de la Categoría</label>
+                        <input type="text" class="form-control" id="nombre_categoria" name="nombre_categoria">
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn-save" id="categoriaActionButton"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-cancel {
+        background: white;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    .btn-save:hover {
+        background: var(--accent);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Previsualización de imagen
+    function previewImage(input) {
+        const preview = document.getElementById('imagePreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Modal de categorías
+    document.getElementById('categoriaModal').addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const action = button.getAttribute('data-action');
+        const modalTitle = document.getElementById('categoriaModalLabel');
+        const form = document.getElementById('categoriaForm');
+        const submitButton = document.getElementById('categoriaActionButton');
+        const nombreField = document.getElementById('nombreCategoriaField');
+        const nombreInput = document.getElementById('nombre_categoria');
+        const nombreEliminar = document.getElementById('nombreEliminarCategoria');
+
+        if (action === 'add') {
+            modalTitle.textContent = 'Agregar Categoría';
+            submitButton.textContent = 'Guardar';
+            form.action = '{% url "agregar_categoria" %}';
+            form.reset();
+            nombreField.style.display = 'block';
+            nombreEliminar.style.display = 'none';
+        } else {
+            const selectedOption = document.getElementById('categorias').selectedOptions[0];
+            const categoriaId = selectedOption?.value;
+
+            if (!categoriaId) {
+                Swal.fire('Error', 'Por favor seleccione una categoría primero', 'error');
+                event.preventDefault();
+                return;
+            }
+
+            if (action === 'edit') {
+                modalTitle.textContent = 'Editar Categoría';
+                submitButton.textContent = 'Guardar Cambios';
+                form.action = `{% url "editar_categoria" id_categoria=0 %}`.replace('0', categoriaId);
+                nombreField.style.display = 'block';
+                nombreInput.value = selectedOption?.text.trim();
+                nombreEliminar.style.display = 'none';
+            } else if (action === 'delete') {
+                modalTitle.textContent = 'Eliminar Categoría';
+                submitButton.textContent = 'Confirmar Eliminación';
+                form.action = `{% url "eliminar_categoria" id_categoria=0 %}`.replace('0', categoriaId);
+                nombreField.style.display = 'none';
+                nombreEliminar.style.display = 'block';
+                nombreEliminar.textContent = `¿Está seguro que desea eliminar la categoría "${selectedOption?.text.trim()}"?`;
+            }
+        }
+    });
+
+    document.getElementById('categoriaForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+
+        if (this.action.includes("eliminar")) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    enviarFormularioCategoria(this.action, formData);
+                }
+            });
+        } else {
+            enviarFormularioCategoria(this.action, formData);
+        }
+    });
+
+    function enviarFormularioCategoria(action, formData) {
+        fetch(action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('categorias');
+                if (action.includes("agregar")) {
+                    const newOption = new Option(data.nombre, data.id_categoria);
+                    select.add(newOption);
+                } else if (action.includes("editar")) {
+                    const selectedOption = select.options[select.selectedIndex];
+                    selectedOption.text = data.nombre;
+                } else if (action.includes("eliminar")) {
+                    select.remove(select.selectedIndex);
+                }
+
+                Swal.fire({
+                    title: 'Éxito',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#F59E0B'
+                }).then(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('categoriaModal'));
+                    modal.hide();
+                });
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        })
+        .catch(() => {
+            Swal.fire('Error', 'Hubo un problema al procesar la solicitud.', 'error');
+        });
+    }
+</script>
+{% endblock %}

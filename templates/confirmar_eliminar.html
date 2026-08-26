@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA CONFIRMAR ELIMINACIÓN  */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --danger-dark: #DC2626;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .confirm-container {
+        max-width: 600px;
+        margin: 3rem auto;
+    }
+
+    .confirm-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* Header */
+    .confirm-header {
+        background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+        padding: 1.8rem 2rem;
+        text-align: center;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .confirm-header i {
+        font-size: 3rem;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .confirm-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* Body */
+    .confirm-body {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .warning-icon i {
+        font-size: 2.5rem;
+        color: var(--danger);
+    }
+
+    /* Preview de la imagen */
+    .image-preview {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: center;
+    }
+
+    .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1rem;
+    }
+
+    /* Información de la imagen */
+    .image-info {
+        background: var(--bg-light);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-item i {
+        width: 28px;
+        color: var(--accent);
+        font-size: 1.1rem;
+    }
+
+    .info-item .label {
+        font-weight: 600;
+        color: var(--text-primary);
+        width: 100px;
+    }
+
+    .info-item .value {
+        color: var(--text-secondary);
+        flex: 1;
+    }
+
+    /* Warning message */
+    .warning-message {
+        background: rgba(239, 68, 68, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid var(--danger);
+    }
+
+    .warning-message p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--danger);
+    }
+
+    /* Botones */
+    .confirm-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.7rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--info);
+        color: var(--info);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+        color: white;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Animación */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+        .confirm-container {
+            margin: 1rem;
+        }
+        .confirm-body {
+            padding: 1.5rem;
+        }
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        .info-item .label {
+            width: auto;
+        }
+        .confirm-actions {
+            flex-direction: column;
+        }
+        .btn-cancel, .btn-delete {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="confirm-container">
+    <div class="confirm-card">
+        <div class="confirm-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h1>Confirmar Eliminación</h1>
+        </div>
+        
+        <div class="confirm-body">
+            <div class="warning-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            
+            <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 0.5rem;">
+                ¿Estás seguro de que deseas eliminar esta imagen?
+            </p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                Esta acción no se puede deshacer.
+            </p>
+            
+            <!-- Vista previa de la imagen -->
+            {% if imagen.img_portada %}
+            <div class="image-preview">
+                <img src="{{ imagen.img_portada.url }}" alt="Vista previa de {{ imagen.titulo }}">
+                <p style="margin: 0.5rem 0 0; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fas fa-image"></i> Vista previa de la imagen
+                </p>
+            </div>
+            {% endif %}
+            
+            <!-- Información de la imagen -->
+            <div class="image-info">
+                <div class="info-item">
+                    <i class="fas fa-image"></i>
+                    <span class="label">Título:</span>
+                    <span class="value">{{ imagen.titulo }}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-user"></i>
+                    <span class="label">Autor:</span>
+                    <span class="value">{{ imagen.autorImg|default:"No especificado" }}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-calendar"></i>
+                    <span class="label">Fecha subida:</span>
+                    <span class="value">{{ imagen.fecha_subida|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% if imagen.categorias.all %}
+                <div class="info-item">
+                    <i class="fas fa-tags"></i>
+                    <span class="label">Categorías:</span>
+                    <span class="value">
+                        {% for cat in imagen.categorias.all %}
+                            {{ cat.nom_cat }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                {% endif %}
+                {% if imagen.descripcion %}
+                <div class="info-item">
+                    <i class="fas fa-align-left"></i>
+                    <span class="label">Descripción:</span>
+                    <span class="value">{{ imagen.descripcion|truncatechars:100 }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Mensaje de advertencia -->
+            <div class="warning-message">
+                <p>
+                    <i class="fas fa-info-circle"></i>
+                    Al eliminar esta imagen, se eliminarán también:
+                </p>
+                <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.8rem; color: var(--danger);">
+                    <li>El archivo de imagen original</li>
+                    <li>La miniatura generada</li>
+                    {% if imagen.pdf %}
+                    <li>El archivo PDF asociado</li>
+                    {% endif %}
+                    {% if imagen.marca_agua %}
+                    <li>La marca de agua asociada</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="confirm-actions">
+                <a href="{% url 'lista_imagenes' %}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+                <form method="post" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-delete" id="deleteBtn">
+                        <i class="fas fa-trash-alt"></i> Eliminar permanentemente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('deleteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        Swal.fire({
+            title: '¿Eliminar imagen?',
+            html: `¿Estás completamente seguro de que deseas eliminar "<strong>${document.querySelector('.info-item .value')?.textContent || 'esta imagen'}</strong>"?<br>Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar loading
+                const deleteBtn = document.getElementById('deleteBtn');
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+                
+                // Enviar formulario
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: '¡Eliminada!',
+                            text: 'La imagen ha sido eliminada correctamente.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '{% url "lista_imagenes" %}';
+                        });
+                    } else {
+                        throw new Error('Error');
+                    }
+                }).catch(() => {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo eliminar la imagen. Intenta nuevamente.',
+                        icon: 'error',
+                        confirmButtonColor: '#EF4444'
+                    });
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar permanentemente';
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

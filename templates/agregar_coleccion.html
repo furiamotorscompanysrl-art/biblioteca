@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA AGREGAR COLECCIÓN      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h4 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h4 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Campos */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.9rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+        font-size: 0.8rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Información adicional */
+    .info-card {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .info-card i {
+        font-size: 1.2rem;
+        color: var(--accent);
+        margin-top: 0.1rem;
+    }
+
+    .info-card p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Botones */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-cancel {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-save:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-cancel, .btn-save {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h4>
+                <i class="fas fa-layer-group"></i>
+                {{ titulo|default:"Agregar Nueva Colección" }}
+            </h4>
+            <p>Las colecciones agrupan revistas y publicaciones periódicas</p>
+        </div>
+
+        <div class="form-body">
+            <form id="coleccionForm" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i> 
+                        Nombre de la Colección <span class="required-star">*</span>
+                    </label>
+                    {{ form.nomb_colecc|add_class:"form-control" }}
+                    {% if form.nomb_colecc.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.nomb_colecc.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> Ejemplo: "Revistas de Arte", "Publicaciones 2024"
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i> 
+                        Descripción
+                    </label>
+                    {{ form.descripcion|add_class:"form-control" }}
+                    {% if form.descripcion.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.descripcion.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb"></i> Describe el contenido o temática de la colección (opcional)
+                    </small>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>Información:</strong> Las colecciones te permiten organizar las revistas por categorías.
+                        Una vez creada la colección, podrás asignarle revistas desde el módulo de revistas.
+                    </p>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{% url 'listar_revistas' %}" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn-save" id="submitBtn">
+                        <i class="fas fa-save"></i> Guardar Colección
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('coleccionForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validar campo requerido
+            const nombreInput = document.querySelector('#id_nomb_colecc');
+            if (!nombreInput.value.trim()) {
+                Swal.fire({
+                    title: 'Campo requerido',
+                    text: 'El nombre de la colección es obligatorio',
+                    icon: 'warning',
+                    confirmButtonColor: '#F59E0B'
+                });
+                nombreInput.focus();
+                return;
+            }
+            
+            // Mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch("{% url 'agregar_coleccion' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Colección creada!',
+                        text: data.message || 'La colección se ha guardado correctamente',
+                        icon: 'success',
+                        confirmButtonColor: '#F59E0B',
+                        confirmButtonText: 'Ir a lista de revistas',
+                        showCancelButton: true,
+                        cancelButtonText: 'Seguir agregando'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{% url 'listar_revistas' %}";
+                        } else {
+                            // Limpiar formulario para seguir agregando
+                            form.reset();
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Colección';
+                            nombreInput.focus();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Hubo un problema al guardar la colección',
+                        icon: 'error',
+                        confirmButtonColor: '#EF4444'
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Colección';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor. Intente nuevamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Colección';
+            }
+        });
+        
+        // Validación en tiempo real del campo nombre
+        const nombreInput = document.querySelector('#id_nomb_colecc');
+        if (nombreInput) {
+            nombreInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = '';
+                } else {
+                    this.style.borderColor = '#EF4444';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

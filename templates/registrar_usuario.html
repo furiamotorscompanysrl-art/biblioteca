@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA REGISTRAR USUARIO      */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+        text-align: center;
+    }
+
+    .form-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .form-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Grid de campos */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+    }
+
+    .form-control, .form-select {
+        padding: 0.7rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    /* Mensaje de error */
+    .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border-left: 4px solid var(--danger);
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        color: var(--danger);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Información adicional */
+    .info-note {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02));
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .info-note i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-note p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Botón */
+    .btn-submit {
+        width: 100%;
+        padding: 0.8rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-user-plus"></i>
+                Registrar Usuario
+            </h1>
+            <p>Complete el formulario para agregar un nuevo usuario al sistema</p>
+        </div>
+
+        <div class="form-body">
+            {% if mensaje %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ mensaje }}
+            </div>
+            {% endif %}
+
+            <form method="POST" id="registroForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <!-- Nombres -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Nombres <span class="required-star">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="nombres" name="nombres" 
+                               placeholder="Ej: Juan Carlos" required>
+                    </div>
+
+                    <!-- Apellido Paterno -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-tag"></i> Apellido Paterno <span class="required-star">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="apepat" name="apepat" 
+                               placeholder="Ej: Pérez" required>
+                    </div>
+
+                    <!-- Apellido Materno -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-tag"></i> Apellido Materno <span class="required-star">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="apemat" name="apemat" 
+                               placeholder="Ej: López" required>
+                    </div>
+
+                    <!-- CI -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> CI <span class="required-star">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="ci" name="ci" 
+                               placeholder="Ej: 12345678" required>
+                        <small class="text-muted">Mínimo 5 dígitos</small>
+                    </div>
+
+                    <!-- Extensión -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Extensión
+                        </label>
+                        <select id="extension" name="extension" class="form-select">
+                            <option value="LP">La Paz (LP)</option>
+                            <option value="CH">Chuquisaca (CH)</option>
+                            <option value="CB">Cochabamba (CB)</option>
+                            <option value="OR">Oruro (OR)</option>
+                            <option value="PT">Potosí (PT)</option>
+                            <option value="TJ">Tarija (TJ)</option>
+                            <option value="SC">Santa Cruz (SC)</option>
+                            <option value="BE">Beni (BE)</option>
+                            <option value="PD">Pando (PD)</option>
+                        </select>
+                    </div>
+
+                    <!-- Complemento -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-pen-alt"></i> Complemento
+                        </label>
+                        <input type="text" class="form-control" id="complemento" name="complemento" 
+                               placeholder="Ej: 123 (opcional)">
+                    </div>
+
+                    <!-- Correo Electrónico -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-envelope"></i> Correo Electrónico <span class="required-star">*</span>
+                        </label>
+                        <input type="email" class="form-control" id="correo" name="correo" 
+                               placeholder="Ej: usuario@umsa.bo" required>
+                        <small class="text-muted">Debe ser un correo @umsa.bo</small>
+                    </div>
+
+                    <!-- Tipo de Usuario -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-shield"></i> Tipo de Usuario <span class="required-star">*</span>
+                        </label>
+                        <select id="tipo_usuario" name="tipo_usuario" class="form-select" required>
+                            <option value="Estudiante">🎓 Estudiante</option>
+                            <option value="Administrador">👑 Administrador</option>
+                            <option value="Docente">👨‍🏫 Docente</option>
+                            <option value="Externo">🌐 Externo</option>
+                        </select>
+                    </div>
+
+                    <!-- Registro Universitario -->
+                    <div class="form-group" id="ruContainer">
+                        <label class="form-label">
+                            <i class="fas fa-graduation-cap"></i> Registro Universitario <span class="required-star" id="ruRequired" style="display: none;">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="ru" name="ru" 
+                               placeholder="Ej: 202012345">
+                        <small class="text-muted ru-hint">Obligatorio para estudiantes</small>
+                    </div>
+
+                    <!-- Número de Celular -->
+                    <div class="form-group full-width">
+                        <label class="form-label">
+                            <i class="fas fa-phone-alt"></i> Número de Celular <span class="required-star">*</span>
+                        </label>
+                        <input type="tel" class="form-control" id="nro_celular" name="nro_celular" 
+                               placeholder="Ej: 71234567" required>
+                        <small class="text-muted">8 dígitos, sin espacios</small>
+                    </div>
+                </div>
+
+                <!-- Nota informativa -->
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>Información importante:</strong> La contraseña inicial del usuario será su número de CI. 
+                        El usuario deberá cambiarla en su primer inicio de sesión.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-save"></i> Guardar Usuario
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoUsuarioSelect = document.getElementById('tipo_usuario');
+        const ruInput = document.getElementById('ru');
+        const ruRequired = document.getElementById('ruRequired');
+        const ruContainer = document.getElementById('ruContainer');
+        const form = document.getElementById('registroForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Mostrar/ocultar campo RU según tipo de usuario
+        function updateRuVisibility() {
+            const selectedValue = tipoUsuarioSelect.value;
+            
+            if (selectedValue === 'Docente') {
+                ruContainer.style.display = 'none';
+                ruInput.required = false;
+                ruInput.value = '';
+            } else {
+                ruContainer.style.display = 'block';
+                if (selectedValue === 'Estudiante') {
+                    ruInput.required = true;
+                    ruRequired.style.display = 'inline';
+                    ruInput.placeholder = 'Ej: 202012345';
+                } else {
+                    ruInput.required = false;
+                    ruRequired.style.display = 'none';
+                    ruInput.value = '';
+                    ruInput.placeholder = 'No requerido';
+                }
+            }
+        }
+
+        tipoUsuarioSelect.addEventListener('change', updateRuVisibility);
+        updateRuVisibility();
+
+        // Validar correo @umsa.bo
+        const correoInput = document.getElementById('correo');
+        correoInput.addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !email.endsWith('@umsa.bo')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Correo no institucional',
+                    text: 'Se recomienda usar el correo institucional @umsa.bo',
+                    confirmButtonColor: '#F59E0B'
+                });
+            }
+        });
+
+        // Envío del formulario
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validar campos requeridos
+            const nombres = document.getElementById('nombres').value.trim();
+            if (!nombres) {
+                Swal.fire('Error', 'El nombre es obligatorio', 'error');
+                return;
+            }
+
+            const ci = document.getElementById('ci').value;
+            if (!ci || ci.length < 5) {
+                Swal.fire('Error', 'El CI debe tener al menos 5 dígitos', 'error');
+                return;
+            }
+
+            const correo = document.getElementById('correo').value;
+            if (!correo || !correo.includes('@')) {
+                Swal.fire('Error', 'Ingrese un correo electrónico válido', 'error');
+                return;
+            }
+
+            const celular = document.getElementById('nro_celular').value;
+            if (!celular || celular.length !== 8) {
+                Swal.fire('Error', 'El número de celular debe tener 8 dígitos', 'error');
+                return;
+            }
+
+            if (tipoUsuarioSelect.value === 'Estudiante' && (!ruInput.value || ruInput.value.length < 5)) {
+                Swal.fire('Error', 'Para estudiantes, el RU es obligatorio y debe tener al menos 5 dígitos', 'error');
+                return;
+            }
+
+            // Mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.text();
+                
+                if (data.includes('mensaje') && data.includes('error')) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    const mensaje = tempDiv.querySelector('h4')?.textContent || 'Error al registrar usuario';
+                    throw new Error(mensaje);
+                }
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Usuario registrado exitosamente!',
+                    text: 'La contraseña inicial es el CI del usuario',
+                    confirmButtonColor: '#F59E0B',
+                    confirmButtonText: 'Ir a lista de usuarios'
+                }).then(() => {
+                    window.location.href = '/lista_usuarios/';
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Hubo un problema al registrar el usuario',
+                    confirmButtonColor: '#EF4444'
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Usuario';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,687 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA MARCA DE AGUA          */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .watermark-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+    }
+
+    .form-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Layout de dos columnas */
+    .two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Panel de controles */
+    .controls-panel {
+        background: var(--bg-light);
+        border-radius: 20px;
+        padding: 1.5rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .section-title i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .section-title h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    /* Grupos de formulario */
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        background-color: white;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    /* Range sliders */
+    .range-group {
+        margin-bottom: 1rem;
+    }
+
+    .range-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.3rem;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        height: 4px;
+        -webkit-appearance: none;
+        background: var(--border-light);
+        border-radius: 2px;
+        outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Estilo selector */
+    .style-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 0.5rem;
+    }
+
+    .style-btn {
+        flex: 1;
+        padding: 0.6rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        font-size: 0.8rem;
+    }
+
+    .style-btn.active {
+        border-color: var(--accent);
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent);
+    }
+
+    /* Panel de vista previa */
+    .preview-panel {
+        background: var(--bg-light);
+        border-radius: 20px;
+        padding: 1.5rem;
+    }
+
+    .preview-container {
+        position: relative;
+        background: #1a1a2e;
+        border-radius: 16px;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+    }
+
+    .watermark-overlay {
+        position: absolute;
+        pointer-events: none;
+    }
+
+    .watermark-text-overlay {
+        position: absolute;
+        font-size: 1.5rem;
+        font-weight: bold;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.7);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Botones de acción */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-cancel {
+        background: white;
+        border: 1.5px solid var(--border-light);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .two-columns {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-cancel, .btn-save {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="watermark-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-watermark"></i>
+                Personalizar Marca de Agua
+            </h1>
+            <p>Ajusta la posición, tamaño y estilo de la marca de agua para la imagen</p>
+        </div>
+
+        <div class="form-body">
+            <div class="two-columns">
+                <!-- Panel de controles izquierdo -->
+                <div class="controls-panel">
+                    <div class="section-title">
+                        <i class="fas fa-sliders-h"></i>
+                        <h3>Configuración de la Marca de Agua</h3>
+                    </div>
+
+                    <!-- Tipo de marca -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-tag"></i> Tipo de Marca
+                        </label>
+                        <div class="style-buttons">
+                            <button type="button" class="style-btn" data-style="text">
+                                <i class="fas fa-font"></i> Texto
+                            </button>
+                            <button type="button" class="style-btn" data-style="image">
+                                <i class="fas fa-image"></i> Imagen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Texto (visible solo cuando se selecciona texto) -->
+                    <div class="form-group" id="textoGroup">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Texto de Marca
+                        </label>
+                        <input type="text" class="form-control" id="texto" 
+                               placeholder="Ej: Biblioteca Art-Dis" value="Biblioteca Art-Dis">
+                    </div>
+
+                    <!-- Imagen (visible solo cuando se selecciona imagen) -->
+                    <div class="form-group" id="imagenGroup" style="display: none;">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> Imagen de Marca
+                        </label>
+                        <input type="file" class="form-control" id="imagen" accept="image/*">
+                        <small class="text-muted">Formatos: PNG, JPG, SVG. Recomendado fondo transparente</small>
+                    </div>
+
+                    <!-- Transparencia -->
+                    <div class="range-group">
+                        <div class="range-header">
+                            <span><i class="fas fa-eye"></i> Transparencia</span>
+                            <span id="transparenciaValor">50%</span>
+                        </div>
+                        <input type="range" id="transparencia" min="0" max="100" value="50">
+                    </div>
+
+                    <!-- Tamaño -->
+                    <div class="range-group">
+                        <div class="range-header">
+                            <span><i class="fas fa-expand"></i> Tamaño</span>
+                            <span id="tamañoValor">50%</span>
+                        </div>
+                        <input type="range" id="tamaño" min="10" max="100" value="50">
+                    </div>
+
+                    <!-- Posición X -->
+                    <div class="range-group">
+                        <div class="range-header">
+                            <span><i class="fas fa-arrows-alt-h"></i> Posición Horizontal</span>
+                            <span id="posicionXValor">50%</span>
+                        </div>
+                        <input type="range" id="posicion_x" min="0" max="100" value="50">
+                    </div>
+
+                    <!-- Posición Y -->
+                    <div class="range-group">
+                        <div class="range-header">
+                            <span><i class="fas fa-arrows-alt-v"></i> Posición Vertical</span>
+                            <span id="posicionYValor">50%</span>
+                        </div>
+                        <input type="range" id="posicion_y" min="0" max="100" value="50">
+                    </div>
+
+                    <!-- Rotación -->
+                    <div class="range-group">
+                        <div class="range-header">
+                            <span><i class="fas fa-sync-alt"></i> Rotación</span>
+                            <span id="rotacionValor">0°</span>
+                        </div>
+                        <input type="range" id="rotacion" min="0" max="360" value="0">
+                    </div>
+
+                    <!-- Estilo de mosaico -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-th"></i> Estilo
+                        </label>
+                        <select id="estilo" class="form-select">
+                            <option value="simple">Simple (una marca)</option>
+                            <option value="mosaico">Mosaico (repetido)</option>
+                            <option value="disperso">Disperso (múltiple)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Panel de vista previa derecho -->
+                <div class="preview-panel">
+                    <div class="section-title">
+                        <i class="fas fa-eye"></i>
+                        <h3>Vista Previa</h3>
+                    </div>
+                    <div class="preview-container" id="previewContainer">
+                        <img id="previewImage" class="preview-image" src="{% static 'images/logoBiblio.png' %}" alt="Vista previa">
+                        <div id="watermarkOverlay" class="watermark-overlay"></div>
+                        <div id="watermarkText" class="watermark-text-overlay"></div>
+                    </div>
+                    <p class="text-muted small mt-2 text-center">
+                        <i class="fas fa-info-circle"></i> Vista previa en tiempo real - Ajusta los controles para ver los cambios
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="window.history.back()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn-save" id="aplicarBtn">
+                    <i class="fas fa-check"></i> Aplicar y Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Elementos DOM
+    const previewImage = document.getElementById('previewImage');
+    const watermarkOverlay = document.getElementById('watermarkOverlay');
+    const watermarkText = document.getElementById('watermarkText');
+    
+    // Controles
+    const textoInput = document.getElementById('texto');
+    const imagenInput = document.getElementById('imagen');
+    const transparencia = document.getElementById('transparencia');
+    const tamaño = document.getElementById('tamaño');
+    const posicionX = document.getElementById('posicion_x');
+    const posicionY = document.getElementById('posicion_y');
+    const rotacion = document.getElementById('rotacion');
+    const estiloSelect = document.getElementById('estilo');
+    
+    // Tipo de marca (texto o imagen)
+    let watermarkType = 'text'; // 'text' o 'image'
+    let currentImageUrl = null;
+
+    // Actualizar valores mostrados
+    function updateRangeValues() {
+        document.getElementById('transparenciaValor').textContent = transparencia.value + '%';
+        document.getElementById('tamañoValor').textContent = tamaño.value + '%';
+        document.getElementById('posicionXValor').textContent = posicionX.value + '%';
+        document.getElementById('posicionYValor').textContent = posicionY.value + '%';
+        document.getElementById('rotacionValor').textContent = rotacion.value + '°';
+    }
+
+    // Actualizar estilo de botones
+    function updateStyleButtons() {
+        document.querySelectorAll('.style-btn').forEach(btn => {
+            if (btn.dataset.style === watermarkType) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        // Mostrar/ocultar campos según tipo
+        document.getElementById('textoGroup').style.display = watermarkType === 'text' ? 'block' : 'none';
+        document.getElementById('imagenGroup').style.display = watermarkType === 'image' ? 'block' : 'none';
+    }
+
+    // Crear marcas de agua en mosaico
+    function createMosaicWatermarks(container, size, opacity, rotate) {
+        container.innerHTML = '';
+        const countX = Math.ceil(container.parentElement.clientWidth / (size + 20));
+        const countY = Math.ceil(container.parentElement.clientHeight / (size + 20));
+        
+        for (let i = 0; i < countX * countY; i++) {
+            const mark = document.createElement('div');
+            mark.className = 'watermark-mark';
+            
+            if (watermarkType === 'text') {
+                mark.textContent = textoInput.value || 'Marca de Agua';
+                mark.style.fontSize = (size * 0.8) + 'px';
+                mark.style.color = `rgba(255, 255, 255, ${opacity})`;
+                mark.style.fontWeight = 'bold';
+                mark.style.whiteSpace = 'nowrap';
+            } else if (currentImageUrl) {
+                mark.style.backgroundImage = `url(${currentImageUrl})`;
+                mark.style.backgroundSize = 'contain';
+                mark.style.backgroundRepeat = 'no-repeat';
+                mark.style.backgroundPosition = 'center';
+            }
+            
+            mark.style.position = 'absolute';
+            mark.style.width = size + 'px';
+            mark.style.height = size + 'px';
+            mark.style.left = ((i % countX) * (size + 20)) + 'px';
+            mark.style.top = (Math.floor(i / countX) * (size + 20)) + 'px';
+            mark.style.opacity = opacity;
+            mark.style.transform = `rotate(${rotate}deg)`;
+            mark.style.pointerEvents = 'none';
+            container.appendChild(mark);
+        }
+    }
+
+    // Actualizar vista previa completa
+    function updatePreview() {
+        const opacity = transparencia.value / 100;
+        const size = parseInt(tamaño.value);
+        const x = parseInt(posicionX.value);
+        const y = parseInt(posicionY.value);
+        const rotate = parseInt(rotacion.value);
+        const estilo = estiloSelect.value;
+        
+        // Limpiar overlays
+        watermarkOverlay.innerHTML = '';
+        watermarkText.innerHTML = '';
+        
+        if (estilo === 'mosaico') {
+            // Modo mosaico - múltiples marcas
+            watermarkOverlay.style.position = 'absolute';
+            watermarkOverlay.style.top = '0';
+            watermarkOverlay.style.left = '0';
+            watermarkOverlay.style.width = '100%';
+            watermarkOverlay.style.height = '100%';
+            createMosaicWatermarks(watermarkOverlay, size * 2, opacity, rotate);
+            watermarkText.style.display = 'none';
+        } else if (estilo === 'disperso') {
+            // Modo disperso - múltiples marcas aleatorias
+            watermarkOverlay.style.position = 'absolute';
+            watermarkOverlay.style.top = '0';
+            watermarkOverlay.style.left = '0';
+            watermarkOverlay.style.width = '100%';
+            watermarkOverlay.style.height = '100%';
+            
+            for (let i = 0; i < 12; i++) {
+                const mark = document.createElement('div');
+                const randX = Math.random() * 100;
+                const randY = Math.random() * 100;
+                const randRotate = Math.random() * 360;
+                
+                if (watermarkType === 'text') {
+                    mark.textContent = textoInput.value || 'Marca de Agua';
+                    mark.style.fontSize = (size * 0.6) + 'px';
+                    mark.style.color = `rgba(255, 255, 255, ${opacity * 0.6})`;
+                    mark.style.fontWeight = 'bold';
+                    mark.style.whiteSpace = 'nowrap';
+                } else if (currentImageUrl) {
+                    mark.style.backgroundImage = `url(${currentImageUrl})`;
+                    mark.style.backgroundSize = 'contain';
+                    mark.style.backgroundRepeat = 'no-repeat';
+                    mark.style.width = size + 'px';
+                    mark.style.height = size + 'px';
+                }
+                
+                mark.style.position = 'absolute';
+                mark.style.left = randX + '%';
+                mark.style.top = randY + '%';
+                mark.style.opacity = opacity * 0.5;
+                mark.style.transform = `rotate(${randRotate}deg)`;
+                mark.style.pointerEvents = 'none';
+                watermarkOverlay.appendChild(mark);
+            }
+            watermarkText.style.display = 'none';
+        } else {
+            // Modo simple
+            watermarkOverlay.style.display = 'none';
+            watermarkOverlay.innerHTML = '';
+            
+            if (watermarkType === 'text') {
+                watermarkText.textContent = textoInput.value || 'Marca de Agua';
+                watermarkText.style.fontSize = (size * 1.5) + 'px';
+                watermarkText.style.color = `rgba(255, 255, 255, ${opacity})`;
+                watermarkText.style.fontWeight = 'bold';
+                watermarkText.style.whiteSpace = 'nowrap';
+                watermarkText.style.position = 'absolute';
+                watermarkText.style.left = x + '%';
+                watermarkText.style.top = y + '%';
+                watermarkText.style.transform = `translate(-50%, -50%) rotate(${rotate}deg)`;
+                watermarkText.style.display = 'block';
+            } else if (currentImageUrl) {
+                watermarkOverlay.style.display = 'block';
+                watermarkOverlay.style.backgroundImage = `url(${currentImageUrl})`;
+                watermarkOverlay.style.backgroundSize = 'contain';
+                watermarkOverlay.style.backgroundRepeat = 'no-repeat';
+                watermarkOverlay.style.backgroundPosition = 'center';
+                watermarkOverlay.style.width = size + '%';
+                watermarkOverlay.style.height = size + '%';
+                watermarkOverlay.style.position = 'absolute';
+                watermarkOverlay.style.left = x + '%';
+                watermarkOverlay.style.top = y + '%';
+                watermarkOverlay.style.transform = `translate(-50%, -50%) rotate(${rotate}deg)`;
+                watermarkOverlay.style.opacity = opacity;
+            }
+        }
+    }
+
+    // Eventos de los controles
+    function bindEvents() {
+        const ranges = [transparencia, tamaño, posicionX, posicionY, rotacion];
+        ranges.forEach(range => {
+            range.addEventListener('input', () => {
+                updateRangeValues();
+                updatePreview();
+            });
+        });
+        
+        textoInput.addEventListener('input', updatePreview);
+        estiloSelect.addEventListener('change', updatePreview);
+        
+        imagenInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentImageUrl = event.target.result;
+                    updatePreview();
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
+
+    // Eventos de los botones de estilo
+    document.querySelectorAll('.style-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            watermarkType = btn.dataset.style;
+            updateStyleButtons();
+            updatePreview();
+        });
+    });
+
+    // Inicializar
+    function init() {
+        updateStyleButtons();
+        updateRangeValues();
+        bindEvents();
+        updatePreview();
+    }
+    
+    init();
+
+    // Botón aplicar
+    document.getElementById('aplicarBtn').addEventListener('click', () => {
+        Swal.fire({
+            title: '¿Aplicar marca de agua?',
+            text: 'La marca de agua se aplicará a la imagen actual',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#F59E0B',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: '<i class="fas fa-check"></i> Sí, aplicar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: '¡Aplicada!',
+                    text: 'La marca de agua se ha aplicado correctamente',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Aquí puedes agregar la lógica para guardar la imagen con marca de agua
+                    window.history.back();
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

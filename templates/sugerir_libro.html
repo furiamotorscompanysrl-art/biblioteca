@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ============================================ */
+    /* ESTILOS MODERNOS PARA SUGERIR LIBRO          */
+    /* ============================================ */
+    :root {
+        --primary-dark: #0F2B3D;
+        --primary: #1A3A4F;
+        --accent: #F59E0B;
+        --accent-hover: #FBBF24;
+        --success: #10B981;
+        --danger: #EF4444;
+        --info: #3B82F6;
+        --bg-light: #F8FAFC;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-light: #E5E7EB;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 3px solid var(--accent);
+        text-align: center;
+    }
+
+    .form-header h1 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .form-header h1 i {
+        color: var(--accent);
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0.5rem 0 0;
+        font-size: 0.85rem;
+    }
+
+    /* Body */
+    .form-body {
+        padding: 2rem;
+    }
+
+    /* Campos de formulario */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label i {
+        color: var(--accent);
+        font-size: 0.9rem;
+    }
+
+    .required-star {
+        color: var(--danger);
+    }
+
+    .form-control, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--border-light);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background-color: var(--bg-light);
+    }
+
+    .form-control:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        background-color: white;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    /* Campos con iconos */
+    .input-icon-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent);
+        font-size: 1rem;
+        z-index: 2;
+    }
+
+    .input-with-icon {
+        padding-left: 2.5rem;
+    }
+
+    /* Información */
+    .info-note {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02));
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .info-note i {
+        font-size: 1.2rem;
+        color: var(--accent);
+    }
+
+    .info-note p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Botón */
+    .btn-submit {
+        width: 100%;
+        padding: 0.8rem;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-lightbulb"></i>
+                Sugerir un Libro
+            </h1>
+            <p>Comparte tus recomendaciones para enriquecer nuestra biblioteca</p>
+        </div>
+
+        <div class="form-body">
+            <form method="post" id="sugerenciaForm">
+                {% csrf_token %}
+                
+                <!-- Autor -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-user-pen"></i> Autor del libro <span class="required-star">*</span>
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" class="form-control input-with-icon" id="autor_sugerencia" 
+                               name="autor_sugerencia" placeholder="Ej: Gabriel García Márquez" required>
+                    </div>
+                </div>
+
+                <!-- Título -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-heading"></i> Título del libro <span class="required-star">*</span>
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-book input-icon"></i>
+                        <input type="text" class="form-control input-with-icon" id="titulo_sugerencia" 
+                               name="titulo_sugerencia" placeholder="Ej: Cien años de soledad" required>
+                    </div>
+                </div>
+
+                <!-- Edición -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i> Edición
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-layer-group input-icon"></i>
+                        <input type="text" class="form-control input-with-icon" id="edicion" 
+                               name="edicion" placeholder="Ej: 2da Edición, 2020">
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i> Descripción <span class="required-star">*</span>
+                    </label>
+                    <textarea id="descripcion" name="descripcion" 
+                              placeholder="Describe el contenido del libro, por qué lo recomiendas o cualquier información relevante..." required></textarea>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> Puedes incluir enlaces donde obtener más información o detalles adicionales
+                    </small>
+                </div>
+
+                <!-- Nota informativa -->
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>Importante:</strong> Tu sugerencia será revisada por el equipo administrativo. 
+                        Recibirás una notificación cuando sea aprobada o si necesitamos más información.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> Enviar Sugerencia
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const form = document.getElementById('sugerenciaForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validar campos requeridos
+        const autor = document.getElementById('autor_sugerencia').value.trim();
+        const titulo = document.getElementById('titulo_sugerencia').value.trim();
+        const descripcion = document.getElementById('descripcion').value.trim();
+        
+        if (!autor) {
+            Swal.fire('Error', 'El nombre del autor es obligatorio', 'error');
+            return;
+        }
+        
+        if (!titulo) {
+            Swal.fire('Error', 'El título del libro es obligatorio', 'error');
+            return;
+        }
+        
+        if (!descripcion) {
+            Swal.fire('Error', 'La descripción es obligatoria', 'error');
+            return;
+        }
+        
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando sugerencia...';
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch("{% url 'sugerir_libro' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Sugerencia enviada!',
+                        text: 'Tu sugerencia ha sido registrada correctamente. El equipo la revisará pronto.',
+                        icon: 'success',
+                        confirmButtonColor: '#F59E0B',
+                        confirmButtonText: 'Ver mis sugerencias'
+                    }).then(() => {
+                        window.location.href = "{% url 'listar_sugerencias_usuario' %}";
+                    });
+                } else {
+                    throw new Error(data.error || 'Error al enviar la sugerencia');
+                }
+            } else {
+                // Si no es JSON, probablemente hay un error HTML
+                const text = await response.text();
+                console.error('Respuesta no JSON:', text.substring(0, 200));
+                throw new Error('Error del servidor. Contacta al administrador.');
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'Hubo un problema al enviar tu sugerencia. Intenta nuevamente.',
+                icon: 'error',
+                confirmButtonColor: '#EF4444'
+            });
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Sugerencia';
+        }
+    });
+</script>
+{% endblock %}
