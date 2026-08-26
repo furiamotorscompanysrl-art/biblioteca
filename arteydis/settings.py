@@ -193,22 +193,26 @@ if DATABASE_URL:
         )
     }
 else:
-    # Fallback para desarrollo local - CREDENCIALES DE SUPABASE
+    # ============================================
+    # BASE DE DATOS - CONFIGURACIÓN DIRECTA
+    # ============================================
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'postgres',
-            'USER': 'postgres.vmwkbkvsthswxshcwhmp',
+            'USER': 'postgres',
             'PASSWORD': 'cnPd.fxp4x.5kMQ2',
-            'HOST': 'aws-1-us-east-1.pooler.supabase.com',
-            'PORT': '6543',
+            'HOST': 'db.vmwkbkvsthswxshcwhmp.supabase.co',
+            'PORT': '5432',
             'OPTIONS': {
                 'sslmode': 'require',
             },
             'CONN_MAX_AGE': 60,
-            'CONN_HEALTH_CHECKS': True,
         }
     }
+
+    print("✅ Base de datos configurada manualmente con ENGINE explícito")
 
 # ============================================
 # Password validation
