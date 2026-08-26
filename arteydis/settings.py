@@ -10,23 +10,17 @@ import json
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ============================================
 # SECRET KEY
-# ============================================
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7xx+3%9o4ni5#7s$0)3lyjb8g4albmz533@^+3w)1hm$v$06^)')
 
 # Silenciar warnings
 import warnings
 warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 
-# ============================================
 # DEBUG
-# ============================================
 DEBUG = False
 
-# ============================================
 # ALLOWED_HOSTS
-# ============================================
 ALLOWED_HOSTS = [
     'biblioteca-production-b2fa.up.railway.app',
     '.up.railway.app',
@@ -36,9 +30,7 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
 ]
 
-# ============================================
 # Application definition
-# ============================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -77,9 +69,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# ============================================
 # TEMPLATES
-# ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -99,9 +89,7 @@ TEMPLATES = [
     },
 ]
 
-# ============================================
 # LOGGING
-# ============================================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -166,31 +154,65 @@ LOGIN_URL = '/'
 WSGI_APPLICATION = 'arteydis.wsgi.application'
 
 # ============================================
-# BASE DE DATOS - ¡CONFIGURACIÓN DIRECTA!
+# BASE DE DATOS - CONFIGURACIÓN CORREGIDA
 # ============================================
 print("🔧 Configurando base de datos...")
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'cnPd.fxp4x.5kMQ2',
-        'HOST': 'db.vmwkbkvsthswxshcwhmp.supabase.co',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
-        'CONN_MAX_AGE': 60,
+# Usar DATABASE_URL si existe, o configuración manual
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Si hay DATABASE_URL en Railway, usar dj_database_url
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                ssl_require=True
+            )
+        }
+        print(f"✅ Base de datos configurada desde DATABASE_URL")
+    except ImportError:
+        # Si no está instalado dj_database_url, usar manual
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'postgres',
+                'USER': 'postgres.vmwkbkvsthswxshcwhmp',
+                'PASSWORD': 'cnPd.fxp4x.5kMQ2',
+                'HOST': 'aws-1-us-east-1.pooler.supabase.com',
+                'PORT': '6543',
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+                'CONN_MAX_AGE': 60,
+            }
+        }
+        print("✅ Base de datos configurada manualmente (fallback)")
+else:
+    # Configuración manual directa
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres.vmwkbkvsthswxshcwhmp',
+            'PASSWORD': 'cnPd.fxp4x.5kMQ2',
+            'HOST': 'aws-1-us-east-1.pooler.supabase.com',
+            'PORT': '6543',
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+            'CONN_MAX_AGE': 60,
+        }
     }
-}
+    print("✅ Base de datos configurada manualmente (directa)")
 
-print(f"✅ DATABASES configurada con ENGINE: {DATABASES['default']['ENGINE']}")
+print(f"📌 USER: {DATABASES['default']['USER']}")
 print(f"📌 HOST: {DATABASES['default']['HOST']}")
+print(f"📌 PORT: {DATABASES['default']['PORT']}")
 
-# ============================================
 # Password validation
-# ============================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 9}},
@@ -218,17 +240,13 @@ MESSAGE_TAGS = {
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# ============================================
-# ARCHIVOS ESTÁTICOS
-# ============================================
+# STATIC FILES
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ============================================
 # CLOUDINARY
-# ============================================
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dnnl3rije'),
     api_key=os.environ.get('CLOUDINARY_API_KEY', '372388277625767'),
@@ -246,9 +264,7 @@ CLOUDINARY_STORAGE = {
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
-# ============================================
 # GOOGLE DRIVE
-# ============================================
 GOOGLE_DRIVE_CREDENTIALS_JSON = os.environ.get('GOOGLE_DRIVE_CREDENTIALS_JSON')
 if GOOGLE_DRIVE_CREDENTIALS_JSON:
     try:
@@ -263,9 +279,7 @@ else:
 
 GOOGLE_DRIVE_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_FOLDER_ID', '')
 
-# ============================================
 # EMAIL
-# ============================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
@@ -276,9 +290,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = f'Biblioteca ARTyDIS <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Biblioteca ARTyDIS <noreply@example.com>'
 EMAIL_TIMEOUT = 30
 
-# ============================================
 # SEGURIDAD
-# ============================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
