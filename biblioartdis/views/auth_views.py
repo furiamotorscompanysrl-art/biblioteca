@@ -177,29 +177,13 @@ def cambiar_password(request):
 
 def registrar_usuario(request):
     """Vista para que los usuarios soliciten acceso"""
+    from django.utils import timezone
+    
     if request.method == 'POST':
         form = RegistroUsuarioForm(request.POST, request.FILES)
         if form.is_valid():
-            # Crear User
-            user = User.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password'],
-                first_name=form.cleaned_data['nombres'],
-                last_name=f"{form.cleaned_data['apepat']} {form.cleaned_data['apemat']}"
-            )
-            # Desactivar usuario hasta aprobación
-            user.is_active = False
-            user.save()
-            
-            # Crear Usuario con estado pendiente
-            usuario = form.save(commit=False)
-            usuario.user = user
-            usuario.correo = form.cleaned_data['email']
-            usuario.estado_registro = 'pendiente'
-            usuario.fecha_solicitud = timezone.now()
-            usuario.esta_activo = False
-            usuario.save()
+            # El formulario ya se encarga de crear el User y el Usuario
+            usuario = form.save()
             
             # Notificar al administrador
             notificar_admin_nuevo_registro(usuario)
