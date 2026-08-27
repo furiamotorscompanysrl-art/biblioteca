@@ -1,144 +1,470 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
+
+{% block title %}Solicitar Acceso - Biblioteca ARTyDIS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        overflow: hidden;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
+        color: white;
+        padding: 25px 30px;
+        border: none;
+    }
+    
+    .register-header h3 {
+        margin: 0;
+        font-weight: 700;
+    }
+    
+    .register-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    
+    .register-body {
+        padding: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #4a00e0;
+        border-bottom: 2px solid #e8e8e8;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .section-title i {
+        margin-right: 10px;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #333;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e8e8e8;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.25);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-control-file {
+        padding: 10px;
+        border: 2px dashed #e8e8e8;
+        border-radius: 10px;
+        width: 100%;
+        background: #fafafa;
+    }
+    
+    .form-control-file:hover {
+        border-color: #764ba2;
+        background: #f5f0ff;
+    }
+    
+    .help-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    .help-text i {
+        margin-right: 4px;
+    }
+    
+    .btn-register {
+        background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(74, 0, 224, 0.3);
+        color: white;
+    }
+    
+    .btn-register:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-back {
+        color: #6c757d;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .btn-back:hover {
+        color: #4a00e0;
+    }
+    
+    .file-info {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    .required-star {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+    
+    .password-requirements {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .loading.show {
+        display: block;
+    }
+    
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #764ba2;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3>📝 Solicitar Acceso - Biblioteca ARTyDIS</h3>
-                    <small>Tu solicitud será revisada por el administrador</small>
+        <div class="col-lg-8 col-md-10">
+            <div class="card register-card">
+                <div class="register-header">
+                    <h3><i class="fas fa-user-plus"></i> Solicitar Acceso</h3>
+                    <p>Tu solicitud será revisada por el administrador</p>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                
+                <div class="register-body">
+                    <!-- Mensajes -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Errores del formulario -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Por favor corrige los siguientes errores:</strong>
+                            <ul class="mb-0 mt-2">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
                         {% csrf_token %}
                         
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                <strong>⚠️ Por favor corrige los siguientes errores:</strong>
-                                {{ form.errors }}
-                            </div>
-                        {% endif %}
-
+                        <!-- DATOS PERSONALES -->
+                        <div class="section-title">
+                            <i class="fas fa-user"></i> Datos Personales
+                        </div>
+                        
                         <div class="row">
-                            <div class="col-md-6">
-                                <h5>Datos Personales</h5>
-                                <div class="mb-3">
-                                    <label>Nombres</label>
-                                    {{ form.nombres|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>Apellido Paterno</label>
-                                    {{ form.apepat|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>Apellido Materno</label>
-                                    {{ form.apemat|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>CI</label>
-                                    {{ form.ci|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>Extensión</label>
-                                    {{ form.extension|add_class:"form-control" }}
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.nombres.id_for_label }}" class="form-label">
+                                    {{ form.nombres.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.nombres|add_class:"form-control" }}
+                                {% if form.nombres.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.nombres.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.apepat.id_for_label }}" class="form-label">
+                                    {{ form.apepat.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.apepat|add_class:"form-control" }}
+                                {% if form.apepat.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.apepat.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.apemat.id_for_label }}" class="form-label">
+                                    {{ form.apemat.label }}
+                                </label>
+                                {{ form.apemat|add_class:"form-control" }}
+                                {% if form.apemat.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.apemat.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.ci.id_for_label }}" class="form-label">
+                                    {{ form.ci.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.ci|add_class:"form-control" }}
+                                {% if form.ci.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.ci.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.extension.id_for_label }}" class="form-label">
+                                    {{ form.extension.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.extension|add_class:"form-select" }}
+                                {% if form.extension.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.extension.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.complemento.id_for_label }}" class="form-label">
+                                    {{ form.complemento.label }}
+                                </label>
+                                {{ form.complemento|add_class:"form-control" }}
+                                {% if form.complemento.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.complemento.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- DATOS DE CONTACTO -->
+                        <div class="section-title mt-4">
+                            <i class="fas fa-address-card"></i> Datos de Contacto
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.correo.id_for_label }}" class="form-label">
+                                    {{ form.correo.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.correo|add_class:"form-control" }}
+                                {% if form.correo.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.correo.errors }}</div>
+                                {% endif %}
+                                <div class="help-text">
+                                    <i class="fas fa-info-circle"></i> {{ form.correo.help_text }}
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <h5>Datos de Contacto</h5>
-                                <div class="mb-3">
-                                    <label>Correo UMSA</label>
-                                    {{ form.email|add_class:"form-control" }}
-                                    <small class="text-muted">Debe ser @umsa.bo</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label>Usuario</label>
-                                    {{ form.username|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>Teléfono / Celular</label>
-                                    {{ form.telefono|add_class:"form-control" }}
-                                </div>
-                                <div class="mb-3">
-                                    <label>Dirección</label>
-                                    {{ form.direccion|add_class:"form-control" }}
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.telefono.id_for_label }}" class="form-label">
+                                    {{ form.telefono.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.telefono|add_class:"form-control" }}
+                                {% if form.telefono.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.telefono.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
-
-                        <hr>
-                        <h5>Datos Académicos</h5>
+                        
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>Carrera</label>
-                                    {{ form.carrera|add_class:"form-control" }}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>Semestre</label>
-                                    {{ form.semestre|add_class:"form-control" }}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>Año de Ingreso</label>
-                                    {{ form.anio_ingreso|add_class:"form-control" }}
-                                </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.direccion.id_for_label }}" class="form-label">
+                                    {{ form.direccion.label }}
+                                </label>
+                                {{ form.direccion|add_class:"form-control" }}
+                                {% if form.direccion.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.direccion.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
-
-                        <hr>
-                        <h5>Documentos Requeridos</h5>
+                        
+                        <!-- DATOS ACADÉMICOS -->
+                        <div class="section-title mt-4">
+                            <i class="fas fa-graduation-cap"></i> Datos Académicos
+                        </div>
+                        
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>📄 Matrícula (PDF)</label>
-                                    {{ form.matricula_pdf|add_class:"form-control" }}
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.carrera.id_for_label }}" class="form-label">
+                                    {{ form.carrera.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.carrera|add_class:"form-control" }}
+                                {% if form.carrera.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.carrera.errors }}</div>
+                                {% endif %}
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>🪪 Carnet - Frente</label>
-                                    {{ form.carnet_frente|add_class:"form-control" }}
-                                </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.semestre.id_for_label }}" class="form-label">
+                                    {{ form.semestre.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.semestre|add_class:"form-control" }}
+                                {% if form.semestre.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.semestre.errors }}</div>
+                                {% endif %}
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label>🪪 Carnet - Reverso</label>
-                                    {{ form.carnet_reverso|add_class:"form-control" }}
-                                </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.anio_ingreso.id_for_label }}" class="form-label">
+                                    {{ form.anio_ingreso.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.anio_ingreso|add_class:"form-control" }}
+                                {% if form.anio_ingreso.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.anio_ingreso.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
-
-                        <hr>
-                        <h5>Seguridad</h5>
+                        
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label>Contraseña</label>
-                                    {{ form.password|add_class:"form-control" }}
-                                    <small class="text-muted">Mínimo 9 caracteres</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label>Confirmar Contraseña</label>
-                                    {{ form.confirmar_password|add_class:"form-control" }}
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.tipo_usuario.id_for_label }}" class="form-label">
+                                    {{ form.tipo_usuario.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.tipo_usuario|add_class:"form-select" }}
+                                {% if form.tipo_usuario.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tipo_usuario.errors }}</div>
+                                {% endif %}
+                                <div class="help-text">
+                                    <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
                                 </div>
                             </div>
                         </div>
-
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                📤 Enviar Solicitud
-                            </button>
-                            <a href="{% url 'login' %}" class="btn btn-secondary">
-                                ⬅️ Volver
+                        
+                        <!-- CONTRASEÑA -->
+                        <div class="section-title mt-4">
+                            <i class="fas fa-lock"></i> Contraseña
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">
+                                    {{ form.password.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.password|add_class:"form-control" }}
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
+                                {% endif %}
+                                <div class="password-requirements">
+                                    {{ form.password.help_text }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
+                                    {{ form.password_confirm.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.password_confirm|add_class:"form-control" }}
+                                {% if form.password_confirm.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.password_confirm.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- DOCUMENTOS -->
+                        <div class="section-title mt-4">
+                            <i class="fas fa-file-alt"></i> Documentos Requeridos
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.matricula_pdf.id_for_label }}" class="form-label">
+                                    {{ form.matricula_pdf.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.matricula_pdf|add_class:"form-control-file" }}
+                                {% if form.matricula_pdf.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.matricula_pdf.errors }}</div>
+                                {% endif %}
+                                <div class="file-info">
+                                    <i class="fas fa-file-pdf"></i> Solo PDF
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.carnet_frente.id_for_label }}" class="form-label">
+                                    {{ form.carnet_frente.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.carnet_frente|add_class:"form-control-file" }}
+                                {% if form.carnet_frente.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.carnet_frente.errors }}</div>
+                                {% endif %}
+                                <div class="file-info">
+                                    <i class="fas fa-image"></i> JPG, PNG
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.carnet_reverso.id_for_label }}" class="form-label">
+                                    {{ form.carnet_reverso.label }} <span class="required-star">*</span>
+                                </label>
+                                {{ form.carnet_reverso|add_class:"form-control-file" }}
+                                {% if form.carnet_reverso.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.carnet_reverso.errors }}</div>
+                                {% endif %}
+                                <div class="file-info">
+                                    <i class="fas fa-image"></i> JPG, PNG
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- BOTONES -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'home' %}" class="btn-back">
+                                <i class="fas fa-arrow-left"></i> Volver al Login
                             </a>
+                            <button type="submit" class="btn-register" id="btnRegistrar">
+                                <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                            </button>
+                        </div>
+                        
+                        <!-- Loading -->
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p class="mt-2 text-muted">Enviando solicitud...</p>
                         </div>
                     </form>
                 </div>
@@ -146,4 +472,59 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registroForm');
+        const btn = document.getElementById('btnRegistrar');
+        const loading = document.getElementById('loading');
+        
+        // Validación en tiempo real del correo
+        const correoInput = document.querySelector('input[name="correo"]');
+        if (correoInput) {
+            correoInput.addEventListener('input', function() {
+                const correo = this.value.toLowerCase();
+                if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Validación de contraseña
+        const passInput = document.querySelector('input[name="password"]');
+        const passConfirmInput = document.querySelector('input[name="password_confirm"]');
+        
+        if (passConfirmInput) {
+            passConfirmInput.addEventListener('input', function() {
+                if (passInput.value !== this.value) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Mostrar nombres de archivos seleccionados
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const fileName = this.files.length > 0 ? this.files[0].name : 'Ningún archivo seleccionado';
+                const label = this.closest('.mb-3').querySelector('.file-info');
+                if (label) {
+                    label.innerHTML = `<i class="fas fa-check-circle text-success"></i> ${fileName}`;
+                }
+            });
+        });
+        
+        // Prevenir doble envío
+        form.addEventListener('submit', function(e) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            loading.classList.add('show');
+        });
+    });
+</script>
 {% endblock %}

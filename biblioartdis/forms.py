@@ -3,6 +3,7 @@ import locale
 from datetime import datetime
 from django.contrib.auth.models import User
 from .models import Autor, Imagen, Usuario, Coleccion, Revista
+from django.utils import timezone
 
 # Configurar locale para fechas en español
 try:
@@ -265,84 +266,219 @@ class CambiarPasswordForm(forms.Form):
 
 # ============================================
 # FORMULARIO DE REGISTRO CON APROBACIÓN
+# SIN CAMPO DE USUARIO (se usa el correo como username)
 # ============================================
 
 class RegistroUsuarioForm(forms.ModelForm):
-    username = forms.CharField(
-        max_length=150, 
-        label='Usuario',
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    email = forms.EmailField(
-        label='Correo UMSA',
-        widget=forms.EmailInput(attrs={'class': 'form-control'})
-    )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Contraseña (mínimo 9 caracteres)'
+        }),
         label='Contraseña',
         min_length=9,
         help_text='Mínimo 9 caracteres'
     )
-    confirmar_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirmar contraseña'
+        }),
         label='Confirmar Contraseña'
     )
     
     class Meta:
         model = Usuario
         fields = [
-            'nombres', 'apepat', 'apemat', 'ci', 'extension', 'complemento',
-            'telefono', 'direccion', 'carrera', 'semestre', 'anio_ingreso',
-            'tipo_usuario', 'ru', 'nro_celular',
+            'nombres', 'apepat', 'apemat',
+            'ci', 'extension', 'complemento',
+            'correo', 'telefono', 'direccion',
+            'carrera', 'semestre', 'anio_ingreso',
+            'tipo_usuario',
             'matricula_pdf', 'carnet_frente', 'carnet_reverso'
         ]
         widgets = {
-            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
-            'apepat': forms.TextInput(attrs={'class': 'form-control'}),
-            'apemat': forms.TextInput(attrs={'class': 'form-control'}),
-            'ci': forms.TextInput(attrs={'class': 'form-control'}),
-            'extension': forms.Select(attrs={'class': 'form-control'}),
-            'complemento': forms.TextInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'carrera': forms.TextInput(attrs={'class': 'form-control'}),
-            'semestre': forms.TextInput(attrs={'class': 'form-control'}),
-            'anio_ingreso': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo_usuario': forms.Select(attrs={'class': 'form-control'}),
-            'ru': forms.TextInput(attrs={'class': 'form-control'}),
-            'nro_celular': forms.TextInput(attrs={'class': 'form-control'}),
-            'matricula_pdf': forms.FileInput(attrs={'class': 'form-control'}),
-            'carnet_frente': forms.FileInput(attrs={'class': 'form-control'}),
-            'carnet_reverso': forms.FileInput(attrs={'class': 'form-control'}),
+            'nombres': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Juan'
+            }),
+            'apepat': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Pérez'
+            }),
+            'apemat': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Gómez (opcional)'
+            }),
+            'ci': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 1234567'
+            }),
+            'extension': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'complemento': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 123 (opcional)'
+            }),
+            'correo': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ejemplo@umsa.bo'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 71234567'
+            }),
+            'direccion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Ej: Calle 123, Zona Central'
+            }),
+            'carrera': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Ingeniería de Sistemas'
+            }),
+            'semestre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 5to Semestre'
+            }),
+            'anio_ingreso': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 2023'
+            }),
+            'tipo_usuario': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'matricula_pdf': forms.FileInput(attrs={
+                'class': 'form-control-file',
+                'accept': '.pdf'
+            }),
+            'carnet_frente': forms.FileInput(attrs={
+                'class': 'form-control-file',
+                'accept': 'image/*'
+            }),
+            'carnet_reverso': forms.FileInput(attrs={
+                'class': 'form-control-file',
+                'accept': 'image/*'
+            }),
+        }
+        labels = {
+            'nombres': 'Nombre',
+            'apepat': 'Apellido Paterno',
+            'apemat': 'Apellido Materno',
+            'ci': 'CI',
+            'extension': 'Extensión',
+            'complemento': 'Complemento (opcional)',
+            'correo': 'Correo UMSA',
+            'telefono': 'Teléfono / Celular',
+            'direccion': 'Dirección',
+            'carrera': 'Carrera',
+            'semestre': 'Semestre',
+            'anio_ingreso': 'Año de Ingreso',
+            'tipo_usuario': 'Tipo de Usuario',
+            'matricula_pdf': 'Matrícula (PDF)',
+            'carnet_frente': 'Carnet - Frente',
+            'carnet_reverso': 'Carnet - Reverso',
+        }
+        help_texts = {
+            'correo': 'Debe ser @umsa.bo',
+            'tipo_usuario': 'Selecciona tu tipo de usuario',
+            'matricula_pdf': 'Sube tu matrícula en formato PDF',
+            'carnet_frente': 'Sube la foto del frente de tu carnet',
+            'carnet_reverso': 'Sube la foto del reverso de tu carnet',
         }
     
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email.endswith('@umsa.bo'):
-            raise forms.ValidationError('Debes usar un correo institucional @umsa.bo')
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError('Este correo ya está registrado')
-        return email
-    
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if User.objects.filter(username=username).exists():
-            raise forms.ValidationError('Este usuario ya existe')
-        return username
+    def clean_correo(self):
+        correo = self.cleaned_data.get('correo', '').lower().strip()
+        CORREO_ESPECIAL = 'vc3070934@gmail.com'
+        
+        # Validar formato @umsa.bo o correo especial
+        if not (correo.endswith('@umsa.bo') or correo == CORREO_ESPECIAL):
+            raise forms.ValidationError('❌ Solo se permiten correos institucionales @umsa.bo')
+        
+        # Verificar si el correo ya está registrado en User
+        if User.objects.filter(email=correo).exists():
+            raise forms.ValidationError('❌ Este correo ya está registrado')
+        
+        # Verificar si el correo ya está registrado en Usuario
+        if Usuario.objects.filter(correo=correo).exists():
+            raise forms.ValidationError('❌ Este correo ya está registrado')
+        
+        return correo
     
     def clean_ci(self):
-        ci = self.cleaned_data.get('ci')
+        ci = self.cleaned_data.get('ci', '').strip()
+        if not ci:
+            raise forms.ValidationError('❌ El CI es requerido')
+        if not ci.isdigit():
+            raise forms.ValidationError('❌ El CI debe contener solo números')
+        if len(ci) < 6:
+            raise forms.ValidationError('❌ El CI debe tener al menos 6 dígitos')
+        
+        # Verificar si el CI ya está registrado
         if Usuario.objects.filter(ci=ci).exists():
-            raise forms.ValidationError('Este CI ya está registrado')
+            raise forms.ValidationError('❌ Este CI ya está registrado')
+        
         return ci
+    
+    def clean_password(self):
+        password = self.cleaned_data.get('password', '')
+        if len(password) < 9:
+            raise forms.ValidationError('❌ La contraseña debe tener al menos 9 caracteres')
+        return password
     
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
-        confirmar = cleaned_data.get('confirmar_password')
-        if password and confirmar and password != confirmar:
-            raise forms.ValidationError('Las contraseñas no coinciden')
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError('❌ Las contraseñas no coinciden')
+        
         return cleaned_data
+    
+    def save(self, commit=True):
+        # Crear el usuario con el correo como username
+        correo = self.cleaned_data['correo'].lower().strip()
+        
+        # Generar username a partir del correo (sin @)
+        username = correo.split('@')[0]
+        
+        # Si el username ya existe, agregar un número
+        if User.objects.filter(username=username).exists():
+            import random
+            username = f"{username}_{random.randint(100, 999)}"
+        
+        user = User.objects.create_user(
+            username=username,
+            email=correo,
+            password=self.cleaned_data['password'],
+            first_name=self.cleaned_data['nombres'],
+            last_name=f"{self.cleaned_data['apepat']} {self.cleaned_data.get('apemat', '')}".strip()
+        )
+        user.is_active = False  # Desactivado hasta aprobación
+        user.save()
+        
+        # Guardar el perfil
+        usuario = super().save(commit=False)
+        usuario.user = user
+        usuario.correo = correo
+        usuario.estado_registro = 'pendiente'
+        usuario.fecha_solicitud = timezone.now()
+        usuario.esta_activo = False
+        
+        if commit:
+            usuario.save()
+            # Guardar los archivos si hay
+            if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
+                usuario.matricula_pdf = self.cleaned_data['matricula_pdf']
+            if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
+                usuario.carnet_frente = self.cleaned_data['carnet_frente']
+            if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
+                usuario.carnet_reverso = self.cleaned_data['carnet_reverso']
+            usuario.save()
+        
+        return usuario
 
 
 # ============================================
