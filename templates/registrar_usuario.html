@@ -1,10 +1,6 @@
-{% extends 'base.html' %}
-{% load widget_tweaks %}
 {% load static %}
+{% load widget_tweaks %}
 
-{% block title %}Solicitar Acceso | Biblioteca Digital ARTyDIS{% endblock %}
-
-{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,7 +58,7 @@
         }
 
         .register-card {
-            max-width: 1020px;
+            max-width: 1100px;
             width: 92%;
             background: var(--bg-white);
             border-radius: 32px;
@@ -75,7 +71,7 @@
         }
 
         /* ============================================
-           HEADER - ESTILO CONSISTENTE CON LOGIN
+           HEADER
         ============================================ */
         .card-header-custom {
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -104,7 +100,7 @@
         }
 
         /* ============================================
-           BODY - ESPACIOSO Y CÓMODO
+           BODY - ESPACIOSO
         ============================================ */
         .card-body-custom {
             padding: 2.5rem 3rem;
@@ -138,7 +134,7 @@
         }
 
         /* ============================================
-           CAMPOS - ALTURA CÓMODA, LEGIBLES
+           CAMPOS
         ============================================ */
         .form-group {
             margin-bottom: 1.25rem;
@@ -172,6 +168,7 @@
             color: var(--accent);
             font-size: 0.95rem;
             z-index: 2;
+            pointer-events: none;
         }
 
         .form-control,
@@ -243,7 +240,7 @@
         }
 
         /* ============================================
-           FILE INPUT - ESTILO MEJORADO
+           FILE INPUT
         ============================================ */
         .file-input-wrapper {
             position: relative;
@@ -385,7 +382,7 @@
         }
 
         /* ============================================
-           ALERTAS - IDÉNTICAS AL LOGIN
+           ALERTAS
         ============================================ */
         .alert-custom {
             border-radius: 16px;
@@ -470,9 +467,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ============================================
-           ANIMACIONES
-        ============================================ */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -488,10 +482,9 @@
         ============================================ */
         @media (max-width: 992px) {
             .register-card {
-                max-width: 95%;
-                width: 95%;
+                max-width: 96%;
+                width: 96%;
             }
-
             .card-body-custom {
                 padding: 2rem 2rem;
             }
@@ -502,50 +495,40 @@
                 width: 98%;
                 margin: 0.5rem;
             }
-
             .card-body-custom {
                 padding: 1.5rem 1.2rem;
             }
-
             .card-header-custom {
                 padding: 1.5rem 1.2rem;
             }
-
             .card-header-custom h2 {
                 font-size: 1.3rem;
             }
-
             .card-header-custom p {
                 font-size: 0.8rem;
             }
-
             .section-title {
                 font-size: 0.9rem;
                 margin-top: 1.5rem;
             }
-
             .form-control,
             .form-select {
                 height: 44px;
                 font-size: 0.85rem;
                 padding: 0 0.8rem 0 2.4rem;
             }
-
             .form-label {
                 font-size: 0.8rem;
             }
-
             .form-actions {
                 flex-direction: column-reverse;
                 gap: 12px;
             }
-
             .btn-register {
                 width: 100%;
                 min-width: unset;
                 padding: 0.8rem;
             }
-
             .btn-back {
                 width: 100%;
                 justify-content: center;
@@ -557,23 +540,18 @@
             body {
                 padding: 20px 10px;
             }
-
             .card-body-custom {
                 padding: 1rem 0.8rem;
             }
-
             .card-header-custom {
                 padding: 1.2rem 0.8rem;
             }
-
             .card-header-custom h2 {
                 font-size: 1.1rem;
             }
-
             .card-header-custom p {
                 font-size: 0.75rem;
             }
-
             .form-control,
             .form-select {
                 height: 42px;
@@ -581,100 +559,47 @@
                 padding: 0 0.7rem 0 2.2rem;
                 border-radius: 14px;
             }
-
             .input-icon {
                 left: 0.7rem;
                 font-size: 0.85rem;
             }
-
             .form-group {
                 margin-bottom: 0.9rem;
             }
-
             .section-title {
                 font-size: 0.82rem;
                 margin-top: 1.2rem;
                 padding-bottom: 8px;
             }
-
             .section-title i {
                 font-size: 0.95rem;
                 width: 20px;
             }
-
             .file-input-wrapper {
                 padding: 0.8rem 0.6rem;
                 min-height: 80px;
             }
-
             .file-input-wrapper .file-icon {
                 font-size: 1.4rem;
             }
-
             .file-input-wrapper .file-text {
                 font-size: 0.7rem;
             }
-
             .file-input-wrapper .file-name {
                 font-size: 0.7rem;
             }
-
             .btn-register {
                 font-size: 0.85rem;
                 padding: 0.7rem;
             }
-
             .btn-back {
                 font-size: 0.8rem;
                 padding: 0.6rem;
             }
-
             .form-actions {
                 margin-top: 1.5rem;
                 padding-top: 1rem;
                 gap: 10px;
-            }
-
-            .form-text {
-                font-size: 0.65rem;
-            }
-
-            .invalid-feedback {
-                font-size: 0.7rem;
-            }
-
-            .alert-custom {
-                font-size: 0.8rem;
-                padding: 0.6rem 0.8rem;
-                border-radius: 12px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .card-body-custom {
-                padding: 0.8rem 0.5rem;
-            }
-
-            .form-control,
-            .form-select {
-                height: 40px;
-                font-size: 0.78rem;
-                padding: 0 0.5rem 0 2rem;
-                border-radius: 12px;
-            }
-
-            .input-icon {
-                left: 0.5rem;
-                font-size: 0.8rem;
-            }
-
-            .form-label {
-                font-size: 0.75rem;
-            }
-
-            .section-title {
-                font-size: 0.78rem;
-                gap: 8px;
             }
         }
     </style>
@@ -682,7 +607,7 @@
 <body>
 
 <div class="register-card">
-    <!-- HEADER - SIN LOGO, SOLO TEXTO -->
+    <!-- HEADER -->
     <div class="card-header-custom">
         <h2><i class="fas fa-user-plus"></i> Solicitud de Registro</h2>
         <p>Completa el formulario para solicitar acceso a la Biblioteca Digital ARTyDIS</p>
@@ -691,7 +616,6 @@
     <!-- BODY -->
     <div class="card-body-custom">
 
-        <!-- MENSAJES -->
         {% if messages %}
             {% for message in messages %}
                 <div class="alert-custom alert-{{ message.tags }}">
@@ -704,7 +628,6 @@
             {% endfor %}
         {% endif %}
 
-        <!-- ERRORES DEL FORMULARIO -->
         {% if form.non_field_errors %}
             <div class="alert-custom alert-error">
                 <i class="fas fa-exclamation-circle"></i>
@@ -720,13 +643,10 @@
             </div>
         {% endif %}
 
-        <!-- FORMULARIO -->
         <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
             {% csrf_token %}
 
-            <!-- ==========================================
-                 DATOS PERSONALES - 3 COLUMNAS
-            ========================================== -->
+            <!-- DATOS PERSONALES -->
             <div class="section-title">
                 <i class="fas fa-user"></i> Datos Personales
             </div>
@@ -825,9 +745,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 DATOS DE CONTACTO - 2 COLUMNAS
-            ========================================== -->
+            <!-- DATOS DE CONTACTO -->
             <div class="section-title">
                 <i class="fas fa-address-card"></i> Datos de Contacto
             </div>
@@ -867,9 +785,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 DIRECCIÓN - ANCHO COMPLETO
-            ========================================== -->
+            <!-- DIRECCIÓN -->
             <div class="section-title">
                 <i class="fas fa-home"></i> Dirección
             </div>
@@ -891,9 +807,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 DATOS ACADÉMICOS - 3 COLUMNAS
-            ========================================== -->
+            <!-- DATOS ACADÉMICOS -->
             <div class="section-title">
                 <i class="fas fa-graduation-cap"></i> Datos Académicos
             </div>
@@ -945,9 +859,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 TIPO DE USUARIO - ANCHO COMPLETO
-            ========================================== -->
+            <!-- TIPO DE USUARIO -->
             <div class="row">
                 <div class="col-12">
                     <div class="form-group">
@@ -968,9 +880,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 CONTRASEÑA - 2 COLUMNAS
-            ========================================== -->
+            <!-- CONTRASEÑA -->
             <div class="section-title">
                 <i class="fas fa-lock"></i> Contraseña
             </div>
@@ -1010,9 +920,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 DOCUMENTOS REQUERIDOS - 3 COLUMNAS
-            ========================================== -->
+            <!-- DOCUMENTOS REQUERIDOS -->
             <div class="section-title">
                 <i class="fas fa-file-alt"></i> Documentos Requeridos
             </div>
@@ -1073,9 +981,7 @@
                 </div>
             </div>
 
-            <!-- ==========================================
-                 BOTONES - CENTRADOS
-            ========================================== -->
+            <!-- BOTONES -->
             <div class="form-actions">
                 <button type="submit" class="btn-register" id="btnRegistrar">
                     <i class="fas fa-paper-plane"></i> Enviar Solicitud
@@ -1085,7 +991,6 @@
                 </a>
             </div>
 
-            <!-- LOADING -->
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p><i class="fas fa-clock"></i> Enviando solicitud, por favor espera...</p>
@@ -1095,16 +1000,10 @@
     </div>
 </div>
 
-<!-- ==========================================
-     SCRIPTS
-========================================== -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ============================================
-        // VALIDACIÓN EN TIEMPO REAL - CORREO
-        // ============================================
         const correoInput = document.querySelector('input[name="correo"]');
         if (correoInput) {
             correoInput.addEventListener('input', function() {
@@ -1122,9 +1021,6 @@
             });
         }
 
-        // ============================================
-        // VALIDACIÓN EN TIEMPO REAL - CONTRASEÑA
-        // ============================================
         const passInput = document.querySelector('input[name="password"]');
         const passConfirmInput = document.querySelector('input[name="password_confirm"]');
 
@@ -1156,9 +1052,6 @@
             });
         }
 
-        // ============================================
-        // MOSTRAR NOMBRE DE ARCHIVOS
-        // ============================================
         const fileConfigs = [
             { input: document.querySelector('input[name="matricula_pdf"]'), nameId: 'matricula-name', wrapperId: 'wrapper-matricula' },
             { input: document.querySelector('input[name="carnet_frente"]'), nameId: 'frente-name', wrapperId: 'wrapper-frente' },
@@ -1194,15 +1087,11 @@
             }
         });
 
-        // ============================================
-        // PREVENIR DOBLE ENVÍO
-        // ============================================
         const form = document.getElementById('registroForm');
         const btn = document.getElementById('btnRegistrar');
         const loading = document.getElementById('loading');
 
         form.addEventListener('submit', function(e) {
-            // Validar correo
             const correo = correoInput ? correoInput.value.toLowerCase().trim() : '';
             if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
                 e.preventDefault();
@@ -1221,7 +1110,6 @@
                 return false;
             }
 
-            // Validar contraseña
             if (passInput && passInput.value.length < 9) {
                 e.preventDefault();
                 const alertDiv = document.createElement('div');
@@ -1256,13 +1144,11 @@
                 return false;
             }
 
-            // Mostrar loading
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             loading.classList.add('show');
         });
 
-        // Cerrar alertas
         document.querySelectorAll('.close-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 this.parentElement.remove();
@@ -1274,4 +1160,3 @@
 
 </body>
 </html>
-{% endblock %}
