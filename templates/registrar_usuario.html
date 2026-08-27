@@ -2,730 +2,947 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block title %}Solicitar Acceso - Biblioteca ARTyDIS{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* ============================================
-       ESTILOS GENERALES
-    ============================================ */
-    body {
-        background: #f5f7fb;
-    }
-    
-    .register-container {
-        max-width: 900px;
-        margin: 30px auto;
-    }
-    
-    .register-card {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        overflow: hidden;
-        background: white;
-    }
-    
-    /* ============================================
-       HEADER
-    ============================================ */
-    .register-header {
-        background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
-        color: white;
-        padding: 30px 35px;
-        border: none;
-    }
-    
-    .register-header h3 {
-        margin: 0;
-        font-weight: 700;
-        font-size: 1.5rem;
-    }
-    
-    .register-header h3 i {
-        margin-right: 12px;
-    }
-    
-    .register-header p {
-        margin: 5px 0 0 0;
-        opacity: 0.85;
-        font-size: 0.95rem;
-    }
-    
-    /* ============================================
-       BODY
-    ============================================ */
-    .register-body {
-        padding: 35px;
-    }
-    
-    /* ============================================
-       SECCIONES
-    ============================================ */
-    .section-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #4a00e0;
-        border-bottom: 2px solid #eef2f7;
-        padding-bottom: 12px;
-        margin-bottom: 20px;
-        margin-top: 25px;
-    }
-    
-    .section-title:first-of-type {
-        margin-top: 0;
-    }
-    
-    .section-title i {
-        margin-right: 10px;
-        color: #764ba2;
-    }
-    
-    /* ============================================
-       CAMPOS DEL FORMULARIO
-    ============================================ */
-    .form-label {
-        font-weight: 500;
-        color: #2d3748;
-        font-size: 0.85rem;
-        margin-bottom: 5px;
-    }
-    
-    .form-control, .form-select {
-        border-radius: 10px;
-        border: 2px solid #e2e8f0;
-        padding: 10px 15px;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        background: #fafbfc;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.15);
-        background: white;
-    }
-    
-    .form-control::placeholder {
-        color: #a0aec0;
-        font-size: 0.85rem;
-    }
-    
-    .form-control.is-invalid {
-        border-color: #fc8181;
-        background: #fff5f5;
-    }
-    
-    .form-control.is-valid {
-        border-color: #68d391;
-        background: #f0fff4;
-    }
-    
-    .invalid-feedback {
-        color: #e53e3e;
-        font-size: 0.8rem;
-        margin-top: 4px;
-    }
-    
-    /* ============================================
-       ARCHIVOS (File Input)
-    ============================================ */
-    .file-input-wrapper {
-        position: relative;
-        border: 2px dashed #e2e8f0;
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-        background: #fafbfc;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .file-input-wrapper:hover {
-        border-color: #764ba2;
-        background: #f5f0ff;
-    }
-    
-    .file-input-wrapper .file-icon {
-        font-size: 2rem;
-        color: #764ba2;
-        display: block;
-        margin-bottom: 5px;
-    }
-    
-    .file-input-wrapper .file-text {
-        color: #4a5568;
-        font-size: 0.85rem;
-    }
-    
-    .file-input-wrapper .file-name {
-        color: #2d3748;
-        font-weight: 500;
-        font-size: 0.9rem;
-        margin-top: 5px;
-    }
-    
-    .file-input-wrapper input[type="file"] {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-    }
-    
-    .file-requirements {
-        font-size: 0.75rem;
-        color: #a0aec0;
-        margin-top: 5px;
-    }
-    
-    /* ============================================
-       HELP TEXT
-    ============================================ */
-    .help-text {
-        font-size: 0.78rem;
-        color: #718096;
-        margin-top: 4px;
-    }
-    
-    .help-text i {
-        margin-right: 5px;
-        color: #764ba2;
-    }
-    
-    /* ============================================
-       REQUIRED STAR
-    ============================================ */
-    .required-star {
-        color: #e53e3e;
-        margin-left: 3px;
-    }
-    
-    /* ============================================
-       BOTONES
-    ============================================ */
-    .btn-register {
-        background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
-        color: white;
-        border: none;
-        padding: 12px 35px;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .btn-register:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(74, 0, 224, 0.25);
-        color: white;
-    }
-    
-    .btn-register:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .btn-back {
-        color: #4a5568;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .btn-back:hover {
-        color: #4a00e0;
-    }
-    
-    .form-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 2px solid #eef2f7;
-    }
-    
-    /* ============================================
-       LOADING
-    ============================================ */
-    .loading {
-        display: none;
-        text-align: center;
-        padding: 15px;
-    }
-    
-    .loading.show {
-        display: block;
-    }
-    
-    .spinner {
-        width: 35px;
-        height: 35px;
-        border: 4px solid #e2e8f0;
-        border-top: 4px solid #764ba2;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        display: inline-block;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .loading p {
-        color: #718096;
-        font-size: 0.9rem;
-        margin-top: 10px;
-    }
-    
-    /* ============================================
-       ALERTAS
-    ============================================ */
-    .alert-custom {
-        border-radius: 12px;
-        border: none;
-        padding: 15px 20px;
-    }
-    
-    .alert-custom i {
-        margin-right: 8px;
-    }
-    
-    .alert-error {
-        background: #fff5f5;
-        color: #e53e3e;
-        border-left: 4px solid #e53e3e;
-    }
-    
-    .alert-success {
-        background: #f0fff4;
-        color: #38a169;
-        border-left: 4px solid #38a169;
-    }
-    
-    .alert-info {
-        background: #ebf8ff;
-        color: #2b6cb0;
-        border-left: 4px solid #2b6cb0;
-    }
-    
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
-    @media (max-width: 768px) {
-        .register-header {
-            padding: 20px;
-        }
-        
-        .register-header h3 {
-            font-size: 1.2rem;
-        }
-        
-        .register-body {
-            padding: 20px;
-        }
-        
-        .form-actions {
-            flex-direction: column-reverse;
-            gap: 15px;
-        }
-        
-        .btn-register {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-    
-    /* ============================================
-       PASSWORD REQUIREMENTS
-    ============================================ */
-    .password-requirements {
-        font-size: 0.78rem;
-        color: #718096;
-        margin-top: 5px;
-    }
-    
-    .password-requirements ul {
-        margin: 4px 0 0 0;
-        padding-left: 18px;
-    }
-    
-    .password-requirements li {
-        list-style: none;
-        position: relative;
-    }
-    
-    .password-requirements li::before {
-        content: "•";
-        color: #764ba2;
-        position: absolute;
-        left: -14px;
-    }
-    
-    /* ============================================
-       ERROR LIST
-    ============================================ */
-    .error-list {
-        padding-left: 18px;
-        margin: 8px 0 0 0;
-    }
-    
-    .error-list li {
-        list-style: none;
-        font-size: 0.85rem;
-        color: #e53e3e;
-    }
-    
-    .error-list li::before {
-        content: "⚠️ ";
-    }
-</style>
-{% endblock %}
+{% block title %}Solicitar Acceso | Biblioteca Digital ARTyDIS{% endblock %}
 
 {% block content %}
-<div class="container register-container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="register-card">
-                <!-- HEADER -->
-                <div class="register-header">
-                    <h3><i class="fas fa-user-plus"></i> Solicitar Acceso</h3>
-                    <p><i class="fas fa-clock"></i> Tu solicitud será revisada por el administrador</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solicitar Acceso | Biblioteca Digital ARTyDIS</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #0F2B3D;
+            --primary: #1A3A4F;
+            --accent: #F59E0B;
+            --accent-hover: #FBBF24;
+            --success: #10B981;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            --bg-light: #F0F4F8;
+            --bg-white: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-light: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #E8EDF2 0%, #DCE3E9 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23F59E0B' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+            background-size: cover;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .register-card {
+            max-width: 820px;
+            width: 100%;
+            background: var(--bg-white);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* ============================================
+           HEADER - IDÉNTICO AL LOGIN
+        ============================================ */
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 100px;
+            margin-bottom: 1rem;
+        }
+
+        .card-header-custom h4 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-header-custom p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            margin: 0.5rem 0 0;
+        }
+
+        /* ============================================
+           BODY
+        ============================================ */
+        .card-body-custom {
+            padding: 2rem 2.5rem;
+        }
+
+        /* ============================================
+           SECCIONES
+        ============================================ */
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+            margin-bottom: 1.25rem;
+            margin-top: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .section-title i {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        /* ============================================
+           CAMPOS - IDÉNTICOS AL LOGIN
+        ============================================ */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-label i {
+            color: var(--accent);
+            font-size: 0.8rem;
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            font-size: 0.9rem;
+            z-index: 2;
+        }
+
+        .form-control,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1.5px solid var(--border-light);
+            border-radius: 16px;
+            font-size: 0.88rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            appearance: auto;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+            background-color: white;
+        }
+
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .form-control.is-valid {
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #A0AEC0;
+            font-size: 0.82rem;
+        }
+
+        .form-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-text i {
+            color: var(--accent);
+        }
+
+        .invalid-feedback {
+            font-size: 0.75rem;
+            color: var(--danger);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ============================================
+           FILE INPUT - ESTILO MEJORADO
+        ============================================ */
+        .file-input-wrapper {
+            position: relative;
+            border: 1.5px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            background: var(--bg-light);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: var(--accent);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .file-input-wrapper.has-file {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-input-wrapper .file-icon {
+            font-size: 1.8rem;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .file-input-wrapper .file-text {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .file-input-wrapper .file-name {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.82rem;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-requirements {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ============================================
+           REQUIRED STAR
+        ============================================ */
+        .required-star {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        /* ============================================
+           BOTONES - IDÉNTICOS AL LOGIN
+        ============================================ */
+        .btn-register {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-register:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-back {
+            width: 100%;
+            padding: 0.75rem;
+            background: white;
+            border: 1.5px solid var(--border-light);
+            color: var(--text-secondary);
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 0.75rem;
+        }
+
+        .btn-back:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(245, 158, 11, 0.05);
+            text-decoration: none;
+        }
+
+        .form-actions {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* ============================================
+           ALERTAS - IDÉNTICAS AL LOGIN
+        ============================================ */
+        .alert-custom {
+            border-radius: 16px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent);
+            border-left: 4px solid var(--accent);
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
+        .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.6;
+            padding: 0 4px;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* ============================================
+           LOADING
+        ============================================ */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 35px;
+            height: 35px;
+            border: 4px solid var(--border-light);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        .loading p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ============================================
+           ANIMACIONES
+        ============================================ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ============================================
+           RESPONSIVE
+        ============================================ */
+        @media (max-width: 768px) {
+            .card-body-custom {
+                padding: 1.5rem;
+            }
+
+            .register-card {
+                margin: 0.5rem;
+            }
+
+            .card-header-custom h4 {
+                font-size: 1.2rem;
+            }
+
+            .logo {
+                max-width: 80px;
+            }
+
+            .section-title {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .card-body-custom {
+                padding: 1rem;
+            }
+
+            .form-control,
+            .form-select {
+                padding: 0.65rem 0.8rem 0.65rem 2.2rem;
+                font-size: 0.82rem;
+            }
+
+            .input-icon {
+                left: 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .btn-register,
+            .btn-back {
+                font-size: 0.85rem;
+                padding: 0.7rem;
+            }
+
+            .card-header-custom {
+                padding: 1.5rem 1rem;
+            }
+
+            .card-header-custom h4 {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .card-body-custom {
+                padding: 0.8rem;
+            }
+
+            .form-group {
+                margin-bottom: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-card">
+    <!-- HEADER - IDÉNTICO AL LOGIN -->
+    <div class="card-header-custom">
+        <img src="{% static 'images/artdis.jpg' %}" alt="Logo" class="logo">
+        <h4>Biblioteca Digital ARTyDIS</h4>
+        <p>Solicita acceso a nuestra colección de recursos académicos</p>
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body-custom">
+
+        <!-- MENSAJES -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-custom alert-{{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                
-                <!-- BODY -->
-                <div class="register-body">
-                    
-                    <!-- ========== MENSAJES ========== -->
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-custom alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                    
-                    <!-- ========== ERRORES DEL FORMULARIO ========== -->
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-custom alert-error alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <strong>Por favor corrige los siguientes errores:</strong>
-                            <ul class="error-list">
-                                {% for error in form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {% endfor %}
+        {% endif %}
+
+        <!-- ERRORES DEL FORMULARIO -->
+        {% if form.non_field_errors %}
+            <div class="alert-custom alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <strong>Por favor corrige los siguientes errores:</strong>
+                <ul style="margin:4px 0 0 18px;padding:0;">
+                    {% for error in form.non_field_errors %}
+                        <li style="list-style:none;font-size:0.8rem;">{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        {% endif %}
+
+        <!-- FORMULARIO -->
+        <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
+            {% csrf_token %}
+
+            <!-- ==========================================
+                 DATOS PERSONALES
+            ========================================== -->
+            <div class="section-title">
+                <i class="fas fa-user"></i> Datos Personales
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> {{ form.nombres.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-user input-icon"></i>
+                            {{ form.nombres|add_class:"form-control" }}
                         </div>
-                    {% endif %}
-                    
-                    <!-- ========== FORMULARIO ========== -->
-                    <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
-                        {% csrf_token %}
-                        
-                        <!-- ==========================================
-                             DATOS PERSONALES
-                        ========================================== -->
-                        <div class="section-title">
-                            <i class="fas fa-user"></i> Datos Personales
+                        {% if form.nombres.errors %}
+                            <div class="invalid-feedback">{{ form.nombres.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> {{ form.apepat.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-user input-icon"></i>
+                            {{ form.apepat|add_class:"form-control" }}
                         </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="{{ form.nombres.id_for_label }}" class="form-label">
-                                    {{ form.nombres.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.nombres|add_class:"form-control" }}
-                                {% if form.nombres.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.nombres.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label for="{{ form.apepat.id_for_label }}" class="form-label">
-                                    {{ form.apepat.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.apepat|add_class:"form-control" }}
-                                {% if form.apepat.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.apepat.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label for="{{ form.apemat.id_for_label }}" class="form-label">
-                                    {{ form.apemat.label }}
-                                </label>
-                                {{ form.apemat|add_class:"form-control" }}
-                                {% if form.apemat.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.apemat.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                        {% if form.apepat.errors %}
+                            <div class="invalid-feedback">{{ form.apepat.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> {{ form.apemat.label }}
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-user input-icon"></i>
+                            {{ form.apemat|add_class:"form-control" }}
                         </div>
-                        
-                        <div class="row g-3 mt-1">
-                            <div class="col-md-4">
-                                <label for="{{ form.ci.id_for_label }}" class="form-label">
-                                    {{ form.ci.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.ci|add_class:"form-control" }}
-                                {% if form.ci.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.ci.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label for="{{ form.extension.id_for_label }}" class="form-label">
-                                    {{ form.extension.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.extension|add_class:"form-select" }}
-                                {% if form.extension.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.extension.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label for="{{ form.complemento.id_for_label }}" class="form-label">
-                                    {{ form.complemento.label }}
-                                </label>
-                                {{ form.complemento|add_class:"form-control" }}
-                                {% if form.complemento.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.complemento.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- ==========================================
-                             DATOS DE CONTACTO
-                        ========================================== -->
-                        <div class="section-title">
-                            <i class="fas fa-address-card"></i> Datos de Contacto
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.correo.id_for_label }}" class="form-label">
-                                    {{ form.correo.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.correo|add_class:"form-control" }}
-                                {% if form.correo.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.correo.errors.0 }}</div>
-                                {% endif %}
-                                <div class="help-text">
-                                    <i class="fas fa-info-circle"></i> {{ form.correo.help_text }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="{{ form.telefono.id_for_label }}" class="form-label">
-                                    {{ form.telefono.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.telefono|add_class:"form-control" }}
-                                {% if form.telefono.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.telefono.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row g-3 mt-1">
-                            <div class="col-md-12">
-                                <label for="{{ form.direccion.id_for_label }}" class="form-label">
-                                    {{ form.direccion.label }}
-                                </label>
-                                {{ form.direccion|add_class:"form-control" }}
-                                {% if form.direccion.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.direccion.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- ==========================================
-                             DATOS ACADÉMICOS
-                        ========================================== -->
-                        <div class="section-title">
-                            <i class="fas fa-graduation-cap"></i> Datos Académicos
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.carrera.id_for_label }}" class="form-label">
-                                    {{ form.carrera.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.carrera|add_class:"form-control" }}
-                                {% if form.carrera.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carrera.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <label for="{{ form.semestre.id_for_label }}" class="form-label">
-                                    {{ form.semestre.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.semestre|add_class:"form-control" }}
-                                {% if form.semestre.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.semestre.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <label for="{{ form.anio_ingreso.id_for_label }}" class="form-label">
-                                    {{ form.anio_ingreso.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.anio_ingreso|add_class:"form-control" }}
-                                {% if form.anio_ingreso.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.anio_ingreso.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row g-3 mt-1">
-                            <div class="col-md-12">
-                                <label for="{{ form.tipo_usuario.id_for_label }}" class="form-label">
-                                    {{ form.tipo_usuario.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.tipo_usuario|add_class:"form-select" }}
-                                {% if form.tipo_usuario.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.tipo_usuario.errors.0 }}</div>
-                                {% endif %}
-                                <div class="help-text">
-                                    <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- ==========================================
-                             CONTRASEÑA
-                        ========================================== -->
-                        <div class="section-title">
-                            <i class="fas fa-lock"></i> Contraseña
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.password.id_for_label }}" class="form-label">
-                                    {{ form.password.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.password|add_class:"form-control" }}
-                                {% if form.password.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
-                                {% endif %}
-                                <div class="password-requirements">
-                                    <i class="fas fa-info-circle"></i> {{ form.password.help_text }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
-                                    {{ form.password_confirm.label }} <span class="required-star">*</span>
-                                </label>
-                                {{ form.password_confirm|add_class:"form-control" }}
-                                {% if form.password_confirm.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.password_confirm.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- ==========================================
-                             DOCUMENTOS REQUERIDOS
-                        ========================================== -->
-                        <div class="section-title">
-                            <i class="fas fa-file-alt"></i> Documentos Requeridos
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">
-                                    {{ form.matricula_pdf.label }} <span class="required-star">*</span>
-                                </label>
-                                <div class="file-input-wrapper">
-                                    <i class="fas fa-file-pdf file-icon"></i>
-                                    <div class="file-text">Haz clic para subir</div>
-                                    <div class="file-name" id="matricula-name">Ningún archivo seleccionado</div>
-                                    {{ form.matricula_pdf }}
-                                    <div class="file-requirements">PDF hasta 5MB</div>
-                                </div>
-                                {% if form.matricula_pdf.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.matricula_pdf.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">
-                                    {{ form.carnet_frente.label }} <span class="required-star">*</span>
-                                </label>
-                                <div class="file-input-wrapper">
-                                    <i class="fas fa-id-card file-icon"></i>
-                                    <div class="file-text">Haz clic para subir</div>
-                                    <div class="file-name" id="carnet-frente-name">Ningún archivo seleccionado</div>
-                                    {{ form.carnet_frente }}
-                                    <div class="file-requirements">JPG, PNG</div>
-                                </div>
-                                {% if form.carnet_frente.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carnet_frente.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">
-                                    {{ form.carnet_reverso.label }} <span class="required-star">*</span>
-                                </label>
-                                <div class="file-input-wrapper">
-                                    <i class="fas fa-id-card file-icon"></i>
-                                    <div class="file-text">Haz clic para subir</div>
-                                    <div class="file-name" id="carnet-reverso-name">Ningún archivo seleccionado</div>
-                                    {{ form.carnet_reverso }}
-                                    <div class="file-requirements">JPG, PNG</div>
-                                </div>
-                                {% if form.carnet_reverso.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carnet_reverso.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- ==========================================
-                             BOTONES
-                        ========================================== -->
-                        <div class="form-actions">
-                            <a href="{% url 'home' %}" class="btn-back">
-                                <i class="fas fa-arrow-left"></i> Volver al Login
-                            </a>
-                            <button type="submit" class="btn-register" id="btnRegistrar">
-                                <i class="fas fa-paper-plane"></i> Enviar Solicitud
-                            </button>
-                        </div>
-                        
-                        <!-- ==========================================
-                             LOADING
-                        ========================================== -->
-                        <div class="loading" id="loading">
-                            <div class="spinner"></div>
-                            <p><i class="fas fa-clock"></i> Enviando solicitud, por favor espera...</p>
-                        </div>
-                        
-                    </form>
+                        {% if form.apemat.errors %}
+                            <div class="invalid-feedback">{{ form.apemat.errors.0 }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> {{ form.ci.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-id-card input-icon"></i>
+                            {{ form.ci|add_class:"form-control" }}
+                        </div>
+                        {% if form.ci.errors %}
+                            <div class="invalid-feedback">{{ form.ci.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> {{ form.extension.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-map-marker-alt input-icon"></i>
+                            {{ form.extension|add_class:"form-select" }}
+                        </div>
+                        {% if form.extension.errors %}
+                            <div class="invalid-feedback">{{ form.extension.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-plus-circle"></i> {{ form.complemento.label }}
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-plus-circle input-icon"></i>
+                            {{ form.complemento|add_class:"form-control" }}
+                        </div>
+                        {% if form.complemento.errors %}
+                            <div class="invalid-feedback">{{ form.complemento.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 DATOS DE CONTACTO
+            ========================================== -->
+            <div class="section-title">
+                <i class="fas fa-address-card"></i> Datos de Contacto
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-envelope"></i> {{ form.correo.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-envelope input-icon"></i>
+                            {{ form.correo|add_class:"form-control" }}
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> {{ form.correo.help_text }}
+                        </div>
+                        {% if form.correo.errors %}
+                            <div class="invalid-feedback">{{ form.correo.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-phone"></i> {{ form.telefono.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-phone input-icon"></i>
+                            {{ form.telefono|add_class:"form-control" }}
+                        </div>
+                        {% if form.telefono.errors %}
+                            <div class="invalid-feedback">{{ form.telefono.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-home"></i> {{ form.direccion.label }}
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-home input-icon" style="top:1.2rem;"></i>
+                            {{ form.direccion|add_class:"form-control" }}
+                        </div>
+                        {% if form.direccion.errors %}
+                            <div class="invalid-feedback">{{ form.direccion.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 DATOS ACADÉMICOS
+            ========================================== -->
+            <div class="section-title">
+                <i class="fas fa-graduation-cap"></i> Datos Académicos
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-book"></i> {{ form.carrera.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-book input-icon"></i>
+                            {{ form.carrera|add_class:"form-control" }}
+                        </div>
+                        {% if form.carrera.errors %}
+                            <div class="invalid-feedback">{{ form.carrera.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-layer-group"></i> {{ form.semestre.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-layer-group input-icon"></i>
+                            {{ form.semestre|add_class:"form-control" }}
+                        </div>
+                        {% if form.semestre.errors %}
+                            <div class="invalid-feedback">{{ form.semestre.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt"></i> {{ form.anio_ingreso.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-calendar-alt input-icon"></i>
+                            {{ form.anio_ingreso|add_class:"form-control" }}
+                        </div>
+                        {% if form.anio_ingreso.errors %}
+                            <div class="invalid-feedback">{{ form.anio_ingreso.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-tag"></i> {{ form.tipo_usuario.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-user-tag input-icon"></i>
+                            {{ form.tipo_usuario|add_class:"form-select" }}
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
+                        </div>
+                        {% if form.tipo_usuario.errors %}
+                            <div class="invalid-feedback">{{ form.tipo_usuario.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 CONTRASEÑA
+            ========================================== -->
+            <div class="section-title">
+                <i class="fas fa-lock"></i> Contraseña
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-lock"></i> {{ form.password.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-lock input-icon"></i>
+                            {{ form.password|add_class:"form-control" }}
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> {{ form.password.help_text }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-check-circle"></i> {{ form.password_confirm.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="input-group-custom">
+                            <i class="fas fa-check-circle input-icon"></i>
+                            {{ form.password_confirm|add_class:"form-control" }}
+                        </div>
+                        {% if form.password_confirm.errors %}
+                            <div class="invalid-feedback">{{ form.password_confirm.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 DOCUMENTOS REQUERIDOS
+            ========================================== -->
+            <div class="section-title">
+                <i class="fas fa-file-alt"></i> Documentos Requeridos
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-file-pdf"></i> {{ form.matricula_pdf.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="file-input-wrapper" id="wrapper-matricula">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <div class="file-text">Haz clic para subir</div>
+                            <div class="file-name" id="matricula-name">Ningún archivo seleccionado</div>
+                            {{ form.matricula_pdf }}
+                            <div class="file-requirements"><i class="fas fa-info-circle"></i> PDF hasta 5MB</div>
+                        </div>
+                        {% if form.matricula_pdf.errors %}
+                            <div class="invalid-feedback">{{ form.matricula_pdf.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> {{ form.carnet_frente.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="file-input-wrapper" id="wrapper-frente">
+                            <i class="fas fa-id-card file-icon"></i>
+                            <div class="file-text">Haz clic para subir</div>
+                            <div class="file-name" id="frente-name">Ningún archivo seleccionado</div>
+                            {{ form.carnet_frente }}
+                            <div class="file-requirements"><i class="fas fa-info-circle"></i> JPG, PNG</div>
+                        </div>
+                        {% if form.carnet_frente.errors %}
+                            <div class="invalid-feedback">{{ form.carnet_frente.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> {{ form.carnet_reverso.label }} <span class="required-star">*</span>
+                        </label>
+                        <div class="file-input-wrapper" id="wrapper-reverso">
+                            <i class="fas fa-id-card file-icon"></i>
+                            <div class="file-text">Haz clic para subir</div>
+                            <div class="file-name" id="reverso-name">Ningún archivo seleccionado</div>
+                            {{ form.carnet_reverso }}
+                            <div class="file-requirements"><i class="fas fa-info-circle"></i> JPG, PNG</div>
+                        </div>
+                        {% if form.carnet_reverso.errors %}
+                            <div class="invalid-feedback">{{ form.carnet_reverso.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 BOTONES
+            ========================================== -->
+            <div class="form-actions">
+                <button type="submit" class="btn-register" id="btnRegistrar">
+                    <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                </button>
+
+                <a href="{% url 'home' %}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Volver al Login
+                </a>
+            </div>
+
+            <!-- LOADING -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p><i class="fas fa-clock"></i> Enviando solicitud, por favor espera...</p>
+            </div>
+
+        </form>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- ==========================================
+     SCRIPTS
+========================================== -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
         // ============================================
         // VALIDACIÓN EN TIEMPO REAL - CORREO
         // ============================================
@@ -736,31 +953,22 @@
                 if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
                     this.classList.add('is-invalid');
                     this.classList.remove('is-valid');
-                    // Mostrar mensaje de error
-                    let feedback = this.parentElement.querySelector('.invalid-feedback');
-                    if (!feedback) {
-                        feedback = document.createElement('div');
-                        feedback.className = 'invalid-feedback d-block';
-                        feedback.textContent = '❌ Debes usar un correo @umsa.bo';
-                        this.parentElement.appendChild(feedback);
-                    }
-                } else {
+                } else if (correo) {
                     this.classList.remove('is-invalid');
                     this.classList.add('is-valid');
-                    const feedback = this.parentElement.querySelector('.invalid-feedback');
-                    if (feedback) {
-                        feedback.remove();
-                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.remove('is-valid');
                 }
             });
         }
-        
+
         // ============================================
         // VALIDACIÓN EN TIEMPO REAL - CONTRASEÑA
         // ============================================
         const passInput = document.querySelector('input[name="password"]');
         const passConfirmInput = document.querySelector('input[name="password_confirm"]');
-        
+
         if (passInput) {
             passInput.addEventListener('input', function() {
                 if (this.value.length >= 9) {
@@ -768,11 +976,13 @@
                     this.classList.add('is-valid');
                 } else {
                     this.classList.remove('is-valid');
-                    this.classList.add('is-invalid');
+                    if (this.value.length > 0) {
+                        this.classList.add('is-invalid');
+                    }
                 }
             });
         }
-        
+
         if (passConfirmInput) {
             passConfirmInput.addEventListener('input', function() {
                 if (passInput && this.value === passInput.value && this.value.length >= 9) {
@@ -780,87 +990,130 @@
                     this.classList.add('is-valid');
                 } else {
                     this.classList.remove('is-valid');
-                    this.classList.add('is-invalid');
+                    if (this.value.length > 0) {
+                        this.classList.add('is-invalid');
+                    }
                 }
             });
         }
-        
+
         // ============================================
         // MOSTRAR NOMBRE DE ARCHIVOS
         // ============================================
-        const fileInputs = [
-            { input: document.querySelector('input[name="matricula_pdf"]'), displayId: 'matricula-name' },
-            { input: document.querySelector('input[name="carnet_frente"]'), displayId: 'carnet-frente-name' },
-            { input: document.querySelector('input[name="carnet_reverso"]'), displayId: 'carnet-reverso-name' }
+        const fileConfigs = [
+            { input: document.querySelector('input[name="matricula_pdf"]'), nameId: 'matricula-name', wrapperId: 'wrapper-matricula' },
+            { input: document.querySelector('input[name="carnet_frente"]'), nameId: 'frente-name', wrapperId: 'wrapper-frente' },
+            { input: document.querySelector('input[name="carnet_reverso"]'), nameId: 'reverso-name', wrapperId: 'wrapper-reverso' }
         ];
-        
-        fileInputs.forEach(({ input, displayId }) => {
+
+        fileConfigs.forEach(({ input, nameId, wrapperId }) => {
             if (input) {
                 input.addEventListener('change', function() {
-                    const display = document.getElementById(displayId);
+                    const nameDisplay = document.getElementById(nameId);
+                    const wrapper = document.getElementById(wrapperId);
                     if (this.files.length > 0) {
                         const fileName = this.files[0].name;
-                        display.textContent = fileName;
-                        display.style.color = '#38a169';
+                        nameDisplay.textContent = fileName;
+                        nameDisplay.style.color = '#10B981';
+                        wrapper.classList.add('has-file');
                         // Cambiar ícono
-                        const wrapper = this.closest('.file-input-wrapper');
                         const icon = wrapper.querySelector('.file-icon');
                         if (icon) {
                             icon.className = 'fas fa-check-circle file-icon';
-                            icon.style.color = '#38a169';
+                            icon.style.color = '#10B981';
                         }
-                        wrapper.style.borderColor = '#68d391';
-                        wrapper.style.background = '#f0fff4';
                     } else {
-                        display.textContent = 'Ningún archivo seleccionado';
-                        display.style.color = '#4a5568';
-                        const wrapper = this.closest('.file-input-wrapper');
+                        nameDisplay.textContent = 'Ningún archivo seleccionado';
+                        nameDisplay.style.color = '#6B7280';
+                        wrapper.classList.remove('has-file');
                         const icon = wrapper.querySelector('.file-icon');
                         if (icon) {
                             icon.className = 'fas fa-file-pdf file-icon';
-                            icon.style.color = '#764ba2';
+                            icon.style.color = '#F59E0B';
                         }
-                        wrapper.style.borderColor = '#e2e8f0';
-                        wrapper.style.background = '#fafbfc';
                     }
                 });
             }
         });
-        
+
         // ============================================
         // PREVENIR DOBLE ENVÍO
         // ============================================
         const form = document.getElementById('registroForm');
         const btn = document.getElementById('btnRegistrar');
         const loading = document.getElementById('loading');
-        
+
         form.addEventListener('submit', function(e) {
-            // Validar correo antes de enviar
+            // Validar correo
             const correo = correoInput ? correoInput.value.toLowerCase().trim() : '';
             if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
                 e.preventDefault();
-                alert('❌ Debes usar un correo institucional @umsa.bo');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-custom alert-error';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    ❌ Debes usar un correo institucional @umsa.bo
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                const container = document.querySelector('.card-body-custom');
+                container.insertBefore(alertDiv, container.firstChild);
+                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
-            
+
             // Validar contraseña
             if (passInput && passInput.value.length < 9) {
                 e.preventDefault();
-                alert('❌ La contraseña debe tener al menos 9 caracteres');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-custom alert-error';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    ❌ La contraseña debe tener al menos 9 caracteres
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                const container = document.querySelector('.card-body-custom');
+                container.insertBefore(alertDiv, container.firstChild);
+                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
-            
+
             if (passConfirmInput && passInput && passConfirmInput.value !== passInput.value) {
                 e.preventDefault();
-                alert('❌ Las contraseñas no coinciden');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-custom alert-error';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    ❌ Las contraseñas no coinciden
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                const container = document.querySelector('.card-body-custom');
+                container.insertBefore(alertDiv, container.firstChild);
+                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
-            
+
             // Mostrar loading
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             loading.classList.add('show');
         });
+
+        // Función para cerrar alertas manualmente (compatibilidad)
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+
     });
 </script>
+
+</body>
+</html>
 {% endblock %}
