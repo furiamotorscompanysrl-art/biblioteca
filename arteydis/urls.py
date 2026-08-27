@@ -14,9 +14,10 @@ urlpatterns = [
     path('principal/', views.principal, name='principal'),
     path('accounts/logout/', views.logout_view, name='logout'),
     
-    # Verificación de dos factores (2FA)
-    path('verificar-codigo/', views.verificar_codigo_view, name='verificar_codigo'),
-    path('reenviar-codigo/', views.reenviar_codigo, name='reenviar_codigo'),
+    # NOTA: Estas rutas YA NO se usan para el nuevo sistema de registro
+    # Si quieres mantenerlas por compatibilidad con código antiguo, puedes comentarlas
+    # path('verificar-codigo/', views.verificar_codigo_view, name='verificar_codigo'),  # COMENTADA
+    # path('reenviar-codigo/', views.reenviar_codigo, name='reenviar_codigo'),  # COMENTADA
     
     # ============================================
     # REGISTRO CON APROBACIÓN MANUAL (NUEVO)

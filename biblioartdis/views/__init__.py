@@ -6,7 +6,6 @@ from .auth_views import (
     CustomLoginView, 
     logout_view, 
     cambiar_password,
-    verificar_codigo_view, 
     reenviar_codigo,
     registrar_usuario,
     listar_solicitudes_pendientes,
@@ -52,7 +51,7 @@ from .usuario_views import (
     chatbot_view,
     obtener_novedades, 
     chat_con_gemini,
-    restablecer_password,  # ← AHORA SÍ IMPORTA DESDE usuario_views
+    restablecer_password,
 )
 
 from .libro_views import (
@@ -84,7 +83,6 @@ __all__ = [
     'CustomLoginView', 
     'logout_view', 
     'cambiar_password',
-    'verificar_codigo_view', 
     'reenviar_codigo',
     'registrar_usuario',
     'listar_solicitudes_pendientes',
@@ -128,7 +126,7 @@ __all__ = [
     'chatbot_view',
     'obtener_novedades', 
     'chat_con_gemini',
-    'restablecer_password',  # ← AHORA SÍ
+    'restablecer_password',
     
     # Libro views
     'listar_libros', 
