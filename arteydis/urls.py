@@ -14,13 +14,8 @@ urlpatterns = [
     path('principal/', views.principal, name='principal'),
     path('accounts/logout/', views.logout_view, name='logout'),
     
-    # NOTA: Estas rutas YA NO se usan para el nuevo sistema de registro
-    # Si quieres mantenerlas por compatibilidad con código antiguo, puedes comentarlas
-    # path('verificar-codigo/', views.verificar_codigo_view, name='verificar_codigo'),  # COMENTADA
-    # path('reenviar-codigo/', views.reenviar_codigo, name='reenviar_codigo'),  # COMENTADA
-    
     # ============================================
-    # REGISTRO CON APROBACIÓN MANUAL (NUEVO)
+    # REGISTRO CON APROBACIÓN MANUAL
     # ============================================
     path('registrar/', views.registrar_usuario, name='registrar_usuario'),
     path('solicitudes-pendientes/', views.listar_solicitudes_pendientes, name='solicitudes_pendientes'),
