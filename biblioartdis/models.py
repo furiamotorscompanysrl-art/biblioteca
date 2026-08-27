@@ -79,7 +79,7 @@ class Usuario(models.Model):
     semestre = models.CharField(max_length=10, blank=True, null=True)
     anio_ingreso = models.CharField(max_length=10, blank=True, null=True)
     
-    # Documentos subidos (Cloudinary)
+    # Documentos subidos (Cloudinary - para archivos pequeños)
     matricula_pdf = CloudinaryField(
         'Matrícula',
         folder='usuarios/matriculas/',
@@ -98,6 +98,29 @@ class Usuario(models.Model):
         folder='usuarios/carnets/',
         null=True,
         blank=True
+    )
+    
+    # ✅ NUEVO: URLs de Google Drive para documentos grandes
+    google_drive_matricula_url = models.URLField(
+        'URL Matrícula (Google Drive)',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Enlace de Google Drive para la matrícula'
+    )
+    google_drive_carnet_frente_url = models.URLField(
+        'URL Carnet Frente (Google Drive)',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Enlace de Google Drive para el carnet frente'
+    )
+    google_drive_carnet_reverso_url = models.URLField(
+        'URL Carnet Reverso (Google Drive)',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Enlace de Google Drive para el carnet reverso'
     )
     
     # Fechas y aprobación
@@ -248,7 +271,6 @@ class Libro(models.Model):
     )
     
     # ⚠️ Cloudinary SOLO para PDFs pequeños (< 10 MB)
-    # Para PDFs grandes (> 10 MB) usar google_drive_url
     pdf = CloudinaryField(
         'PDF',
         folder='biblioteca/pdfs/',
@@ -383,6 +405,7 @@ class Revista(models.Model):
         blank=True
     )
     
+    # ✅ NUEVO: URL de Google Drive para PDFs grandes
     google_drive_url = models.URLField(
         'URL de Google Drive',
         max_length=500,
@@ -393,6 +416,20 @@ class Revista(models.Model):
     
     url = models.URLField(max_length=200, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
+
+    def get_pdf_display_url(self):
+        """Retorna la URL para mostrar el PDF"""
+        if self.google_drive_url:
+            if 'drive.google.com' in self.google_drive_url:
+                file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None
+                if file_id:
+                    return f'https://drive.google.com/file/d/{file_id}/preview'
+            return self.google_drive_url
+        if self.url:
+            return self.url
+        if self.pdf:
+            return self.pdf.url
+        return None
 
     def __str__(self):
         try:

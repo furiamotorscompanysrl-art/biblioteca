@@ -70,14 +70,14 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ============================================
-# TEMPLATES - CORREGIDO
+# TEMPLATES
 # ============================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'biblioartdis' / 'templates',  # ← PRIMERO busca aquí
-            BASE_DIR / 'templates',                    # ← Fallback en raíz
+            BASE_DIR / 'biblioartdis' / 'templates',
+            BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -247,7 +247,9 @@ CLOUDINARY_STORAGE = {
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
-# GOOGLE DRIVE
+# ============================================
+# GOOGLE DRIVE CONFIGURATION
+# ============================================
 GOOGLE_DRIVE_CREDENTIALS_JSON = os.environ.get('GOOGLE_DRIVE_CREDENTIALS_JSON')
 if GOOGLE_DRIVE_CREDENTIALS_JSON:
     try:
@@ -260,7 +262,29 @@ else:
     GOOGLE_DRIVE_CREDENTIALS = None
     print("⚠️ GOOGLE_DRIVE_CREDENTIALS_JSON no encontrado")
 
+# ID de la carpeta principal de Google Drive
+# NOTA: Quita el "?hl=es-419" del ID si está presente
 GOOGLE_DRIVE_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_FOLDER_ID', '')
+
+# Estructura de carpetas para Google Drive
+GOOGLE_DRIVE_FOLDERS = {
+    'USUARIOS': {
+        'CARNES_FRENTE': 'Usuarios/Carnets/Frente',
+        'CARNES_REVERSO': 'Usuarios/Carnets/Reverso',
+        'MATRICULAS': 'Usuarios/Matriculas',
+        'FOTOS_PERFIL': 'Usuarios/Fotos_Perfil'
+    },
+    'MATERIAL': {
+        'LIBROS_PORTADAS': 'Biblioteca/Libros/Portadas',
+        'LIBROS_PDFS': 'Biblioteca/Libros/PDFs',
+        'REVISTAS_PORTADAS': 'Biblioteca/Revistas/Portadas',
+        'REVISTAS_PDFS': 'Biblioteca/Revistas/PDFs',
+        'IMAGENES_OBRAS': 'Biblioteca/Imagenes/Obras',
+        'IMAGENES_PORTADAS': 'Biblioteca/Imagenes/Portadas',
+        'AUTORIZACIONES': 'Biblioteca/Autorizaciones'
+    },
+    'BACKUP': 'Backup'
+}
 
 # EMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
