@@ -6,148 +6,263 @@
 
 {% block extra_css %}
 <style>
+    /* ============================================
+       ESTILOS GENERALES
+    ============================================ */
+    body {
+        background: #f5f7fb;
+    }
+    
+    .register-container {
+        max-width: 900px;
+        margin: 30px auto;
+    }
+    
     .register-card {
         border: none;
         border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
-        margin-top: 30px;
-        margin-bottom: 30px;
+        background: white;
     }
     
+    /* ============================================
+       HEADER
+    ============================================ */
     .register-header {
         background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
         color: white;
-        padding: 25px 30px;
+        padding: 30px 35px;
         border: none;
     }
     
     .register-header h3 {
         margin: 0;
         font-weight: 700;
+        font-size: 1.5rem;
+    }
+    
+    .register-header h3 i {
+        margin-right: 12px;
     }
     
     .register-header p {
         margin: 5px 0 0 0;
-        opacity: 0.9;
+        opacity: 0.85;
         font-size: 0.95rem;
     }
     
+    /* ============================================
+       BODY
+    ============================================ */
     .register-body {
-        padding: 30px;
+        padding: 35px;
     }
     
+    /* ============================================
+       SECCIONES
+    ============================================ */
     .section-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #4a00e0;
-        border-bottom: 2px solid #e8e8e8;
-        padding-bottom: 10px;
+        border-bottom: 2px solid #eef2f7;
+        padding-bottom: 12px;
         margin-bottom: 20px;
+        margin-top: 25px;
+    }
+    
+    .section-title:first-of-type {
+        margin-top: 0;
     }
     
     .section-title i {
         margin-right: 10px;
+        color: #764ba2;
     }
     
+    /* ============================================
+       CAMPOS DEL FORMULARIO
+    ============================================ */
     .form-label {
         font-weight: 500;
-        color: #333;
-        font-size: 0.9rem;
+        color: #2d3748;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
     }
     
     .form-control, .form-select {
         border-radius: 10px;
-        border: 2px solid #e8e8e8;
+        border: 2px solid #e2e8f0;
         padding: 10px 15px;
+        font-size: 0.95rem;
         transition: all 0.3s ease;
+        background: #fafbfc;
     }
     
     .form-control:focus, .form-select:focus {
         border-color: #764ba2;
-        box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.25);
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.15);
+        background: white;
+    }
+    
+    .form-control::placeholder {
+        color: #a0aec0;
+        font-size: 0.85rem;
     }
     
     .form-control.is-invalid {
-        border-color: #dc3545;
+        border-color: #fc8181;
+        background: #fff5f5;
     }
     
-    .form-control-file {
-        padding: 10px;
-        border: 2px dashed #e8e8e8;
-        border-radius: 10px;
-        width: 100%;
-        background: #fafafa;
+    .form-control.is-valid {
+        border-color: #68d391;
+        background: #f0fff4;
     }
     
-    .form-control-file:hover {
+    .invalid-feedback {
+        color: #e53e3e;
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+    
+    /* ============================================
+       ARCHIVOS (File Input)
+    ============================================ */
+    .file-input-wrapper {
+        position: relative;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        background: #fafbfc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .file-input-wrapper:hover {
         border-color: #764ba2;
         background: #f5f0ff;
     }
     
+    .file-input-wrapper .file-icon {
+        font-size: 2rem;
+        color: #764ba2;
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .file-input-wrapper .file-text {
+        color: #4a5568;
+        font-size: 0.85rem;
+    }
+    
+    .file-input-wrapper .file-name {
+        color: #2d3748;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .file-requirements {
+        font-size: 0.75rem;
+        color: #a0aec0;
+        margin-top: 5px;
+    }
+    
+    /* ============================================
+       HELP TEXT
+    ============================================ */
     .help-text {
-        font-size: 0.8rem;
-        color: #6c757d;
+        font-size: 0.78rem;
+        color: #718096;
         margin-top: 4px;
     }
     
     .help-text i {
-        margin-right: 4px;
+        margin-right: 5px;
+        color: #764ba2;
     }
     
+    /* ============================================
+       REQUIRED STAR
+    ============================================ */
+    .required-star {
+        color: #e53e3e;
+        margin-left: 3px;
+    }
+    
+    /* ============================================
+       BOTONES
+    ============================================ */
     .btn-register {
         background: linear-gradient(135deg, #4a00e0 0%, #8e2de2 100%);
         color: white;
         border: none;
-        padding: 12px 40px;
+        padding: 12px 35px;
         border-radius: 50px;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1rem;
         transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
     
     .btn-register:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(74, 0, 224, 0.3);
+        box-shadow: 0 10px 30px rgba(74, 0, 224, 0.25);
         color: white;
     }
     
     .btn-register:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
     }
     
     .btn-back {
-        color: #6c757d;
+        color: #4a5568;
         text-decoration: none;
         font-weight: 500;
+        font-size: 0.95rem;
+        transition: color 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
     
     .btn-back:hover {
         color: #4a00e0;
     }
     
-    .file-info {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 4px;
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #eef2f7;
     }
     
-    .required-star {
-        color: #dc3545;
-        margin-left: 3px;
-    }
-    
-    .password-requirements {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 5px;
-    }
-    
+    /* ============================================
+       LOADING
+    ============================================ */
     .loading {
         display: none;
         text-align: center;
-        padding: 10px;
+        padding: 15px;
     }
     
     .loading.show {
@@ -155,12 +270,12 @@
     }
     
     .spinner {
-        width: 30px;
-        height: 30px;
-        border: 4px solid #f3f3f3;
+        width: 35px;
+        height: 35px;
+        border: 4px solid #e2e8f0;
         border-top: 4px solid #764ba2;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.8s linear infinite;
         display: inline-block;
     }
     
@@ -168,206 +283,322 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+    
+    .loading p {
+        color: #718096;
+        font-size: 0.9rem;
+        margin-top: 10px;
+    }
+    
+    /* ============================================
+       ALERTAS
+    ============================================ */
+    .alert-custom {
+        border-radius: 12px;
+        border: none;
+        padding: 15px 20px;
+    }
+    
+    .alert-custom i {
+        margin-right: 8px;
+    }
+    
+    .alert-error {
+        background: #fff5f5;
+        color: #e53e3e;
+        border-left: 4px solid #e53e3e;
+    }
+    
+    .alert-success {
+        background: #f0fff4;
+        color: #38a169;
+        border-left: 4px solid #38a169;
+    }
+    
+    .alert-info {
+        background: #ebf8ff;
+        color: #2b6cb0;
+        border-left: 4px solid #2b6cb0;
+    }
+    
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 768px) {
+        .register-header {
+            padding: 20px;
+        }
+        
+        .register-header h3 {
+            font-size: 1.2rem;
+        }
+        
+        .register-body {
+            padding: 20px;
+        }
+        
+        .form-actions {
+            flex-direction: column-reverse;
+            gap: 15px;
+        }
+        
+        .btn-register {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    /* ============================================
+       PASSWORD REQUIREMENTS
+    ============================================ */
+    .password-requirements {
+        font-size: 0.78rem;
+        color: #718096;
+        margin-top: 5px;
+    }
+    
+    .password-requirements ul {
+        margin: 4px 0 0 0;
+        padding-left: 18px;
+    }
+    
+    .password-requirements li {
+        list-style: none;
+        position: relative;
+    }
+    
+    .password-requirements li::before {
+        content: "•";
+        color: #764ba2;
+        position: absolute;
+        left: -14px;
+    }
+    
+    /* ============================================
+       ERROR LIST
+    ============================================ */
+    .error-list {
+        padding-left: 18px;
+        margin: 8px 0 0 0;
+    }
+    
+    .error-list li {
+        list-style: none;
+        font-size: 0.85rem;
+        color: #e53e3e;
+    }
+    
+    .error-list li::before {
+        content: "⚠️ ";
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container register-container">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
-            <div class="card register-card">
+        <div class="col-lg-10">
+            <div class="register-card">
+                <!-- HEADER -->
                 <div class="register-header">
                     <h3><i class="fas fa-user-plus"></i> Solicitar Acceso</h3>
-                    <p>Tu solicitud será revisada por el administrador</p>
+                    <p><i class="fas fa-clock"></i> Tu solicitud será revisada por el administrador</p>
                 </div>
                 
+                <!-- BODY -->
                 <div class="register-body">
-                    <!-- Mensajes -->
+                    
+                    <!-- ========== MENSAJES ========== -->
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            <div class="alert alert-custom alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
                                 {{ message }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
                     
-                    <!-- Errores del formulario -->
-                    {% if form.errors %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <!-- ========== ERRORES DEL FORMULARIO ========== -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-custom alert-error alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle"></i>
                             <strong>Por favor corrige los siguientes errores:</strong>
-                            <ul class="mb-0 mt-2">
-                            {% for field, errors in form.errors.items %}
-                                {% for error in errors %}
+                            <ul class="error-list">
+                                {% for error in form.non_field_errors %}
                                     <li>{{ error }}</li>
                                 {% endfor %}
-                            {% endfor %}
                             </ul>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     {% endif %}
                     
+                    <!-- ========== FORMULARIO ========== -->
                     <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
                         {% csrf_token %}
                         
-                        <!-- DATOS PERSONALES -->
+                        <!-- ==========================================
+                             DATOS PERSONALES
+                        ========================================== -->
                         <div class="section-title">
                             <i class="fas fa-user"></i> Datos Personales
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-4">
                                 <label for="{{ form.nombres.id_for_label }}" class="form-label">
                                     {{ form.nombres.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.nombres|add_class:"form-control" }}
                                 {% if form.nombres.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.nombres.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.nombres.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label for="{{ form.apepat.id_for_label }}" class="form-label">
                                     {{ form.apepat.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.apepat|add_class:"form-control" }}
                                 {% if form.apepat.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.apepat.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.apepat.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label for="{{ form.apemat.id_for_label }}" class="form-label">
                                     {{ form.apemat.label }}
                                 </label>
                                 {{ form.apemat|add_class:"form-control" }}
                                 {% if form.apemat.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.apemat.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.apemat.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
                                 <label for="{{ form.ci.id_for_label }}" class="form-label">
                                     {{ form.ci.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.ci|add_class:"form-control" }}
                                 {% if form.ci.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.ci.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.ci.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label for="{{ form.extension.id_for_label }}" class="form-label">
                                     {{ form.extension.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.extension|add_class:"form-select" }}
                                 {% if form.extension.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.extension.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.extension.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label for="{{ form.complemento.id_for_label }}" class="form-label">
                                     {{ form.complemento.label }}
                                 </label>
                                 {{ form.complemento|add_class:"form-control" }}
                                 {% if form.complemento.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.complemento.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.complemento.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <!-- DATOS DE CONTACTO -->
-                        <div class="section-title mt-4">
+                        <!-- ==========================================
+                             DATOS DE CONTACTO
+                        ========================================== -->
+                        <div class="section-title">
                             <i class="fas fa-address-card"></i> Datos de Contacto
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label for="{{ form.correo.id_for_label }}" class="form-label">
                                     {{ form.correo.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.correo|add_class:"form-control" }}
                                 {% if form.correo.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.correo.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.correo.errors.0 }}</div>
                                 {% endif %}
                                 <div class="help-text">
                                     <i class="fas fa-info-circle"></i> {{ form.correo.help_text }}
                                 </div>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6">
                                 <label for="{{ form.telefono.id_for_label }}" class="form-label">
                                     {{ form.telefono.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.telefono|add_class:"form-control" }}
                                 {% if form.telefono.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.telefono.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.telefono.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-12">
                                 <label for="{{ form.direccion.id_for_label }}" class="form-label">
                                     {{ form.direccion.label }}
                                 </label>
                                 {{ form.direccion|add_class:"form-control" }}
                                 {% if form.direccion.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.direccion.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.direccion.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <!-- DATOS ACADÉMICOS -->
-                        <div class="section-title mt-4">
+                        <!-- ==========================================
+                             DATOS ACADÉMICOS
+                        ========================================== -->
+                        <div class="section-title">
                             <i class="fas fa-graduation-cap"></i> Datos Académicos
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label for="{{ form.carrera.id_for_label }}" class="form-label">
                                     {{ form.carrera.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.carrera|add_class:"form-control" }}
                                 {% if form.carrera.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carrera.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.carrera.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3">
                                 <label for="{{ form.semestre.id_for_label }}" class="form-label">
                                     {{ form.semestre.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.semestre|add_class:"form-control" }}
                                 {% if form.semestre.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.semestre.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.semestre.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3">
                                 <label for="{{ form.anio_ingreso.id_for_label }}" class="form-label">
                                     {{ form.anio_ingreso.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.anio_ingreso|add_class:"form-control" }}
                                 {% if form.anio_ingreso.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.anio_ingreso.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.anio_ingreso.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-12">
                                 <label for="{{ form.tipo_usuario.id_for_label }}" class="form-label">
                                     {{ form.tipo_usuario.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.tipo_usuario|add_class:"form-select" }}
                                 {% if form.tipo_usuario.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.tipo_usuario.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.tipo_usuario.errors.0 }}</div>
                                 {% endif %}
                                 <div class="help-text">
                                     <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
@@ -375,84 +606,99 @@
                             </div>
                         </div>
                         
-                        <!-- CONTRASEÑA -->
-                        <div class="section-title mt-4">
+                        <!-- ==========================================
+                             CONTRASEÑA
+                        ========================================== -->
+                        <div class="section-title">
                             <i class="fas fa-lock"></i> Contraseña
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label for="{{ form.password.id_for_label }}" class="form-label">
                                     {{ form.password.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.password|add_class:"form-control" }}
                                 {% if form.password.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
                                 {% endif %}
                                 <div class="password-requirements">
-                                    {{ form.password.help_text }}
+                                    <i class="fas fa-info-circle"></i> {{ form.password.help_text }}
                                 </div>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6">
                                 <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
                                     {{ form.password_confirm.label }} <span class="required-star">*</span>
                                 </label>
                                 {{ form.password_confirm|add_class:"form-control" }}
                                 {% if form.password_confirm.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.password_confirm.errors }}</div>
+                                    <div class="invalid-feedback d-block">{{ form.password_confirm.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <!-- DOCUMENTOS -->
-                        <div class="section-title mt-4">
+                        <!-- ==========================================
+                             DOCUMENTOS REQUERIDOS
+                        ========================================== -->
+                        <div class="section-title">
                             <i class="fas fa-file-alt"></i> Documentos Requeridos
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.matricula_pdf.id_for_label }}" class="form-label">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">
                                     {{ form.matricula_pdf.label }} <span class="required-star">*</span>
                                 </label>
-                                {{ form.matricula_pdf|add_class:"form-control-file" }}
-                                {% if form.matricula_pdf.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.matricula_pdf.errors }}</div>
-                                {% endif %}
-                                <div class="file-info">
-                                    <i class="fas fa-file-pdf"></i> Solo PDF
+                                <div class="file-input-wrapper">
+                                    <i class="fas fa-file-pdf file-icon"></i>
+                                    <div class="file-text">Haz clic para subir</div>
+                                    <div class="file-name" id="matricula-name">Ningún archivo seleccionado</div>
+                                    {{ form.matricula_pdf }}
+                                    <div class="file-requirements">PDF hasta 5MB</div>
                                 </div>
+                                {% if form.matricula_pdf.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.matricula_pdf.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.carnet_frente.id_for_label }}" class="form-label">
+                            <div class="col-md-4">
+                                <label class="form-label">
                                     {{ form.carnet_frente.label }} <span class="required-star">*</span>
                                 </label>
-                                {{ form.carnet_frente|add_class:"form-control-file" }}
-                                {% if form.carnet_frente.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carnet_frente.errors }}</div>
-                                {% endif %}
-                                <div class="file-info">
-                                    <i class="fas fa-image"></i> JPG, PNG
+                                <div class="file-input-wrapper">
+                                    <i class="fas fa-id-card file-icon"></i>
+                                    <div class="file-text">Haz clic para subir</div>
+                                    <div class="file-name" id="carnet-frente-name">Ningún archivo seleccionado</div>
+                                    {{ form.carnet_frente }}
+                                    <div class="file-requirements">JPG, PNG</div>
                                 </div>
+                                {% if form.carnet_frente.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.carnet_frente.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.carnet_reverso.id_for_label }}" class="form-label">
+                            <div class="col-md-4">
+                                <label class="form-label">
                                     {{ form.carnet_reverso.label }} <span class="required-star">*</span>
                                 </label>
-                                {{ form.carnet_reverso|add_class:"form-control-file" }}
-                                {% if form.carnet_reverso.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.carnet_reverso.errors }}</div>
-                                {% endif %}
-                                <div class="file-info">
-                                    <i class="fas fa-image"></i> JPG, PNG
+                                <div class="file-input-wrapper">
+                                    <i class="fas fa-id-card file-icon"></i>
+                                    <div class="file-text">Haz clic para subir</div>
+                                    <div class="file-name" id="carnet-reverso-name">Ningún archivo seleccionado</div>
+                                    {{ form.carnet_reverso }}
+                                    <div class="file-requirements">JPG, PNG</div>
                                 </div>
+                                {% if form.carnet_reverso.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.carnet_reverso.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         
-                        <!-- BOTONES -->
-                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <!-- ==========================================
+                             BOTONES
+                        ========================================== -->
+                        <div class="form-actions">
                             <a href="{% url 'home' %}" class="btn-back">
                                 <i class="fas fa-arrow-left"></i> Volver al Login
                             </a>
@@ -461,11 +707,14 @@
                             </button>
                         </div>
                         
-                        <!-- Loading -->
+                        <!-- ==========================================
+                             LOADING
+                        ========================================== -->
                         <div class="loading" id="loading">
                             <div class="spinner"></div>
-                            <p class="mt-2 text-muted">Enviando solicitud...</p>
+                            <p><i class="fas fa-clock"></i> Enviando solicitud, por favor espera...</p>
                         </div>
+                        
                     </form>
                 </div>
             </div>
@@ -477,50 +726,137 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // VALIDACIÓN EN TIEMPO REAL - CORREO
+        // ============================================
+        const correoInput = document.querySelector('input[name="correo"]');
+        if (correoInput) {
+            correoInput.addEventListener('input', function() {
+                const correo = this.value.toLowerCase().trim();
+                if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                    // Mostrar mensaje de error
+                    let feedback = this.parentElement.querySelector('.invalid-feedback');
+                    if (!feedback) {
+                        feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback d-block';
+                        feedback.textContent = '❌ Debes usar un correo @umsa.bo';
+                        this.parentElement.appendChild(feedback);
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    const feedback = this.parentElement.querySelector('.invalid-feedback');
+                    if (feedback) {
+                        feedback.remove();
+                    }
+                }
+            });
+        }
+        
+        // ============================================
+        // VALIDACIÓN EN TIEMPO REAL - CONTRASEÑA
+        // ============================================
+        const passInput = document.querySelector('input[name="password"]');
+        const passConfirmInput = document.querySelector('input[name="password_confirm"]');
+        
+        if (passInput) {
+            passInput.addEventListener('input', function() {
+                if (this.value.length >= 9) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        }
+        
+        if (passConfirmInput) {
+            passConfirmInput.addEventListener('input', function() {
+                if (passInput && this.value === passInput.value && this.value.length >= 9) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        }
+        
+        // ============================================
+        // MOSTRAR NOMBRE DE ARCHIVOS
+        // ============================================
+        const fileInputs = [
+            { input: document.querySelector('input[name="matricula_pdf"]'), displayId: 'matricula-name' },
+            { input: document.querySelector('input[name="carnet_frente"]'), displayId: 'carnet-frente-name' },
+            { input: document.querySelector('input[name="carnet_reverso"]'), displayId: 'carnet-reverso-name' }
+        ];
+        
+        fileInputs.forEach(({ input, displayId }) => {
+            if (input) {
+                input.addEventListener('change', function() {
+                    const display = document.getElementById(displayId);
+                    if (this.files.length > 0) {
+                        const fileName = this.files[0].name;
+                        display.textContent = fileName;
+                        display.style.color = '#38a169';
+                        // Cambiar ícono
+                        const wrapper = this.closest('.file-input-wrapper');
+                        const icon = wrapper.querySelector('.file-icon');
+                        if (icon) {
+                            icon.className = 'fas fa-check-circle file-icon';
+                            icon.style.color = '#38a169';
+                        }
+                        wrapper.style.borderColor = '#68d391';
+                        wrapper.style.background = '#f0fff4';
+                    } else {
+                        display.textContent = 'Ningún archivo seleccionado';
+                        display.style.color = '#4a5568';
+                        const wrapper = this.closest('.file-input-wrapper');
+                        const icon = wrapper.querySelector('.file-icon');
+                        if (icon) {
+                            icon.className = 'fas fa-file-pdf file-icon';
+                            icon.style.color = '#764ba2';
+                        }
+                        wrapper.style.borderColor = '#e2e8f0';
+                        wrapper.style.background = '#fafbfc';
+                    }
+                });
+            }
+        });
+        
+        // ============================================
+        // PREVENIR DOBLE ENVÍO
+        // ============================================
         const form = document.getElementById('registroForm');
         const btn = document.getElementById('btnRegistrar');
         const loading = document.getElementById('loading');
         
-        // Validación en tiempo real del correo
-        const correoInput = document.querySelector('input[name="correo"]');
-        if (correoInput) {
-            correoInput.addEventListener('input', function() {
-                const correo = this.value.toLowerCase();
-                if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-invalid');
-                }
-            });
-        }
-        
-        // Validación de contraseña
-        const passInput = document.querySelector('input[name="password"]');
-        const passConfirmInput = document.querySelector('input[name="password_confirm"]');
-        
-        if (passConfirmInput) {
-            passConfirmInput.addEventListener('input', function() {
-                if (passInput.value !== this.value) {
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-invalid');
-                }
-            });
-        }
-        
-        // Mostrar nombres de archivos seleccionados
-        document.querySelectorAll('input[type="file"]').forEach(input => {
-            input.addEventListener('change', function() {
-                const fileName = this.files.length > 0 ? this.files[0].name : 'Ningún archivo seleccionado';
-                const label = this.closest('.mb-3').querySelector('.file-info');
-                if (label) {
-                    label.innerHTML = `<i class="fas fa-check-circle text-success"></i> ${fileName}`;
-                }
-            });
-        });
-        
-        // Prevenir doble envío
         form.addEventListener('submit', function(e) {
+            // Validar correo antes de enviar
+            const correo = correoInput ? correoInput.value.toLowerCase().trim() : '';
+            if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
+                e.preventDefault();
+                alert('❌ Debes usar un correo institucional @umsa.bo');
+                return false;
+            }
+            
+            // Validar contraseña
+            if (passInput && passInput.value.length < 9) {
+                e.preventDefault();
+                alert('❌ La contraseña debe tener al menos 9 caracteres');
+                return false;
+            }
+            
+            if (passConfirmInput && passInput && passConfirmInput.value !== passInput.value) {
+                e.preventDefault();
+                alert('❌ Las contraseñas no coinciden');
+                return false;
+            }
+            
+            // Mostrar loading
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             loading.classList.add('show');
