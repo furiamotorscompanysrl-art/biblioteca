@@ -435,6 +435,36 @@ class RegistroUsuarioForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError('❌ Las contraseñas no coinciden')
         
+        # ============================================
+        # VALIDACIONES POR ROL
+        # ============================================
+        tipo_usuario = cleaned_data.get('tipo_usuario')
+        matricula = cleaned_data.get('matricula_pdf')
+        carnet_frente = cleaned_data.get('carnet_frente')
+        carnet_reverso = cleaned_data.get('carnet_reverso')
+        
+        if tipo_usuario == 'Estudiante':
+            if not matricula:
+                raise forms.ValidationError('❌ Los estudiantes deben subir la matrícula en PDF')
+            if not carnet_frente:
+                raise forms.ValidationError('❌ Los estudiantes deben subir la foto del frente del carnet')
+            if not carnet_reverso:
+                raise forms.ValidationError('❌ Los estudiantes deben subir la foto del reverso del carnet')
+        
+        elif tipo_usuario == 'Docente':
+            if not carnet_frente:
+                raise forms.ValidationError('❌ Los docentes deben subir la foto del frente del carnet')
+            if not carnet_reverso:
+                raise forms.ValidationError('❌ Los docentes deben subir la foto del reverso del carnet')
+            # No requiere matrícula
+        
+        elif tipo_usuario == 'Investigador':
+            if not carnet_frente:
+                raise forms.ValidationError('❌ Los investigadores deben subir la foto del frente del carnet')
+            if not carnet_reverso:
+                raise forms.ValidationError('❌ Los investigadores deben subir la foto del reverso del carnet')
+            # No requiere matrícula
+        
         return cleaned_data
     
     def _subir_a_drive(self, archivo, usuario_id, tipo, carpeta_destino):
@@ -446,7 +476,6 @@ class RegistroUsuarioForm(forms.ModelForm):
             if not archivo:
                 return None
             
-            # Obtener o crear la carpeta
             folder_id = drive_service.get_or_create_folder(
                 carpeta_destino,
                 settings.GOOGLE_DRIVE_FOLDER_ID
@@ -455,14 +484,12 @@ class RegistroUsuarioForm(forms.ModelForm):
             if not folder_id:
                 return None
             
-            # Guardar archivo temporal
             ext = os.path.splitext(archivo.name)[1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
                 for chunk in archivo.chunks():
                     tmp_file.write(chunk)
                 tmp_path = tmp_file.name
             
-            # Subir a Google Drive
             nombre_archivo = f"{usuario_id}_{tipo}{ext}"
             resultado = drive_service.upload_file(
                 file_path=tmp_path,
@@ -470,7 +497,6 @@ class RegistroUsuarioForm(forms.ModelForm):
                 folder_id=folder_id
             )
             
-            # Eliminar archivo temporal
             os.unlink(tmp_path)
             
             if resultado:
@@ -487,7 +513,6 @@ class RegistroUsuarioForm(forms.ModelForm):
         from .google_drive_utils import drive_service
         from django.conf import settings
         
-        # Crear el usuario con el correo como username
         correo = self.cleaned_data['correo'].lower().strip()
         
         username = correo.split('@')[0]
@@ -505,7 +530,6 @@ class RegistroUsuarioForm(forms.ModelForm):
         user.is_active = False
         user.save()
         
-        # Guardar el perfil
         usuario = super().save(commit=False)
         usuario.user = user
         usuario.correo = correo
@@ -516,21 +540,23 @@ class RegistroUsuarioForm(forms.ModelForm):
         if commit:
             usuario.save()
             
-            # Subir documentos a Google Drive
             usuario_id = usuario.usuario_id
+            tipo_usuario = self.cleaned_data.get('tipo_usuario')
             
-            # Matrícula
-            if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
-                url = self._subir_a_drive(
-                    self.cleaned_data['matricula_pdf'],
-                    usuario_id,
-                    'matricula',
-                    'Usuarios/Matriculas'
-                )
-                if url:
-                    usuario.google_drive_matricula_url = url
+            # Subir documentos según el rol
+            # Matrícula - SOLO para estudiantes
+            if tipo_usuario == 'Estudiante':
+                if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
+                    url = self._subir_a_drive(
+                        self.cleaned_data['matricula_pdf'],
+                        usuario_id,
+                        'matricula',
+                        'Usuarios/Matriculas'
+                    )
+                    if url:
+                        usuario.google_drive_matricula_url = url
             
-            # Carnet Frente
+            # Carnet Frente - TODOS los roles
             if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
                 url = self._subir_a_drive(
                     self.cleaned_data['carnet_frente'],
@@ -541,7 +567,7 @@ class RegistroUsuarioForm(forms.ModelForm):
                 if url:
                     usuario.google_drive_carnet_frente_url = url
             
-            # Carnet Reverso
+            # Carnet Reverso - TODOS los roles
             if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
                 url = self._subir_a_drive(
                     self.cleaned_data['carnet_reverso'],

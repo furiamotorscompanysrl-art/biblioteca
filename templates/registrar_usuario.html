@@ -70,9 +70,6 @@
             margin: 0 auto;
         }
 
-        /* ============================================
-           HEADER
-        ============================================ */
         .card-header-custom {
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
             padding: 2rem 2.5rem;
@@ -99,16 +96,10 @@
             font-weight: 400;
         }
 
-        /* ============================================
-           BODY - ESPACIOSO
-        ============================================ */
         .card-body-custom {
             padding: 2.5rem 3rem;
         }
 
-        /* ============================================
-           SECCIONES
-        ============================================ */
         .section-title {
             font-size: 1rem;
             font-weight: 600;
@@ -133,9 +124,6 @@
             text-align: center;
         }
 
-        /* ============================================
-           CAMPOS
-        ============================================ */
         .form-group {
             margin-bottom: 1.25rem;
         }
@@ -239,9 +227,6 @@
             gap: 4px;
         }
 
-        /* ============================================
-           FILE INPUT
-        ============================================ */
         .file-input-wrapper {
             position: relative;
             border: 1.5px dashed var(--border-light);
@@ -304,17 +289,11 @@
             margin-top: 4px;
         }
 
-        /* ============================================
-           REQUIRED STAR
-        ============================================ */
         .required-star {
             color: var(--danger);
             margin-left: 2px;
         }
 
-        /* ============================================
-           BOTONES
-        ============================================ */
         .btn-register {
             padding: 0.85rem 3rem;
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -381,9 +360,6 @@
             flex-wrap: wrap;
         }
 
-        /* ============================================
-           ALERTAS
-        ============================================ */
         .alert-custom {
             border-radius: 16px;
             padding: 0.8rem 1rem;
@@ -433,9 +409,6 @@
             opacity: 1;
         }
 
-        /* ============================================
-           LOADING
-        ============================================ */
         .loading {
             display: none;
             text-align: center;
@@ -926,10 +899,12 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-4 col-md-6">
+                <!-- Matrícula - SOLO para estudiantes -->
+                <div class="col-lg-4 col-md-6" id="matricula-group">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-file-pdf"></i> {{ form.matricula_pdf.label }} <span class="required-star">*</span>
+                            <i class="fas fa-file-pdf"></i> {{ form.matricula_pdf.label }} 
+                            <span class="required-star" id="matricula-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-matricula">
                             <i class="fas fa-file-pdf file-icon"></i>
@@ -944,10 +919,12 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-6">
+                <!-- Carnet Frente - TODOS -->
+                <div class="col-lg-4 col-md-6" id="carnet-frente-group">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-id-card"></i> {{ form.carnet_frente.label }} <span class="required-star">*</span>
+                            <i class="fas fa-id-card"></i> {{ form.carnet_frente.label }} 
+                            <span class="required-star" id="carnet-frente-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-frente">
                             <i class="fas fa-id-card file-icon"></i>
@@ -962,10 +939,12 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-6">
+                <!-- Carnet Reverso - TODOS -->
+                <div class="col-lg-4 col-md-6" id="carnet-reverso-group">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-id-card"></i> {{ form.carnet_reverso.label }} <span class="required-star">*</span>
+                            <i class="fas fa-id-card"></i> {{ form.carnet_reverso.label }} 
+                            <span class="required-star" id="carnet-reverso-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-reverso">
                             <i class="fas fa-id-card file-icon"></i>
@@ -1052,6 +1031,49 @@
             });
         }
 
+        // ============================================
+        // MOSTRAR/OCULTAR CAMPOS SEGÚN ROL
+        // ============================================
+        const tipoUsuario = document.querySelector('select[name="tipo_usuario"]');
+        const matriculaGroup = document.getElementById('matricula-group');
+        const matriculaStar = document.getElementById('matricula-star');
+        const carnetFrenteGroup = document.getElementById('carnet-frente-group');
+        const carnetReversoGroup = document.getElementById('carnet-reverso-group');
+
+        function actualizarCampos() {
+            if (!tipoUsuario) return;
+            const tipo = tipoUsuario.value;
+
+            // Mostrar todos los grupos por defecto
+            matriculaGroup.style.display = 'block';
+            carnetFrenteGroup.style.display = 'block';
+            carnetReversoGroup.style.display = 'block';
+
+            // Mostrar/ocultar asteriscos según rol
+            if (tipo === 'Estudiante') {
+                // Todos los documentos requeridos
+                matriculaStar.style.display = 'inline';
+                document.querySelector('label[for="id_matricula_pdf"] .required-star').style.display = 'inline';
+            } else if (tipo === 'Docente') {
+                // Solo carnet (frente y reverso), sin matrícula
+                matriculaGroup.style.display = 'none';
+                matriculaStar.style.display = 'none';
+            } else if (tipo === 'Investigador') {
+                // Solo carnet (frente y reverso), sin matrícula
+                matriculaGroup.style.display = 'none';
+                matriculaStar.style.display = 'none';
+            }
+        }
+
+        if (tipoUsuario) {
+            tipoUsuario.addEventListener('change', actualizarCampos);
+            // Ejecutar al cargar la página
+            setTimeout(actualizarCampos, 100);
+        }
+
+        // ============================================
+        // MOSTRAR NOMBRE DE ARCHIVOS
+        // ============================================
         const fileConfigs = [
             { input: document.querySelector('input[name="matricula_pdf"]'), nameId: 'matricula-name', wrapperId: 'wrapper-matricula' },
             { input: document.querySelector('input[name="carnet_frente"]'), nameId: 'frente-name', wrapperId: 'wrapper-frente' },
@@ -1087,6 +1109,9 @@
             }
         });
 
+        // ============================================
+        // PREVENIR DOBLE ENVÍO
+        // ============================================
         const form = document.getElementById('registroForm');
         const btn = document.getElementById('btnRegistrar');
         const loading = document.getElementById('loading');

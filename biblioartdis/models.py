@@ -19,11 +19,14 @@ def get_fecha_baja_default():
 
 
 class Usuario(models.Model):
+    # ============================================
+    # ROLES ACTUALIZADOS
+    # ============================================
     opciones_usuarios = (
         ('Estudiante', 'Estudiante'),
-        ('Administrador', 'Administrador'),
         ('Docente', 'Docente'),
-        ('Externo', 'Externo'),
+        ('Investigador', 'Investigador (Externo)'),
+        ('Administrador', 'Administrador'),
     )
     opciones_extensiones = (
         ('LP', 'LP'),
@@ -319,12 +322,7 @@ class Libro(models.Model):
         self.save()
 
     def get_pdf_display_url(self):
-        """
-        Retorna la URL para mostrar el PDF en el template.
-        Prioridad: google_drive_url → pdf_url → pdf de Cloudinary
-        """
         if self.google_drive_url:
-            # Convertir URL de Google Drive a embed si es necesario
             if 'drive.google.com' in self.google_drive_url:
                 file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None
                 if file_id:
@@ -405,7 +403,6 @@ class Revista(models.Model):
         blank=True
     )
     
-    # ✅ NUEVO: URL de Google Drive para PDFs grandes
     google_drive_url = models.URLField(
         'URL de Google Drive',
         max_length=500,
@@ -418,7 +415,6 @@ class Revista(models.Model):
     descripcion = models.TextField(blank=True, null=True)
 
     def get_pdf_display_url(self):
-        """Retorna la URL para mostrar el PDF"""
         if self.google_drive_url:
             if 'drive.google.com' in self.google_drive_url:
                 file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None

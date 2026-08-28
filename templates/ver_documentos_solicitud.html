@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Documentos | Biblioteca Digital ARTyDIS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #0F2B3D 0%, #1A3A4F 100%); color: white;">
+                    <h4><i class="fas fa-file-alt"></i> Documentos de {{ usuario.nombres }} {{ usuario.apepat }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h6><i class="fas fa-file-pdf text-danger"></i> Matrícula</h6>
+                                    {% if usuario.google_drive_matricula_url %}
+                                        <a href="{{ usuario.google_drive_matricula_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Matrícula
+                                        </a>
+                                    {% elif usuario.matricula_pdf %}
+                                        <a href="{{ usuario.matricula_pdf.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Matrícula
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">No disponible</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h6><i class="fas fa-id-card text-primary"></i> Carnet - Frente</h6>
+                                    {% if usuario.google_drive_carnet_frente_url %}
+                                        <a href="{{ usuario.google_drive_carnet_frente_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Carnet Frente
+                                        </a>
+                                    {% elif usuario.carnet_frente %}
+                                        <a href="{{ usuario.carnet_frente.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Carnet Frente
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">No disponible</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <h6><i class="fas fa-id-card text-primary"></i> Carnet - Reverso</h6>
+                                    {% if usuario.google_drive_carnet_reverso_url %}
+                                        <a href="{{ usuario.google_drive_carnet_reverso_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Carnet Reverso
+                                        </a>
+                                    {% elif usuario.carnet_reverso %}
+                                        <a href="{{ usuario.carnet_reverso.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Ver Carnet Reverso
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted">No disponible</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'gestionar_solicitudes' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
