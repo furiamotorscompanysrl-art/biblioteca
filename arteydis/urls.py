@@ -23,6 +23,14 @@ urlpatterns = [
     path('rechazar-usuario/<int:usuario_id>/', views.rechazar_usuario, name='rechazar_usuario'),
     
     # ============================================
+    # GESTIÓN DE SOLICITUDES (NUEVO DASHBOARD)
+    # ============================================
+    path('solicitudes/', views.gestionar_solicitudes, name='gestionar_solicitudes'),
+    path('aprobar-solicitud/<int:usuario_id>/', views.aprobar_solicitud, name='aprobar_solicitud'),
+    path('rechazar-solicitud/<int:usuario_id>/', views.rechazar_solicitud, name='rechazar_solicitud'),
+    path('ver-documentos/<int:usuario_id>/', views.ver_documentos_solicitud, name='ver_documentos_solicitud'),
+    
+    # ============================================
     # RESTABLECER CONTRASEÑA (ADMIN)
     # ============================================
     path('restablecer-password-admin/', views.restablecer_password_admin, name='restablecer_password_admin'),

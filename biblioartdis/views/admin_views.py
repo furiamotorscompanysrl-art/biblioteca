@@ -1,4 +1,4 @@
-# views/admin_views.py
+# biblioartdis/views/admin_views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -194,7 +194,103 @@ def eliminar_usuario(request, usuario_id):
     return redirect('lista_usuarios')
 
 
-# ==================== Panel Principal / Dashboard ====================
+# ============================================
+# GESTIÓN DE SOLICITUDES DE REGISTRO
+# ============================================
+
+@login_required
+@admin_required
+def gestionar_solicitudes(request):
+    """Dashboard para gestionar solicitudes de registro"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso para ver esta página')
+        return redirect('inicio')
+    
+    pendientes = Usuario.objects.filter(estado_registro='pendiente').order_by('-fecha_solicitud')
+    aprobados_recientes = Usuario.objects.filter(estado_registro='aprobado').order_by('-fecha_aprobacion')[:10]
+    rechazados_recientes = Usuario.objects.filter(estado_registro='rechazado').order_by('-fecha_solicitud')[:10]
+    
+    context = {
+        'pendientes': pendientes,
+        'aprobados_recientes': aprobados_recientes,
+        'rechazados_recientes': rechazados_recientes,
+        'total_pendientes': pendientes.count(),
+        'total_aprobados': Usuario.objects.filter(estado_registro='aprobado').count(),
+        'total_rechazados': Usuario.objects.filter(estado_registro='rechazado').count(),
+    }
+    return render(request, 'gestionar_solicitudes.html', context)
+
+
+@login_required
+@admin_required
+def aprobar_solicitud(request, usuario_id):
+    """Aprobar una solicitud de registro"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    
+    if usuario.estado_registro != 'pendiente':
+        messages.warning(request, f'Esta solicitud ya fue procesada (Estado: {usuario.get_estado_registro_display()})')
+        return redirect('gestionar_solicitudes')
+    
+    # Aprobar usuario
+    usuario.estado_registro = 'aprobado'
+    usuario.fecha_aprobacion = timezone.now()
+    if hasattr(request.user, 'usuario'):
+        usuario.aprobado_por = request.user.usuario
+    usuario.esta_activo = True
+    usuario.save()
+    
+    # Activar el usuario de Django
+    usuario.user.is_active = True
+    usuario.user.save()
+    
+    messages.success(request, f'✅ Usuario {usuario.nombres} {usuario.apepat} aprobado correctamente')
+    return redirect('gestionar_solicitudes')
+
+
+@login_required
+@admin_required
+def rechazar_solicitud(request, usuario_id):
+    """Rechazar una solicitud de registro"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo', 'No especificado')
+        
+        usuario.estado_registro = 'rechazado'
+        usuario.motivo_rechazo = motivo
+        usuario.esta_activo = False
+        usuario.save()
+        
+        # Desactivar usuario de Django
+        usuario.user.is_active = False
+        usuario.user.save()
+        
+        messages.success(request, f'❌ Usuario {usuario.nombres} {usuario.apepat} rechazado')
+        return redirect('gestionar_solicitudes')
+    
+    return render(request, 'rechazar_solicitud.html', {'usuario': usuario})
+
+
+@login_required
+@admin_required
+def ver_documentos_solicitud(request, usuario_id):
+    """Ver documentos de una solicitud"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permiso')
+        return redirect('inicio')
+    
+    usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+    return render(request, 'ver_documentos_solicitud.html', {'usuario': usuario})
+
+
 @login_required
 @admin_required
 def principal(request):
@@ -230,6 +326,14 @@ def principal(request):
         total_revistas = Revista.objects.count()
         total_imagenes = Imagen.objects.count()
 
+        # ============================================
+        # DATOS DE SOLICITUDES PARA EL DASHBOARD
+        # ============================================
+        pendientes = Usuario.objects.filter(estado_registro='pendiente').order_by('-fecha_solicitud')
+        total_pendientes = pendientes.count()
+        total_aprobados = Usuario.objects.filter(estado_registro='aprobado').count()
+        total_rechazados = Usuario.objects.filter(estado_registro='rechazado').count()
+
         datos = {
             'total_usuarios': total_usuarios,
             'total_sugerencias': total_sugerencias,
@@ -240,7 +344,12 @@ def principal(request):
             'visitas_agrupadas_nivel': visitas_agrupadas_nivel,
             'visitas_agrupadas_unitarias': visitas_agrupadas_unitarias,
             'vista_opcion': vista_opcion,
-            'usuario': request.user.usuario if hasattr(request.user, 'usuario') else None
+            'usuario': request.user.usuario if hasattr(request.user, 'usuario') else None,
+            # Nuevos datos de solicitudes
+            'pendientes': pendientes,
+            'total_pendientes': total_pendientes,
+            'total_aprobados': total_aprobados,
+            'total_rechazados': total_rechazados,
         }
 
         estadisticas = {

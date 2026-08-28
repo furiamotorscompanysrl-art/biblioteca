@@ -1,9 +1,13 @@
+# biblioartdis/forms.py
+
 from django import forms
 import locale
 from datetime import datetime
 from django.contrib.auth.models import User
 from .models import Autor, Imagen, Usuario, Coleccion, Revista
 from django.utils import timezone
+import os
+import tempfile
 
 # Configurar locale para fechas en español
 try:
@@ -266,7 +270,7 @@ class CambiarPasswordForm(forms.Form):
 
 # ============================================
 # FORMULARIO DE REGISTRO CON APROBACIÓN
-# SIN CAMPO DE USUARIO (se usa el correo como username)
+# CON SUBIDA A GOOGLE DRIVE
 # ============================================
 
 class RegistroUsuarioForm(forms.ModelForm):
@@ -392,15 +396,12 @@ class RegistroUsuarioForm(forms.ModelForm):
         correo = self.cleaned_data.get('correo', '').lower().strip()
         CORREO_ESPECIAL = 'vc3070934@gmail.com'
         
-        # Validar formato @umsa.bo o correo especial
         if not (correo.endswith('@umsa.bo') or correo == CORREO_ESPECIAL):
             raise forms.ValidationError('❌ Solo se permiten correos institucionales @umsa.bo')
         
-        # Verificar si el correo ya está registrado en User
         if User.objects.filter(email=correo).exists():
             raise forms.ValidationError('❌ Este correo ya está registrado')
         
-        # Verificar si el correo ya está registrado en Usuario
         if Usuario.objects.filter(correo=correo).exists():
             raise forms.ValidationError('❌ Este correo ya está registrado')
         
@@ -415,7 +416,6 @@ class RegistroUsuarioForm(forms.ModelForm):
         if len(ci) < 6:
             raise forms.ValidationError('❌ El CI debe tener al menos 6 dígitos')
         
-        # Verificar si el CI ya está registrado
         if Usuario.objects.filter(ci=ci).exists():
             raise forms.ValidationError('❌ Este CI ya está registrado')
         
@@ -437,14 +437,60 @@ class RegistroUsuarioForm(forms.ModelForm):
         
         return cleaned_data
     
+    def _subir_a_drive(self, archivo, usuario_id, tipo, carpeta_destino):
+        """Subir un archivo a Google Drive"""
+        try:
+            from .google_drive_utils import drive_service
+            from django.conf import settings
+            
+            if not archivo:
+                return None
+            
+            # Obtener o crear la carpeta
+            folder_id = drive_service.get_or_create_folder(
+                carpeta_destino,
+                settings.GOOGLE_DRIVE_FOLDER_ID
+            )
+            
+            if not folder_id:
+                return None
+            
+            # Guardar archivo temporal
+            ext = os.path.splitext(archivo.name)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
+                for chunk in archivo.chunks():
+                    tmp_file.write(chunk)
+                tmp_path = tmp_file.name
+            
+            # Subir a Google Drive
+            nombre_archivo = f"{usuario_id}_{tipo}{ext}"
+            resultado = drive_service.upload_file(
+                file_path=tmp_path,
+                file_name=nombre_archivo,
+                folder_id=folder_id
+            )
+            
+            # Eliminar archivo temporal
+            os.unlink(tmp_path)
+            
+            if resultado:
+                return resultado['download_link']
+            return None
+            
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error subiendo archivo a Drive: {e}")
+            return None
+    
     def save(self, commit=True):
+        from .google_drive_utils import drive_service
+        from django.conf import settings
+        
         # Crear el usuario con el correo como username
         correo = self.cleaned_data['correo'].lower().strip()
         
-        # Generar username a partir del correo (sin @)
         username = correo.split('@')[0]
-        
-        # Si el username ya existe, agregar un número
         if User.objects.filter(username=username).exists():
             import random
             username = f"{username}_{random.randint(100, 999)}"
@@ -456,7 +502,7 @@ class RegistroUsuarioForm(forms.ModelForm):
             first_name=self.cleaned_data['nombres'],
             last_name=f"{self.cleaned_data['apepat']} {self.cleaned_data.get('apemat', '')}".strip()
         )
-        user.is_active = False  # Desactivado hasta aprobación
+        user.is_active = False
         user.save()
         
         # Guardar el perfil
@@ -469,13 +515,43 @@ class RegistroUsuarioForm(forms.ModelForm):
         
         if commit:
             usuario.save()
-            # Guardar los archivos si hay
+            
+            # Subir documentos a Google Drive
+            usuario_id = usuario.usuario_id
+            
+            # Matrícula
             if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
-                usuario.matricula_pdf = self.cleaned_data['matricula_pdf']
+                url = self._subir_a_drive(
+                    self.cleaned_data['matricula_pdf'],
+                    usuario_id,
+                    'matricula',
+                    'Usuarios/Matriculas'
+                )
+                if url:
+                    usuario.google_drive_matricula_url = url
+            
+            # Carnet Frente
             if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
-                usuario.carnet_frente = self.cleaned_data['carnet_frente']
+                url = self._subir_a_drive(
+                    self.cleaned_data['carnet_frente'],
+                    usuario_id,
+                    'carnet_frente',
+                    'Usuarios/Carnets/Frente'
+                )
+                if url:
+                    usuario.google_drive_carnet_frente_url = url
+            
+            # Carnet Reverso
             if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
-                usuario.carnet_reverso = self.cleaned_data['carnet_reverso']
+                url = self._subir_a_drive(
+                    self.cleaned_data['carnet_reverso'],
+                    usuario_id,
+                    'carnet_reverso',
+                    'Usuarios/Carnets/Reverso'
+                )
+                if url:
+                    usuario.google_drive_carnet_reverso_url = url
+            
             usuario.save()
         
         return usuario

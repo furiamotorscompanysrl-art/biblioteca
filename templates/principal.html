@@ -117,6 +117,24 @@
     .stat-card.suggestions .stat-link { color: var(--danger); }
     .stat-card.suggestions .stat-link:hover { color: var(--accent); }
 
+    /* Card de Solicitudes - DESTACADA */
+    .stat-card.solicitudes {
+        background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+        border: 2px solid var(--accent);
+    }
+
+    .stat-card.solicitudes .stat-value {
+        color: #D97706;
+    }
+
+    .stat-card.solicitudes .stat-link {
+        color: #D97706;
+    }
+
+    .stat-card.solicitudes .stat-link:hover {
+        color: #B45309;
+    }
+
     /* Filtros */
     .filter-section {
         background: white;
@@ -213,6 +231,115 @@
         background-color: var(--bg-light);
     }
 
+    /* Tabla de Solicitudes */
+    .solicitudes-table {
+        font-size: 0.85rem;
+    }
+
+    .solicitudes-table th {
+        background: #FEF3C7;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: #92400E;
+        border-bottom: 2px solid var(--accent);
+    }
+
+    .solicitudes-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        vertical-align: middle;
+    }
+
+    .solicitudes-table tr:hover td {
+        background-color: #FFFBEB;
+    }
+
+    .btn-accion {
+        padding: 0.25rem 0.6rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-accion-aprobar {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-accion-aprobar:hover {
+        background: #059669;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-accion-rechazar {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-accion-rechazar:hover {
+        background: #DC2626;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-accion-documentos {
+        background: var(--info);
+        color: white;
+    }
+
+    .btn-accion-documentos:hover {
+        background: #2563EB;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .badge-pendiente {
+        background: #F59E0B;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-aprobado {
+        background: var(--success);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-rechazado {
+        background: var(--danger);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--accent);
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+
     /* Resumen General */
     .summary-section {
         background: white;
@@ -303,6 +430,17 @@
         .filter-form select, .filter-form button {
             width: 100%;
         }
+        .solicitudes-table {
+            font-size: 0.75rem;
+        }
+        .solicitudes-table th,
+        .solicitudes-table td {
+            padding: 0.5rem;
+        }
+        .btn-accion {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+        }
     }
 </style>
 
@@ -316,54 +454,161 @@
         <p class="dashboard-subtitle">Bienvenido al sistema de gestión de la Biblioteca Digital ARTyDIS</p>
     </div>
 
+    <!-- ============================================ -->
+    <!-- SOLICITUDES PENDIENTES - DESTACADO           -->
+    <!-- ============================================ -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="stat-card solicitudes">
+                <div class="stat-card-body">
+                    <i class="fas fa-users stat-icon"></i>
+                    <div class="stat-value">{{ total_pendientes|default:0 }}</div>
+                    <div class="stat-label">
+                        <i class="fas fa-clock text-warning"></i> 
+                        Solicitudes Pendientes de Aprobación
+                    </div>
+                    <a href="{% url 'gestionar_solicitudes' %}" class="stat-link">
+                        <i class="fas fa-arrow-right me-1"></i> Gestionar todas las solicitudes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Cards de Estadísticas -->
     <div class="row g-4 mb-4">
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-4 col-6">
             <div class="stat-card users">
                 <div class="stat-card-body">
                     <i class="fas fa-users stat-icon"></i>
                     <div class="stat-value">{{ total_usuarios }}</div>
-                    <div class="stat-label">Usuarios Registrados</div>
-                    <a href="{% url 'lista_usuarios' %}" class="stat-link">
-                        Gestionar <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+                    <div class="stat-label">Usuarios</div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-4 col-6">
             <div class="stat-card books">
                 <div class="stat-card-body">
                     <i class="fas fa-book stat-icon"></i>
                     <div class="stat-value">{{ total_libros }}</div>
-                    <div class="stat-label">Libros Disponibles</div>
-                    <a href="{% url 'listar_libros' %}" class="stat-link">
-                        Gestionar <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+                    <div class="stat-label">Libros</div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-4 col-6">
             <div class="stat-card revistas">
                 <div class="stat-card-body">
                     <i class="fas fa-newspaper stat-icon"></i>
                     <div class="stat-value">{{ total_revistas }}</div>
-                    <div class="stat-label">Colecciones</div>
-                    <a href="{% url 'listar_revistas' %}" class="stat-link">
-                        Gestionar <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+                    <div class="stat-label">Revistas</div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-4 col-6">
+            <div class="stat-card gallery">
+                <div class="stat-card-body">
+                    <i class="fas fa-images stat-icon"></i>
+                    <div class="stat-value">{{ total_imagenes }}</div>
+                    <div class="stat-label">Imágenes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-6">
             <div class="stat-card suggestions">
                 <div class="stat-card-body">
                     <i class="fas fa-lightbulb stat-icon"></i>
                     <div class="stat-value">{{ total_sugerencias }}</div>
                     <div class="stat-label">Sugerencias</div>
-                    <a href="{% url 'listar_sugerencias' %}" class="stat-link">
-                        Revisar <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
                 </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-6">
+            <div class="stat-card" style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);">
+                <div class="stat-card-body">
+                    <i class="fas fa-check-circle stat-icon" style="color: var(--success);"></i>
+                    <div class="stat-value">{{ total_aprobados|default:0 }}</div>
+                    <div class="stat-label">Aprobados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TABLA DE SOLICITUDES PENDIENTES              -->
+    <!-- ============================================ -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="table-container">
+                <div class="section-title">
+                    <i class="fas fa-clock" style="color: var(--accent);"></i> 
+                    Solicitudes Pendientes
+                    {% if total_pendientes > 0 %}
+                        <span class="badge bg-warning text-dark ms-2">{{ total_pendientes }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if pendientes and pendientes|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="data-table solicitudes-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Carrera</th>
+                                    <th>Fecha</th>
+                                    <th>Documentos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario in pendientes|slice:":10" %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ usuario.nombres }} {{ usuario.apepat }}</strong>
+                                    </td>
+                                    <td>{{ usuario.correo }}</td>
+                                    <td>{{ usuario.carrera|default:"-" }}</td>
+                                    <td>{{ usuario.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'ver_documentos_solicitud' usuario.usuario_id %}" 
+                                           class="btn-accion btn-accion-documentos" target="_blank">
+                                            <i class="fas fa-file-alt"></i> Ver
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{% url 'aprobar_solicitud' usuario.usuario_id %}" 
+                                               class="btn-accion btn-accion-aprobar"
+                                               onclick="return confirm('¿Aprobar a {{ usuario.nombres }} {{ usuario.apepat }}?')">
+                                                <i class="fas fa-check"></i> Aprobar
+                                            </a>
+                                            <a href="{% url 'rechazar_solicitud' usuario.usuario_id %}" 
+                                               class="btn-accion btn-accion-rechazar">
+                                                <i class="fas fa-times"></i> Rechazar
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if pendientes|length > 10 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'gestionar_solicitudes' %}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-eye"></i> Ver todas las solicitudes ({{ pendientes|length }})
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h5 class="text-success">¡No hay solicitudes pendientes!</h5>
+                        <p class="text-muted">Todas las solicitudes han sido procesadas</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -403,14 +648,14 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Categoría</th>
+                                <th>Título</th>
                                 <th class="text-end">Total Visitas</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for categoria, total in visitas_agrupadas_nivel.items %}
+                            {% for titulo, total in visitas_agrupadas_unitarias.items %}
                             <tr>
-                                <td>{{ categoria }}</td>
+                                <td>{{ titulo|truncatechars:50 }}</td>
                                 <td class="text-end"><span class="badge" style="background: var(--accent);">{{ total }}</span></td>
                             </tr>
                             {% empty %}
@@ -422,14 +667,14 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Título</th>
+                                <th>Categoría</th>
                                 <th class="text-end">Total Visitas</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for titulo, total in visitas_agrupadas_unitarias.items %}
+                            {% for categoria, total in visitas_agrupadas_nivel.items %}
                             <tr>
-                                <td>{{ titulo|truncatechars:50 }}</td>
+                                <td>{{ categoria }}</td>
                                 <td class="text-end"><span class="badge" style="background: var(--accent);">{{ total }}</span></td>
                             </tr>
                             {% empty %}
