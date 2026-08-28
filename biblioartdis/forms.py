@@ -443,6 +443,7 @@ class RegistroUsuarioForm(forms.ModelForm):
         carnet_frente = cleaned_data.get('carnet_frente')
         carnet_reverso = cleaned_data.get('carnet_reverso')
         
+        # Estudiante: requiere matrícula + carnet (frente y reverso)
         if tipo_usuario == 'Estudiante':
             if not matricula:
                 raise forms.ValidationError('❌ Los estudiantes deben subir la matrícula en PDF')
@@ -451,19 +452,23 @@ class RegistroUsuarioForm(forms.ModelForm):
             if not carnet_reverso:
                 raise forms.ValidationError('❌ Los estudiantes deben subir la foto del reverso del carnet')
         
-        elif tipo_usuario == 'Docente':
-            if not carnet_frente:
-                raise forms.ValidationError('❌ Los docentes deben subir la foto del frente del carnet')
-            if not carnet_reverso:
-                raise forms.ValidationError('❌ Los docentes deben subir la foto del reverso del carnet')
-            # No requiere matrícula
-        
+        # Investigador: solo requiere carnet (frente y reverso), sin matrícula
         elif tipo_usuario == 'Investigador':
             if not carnet_frente:
                 raise forms.ValidationError('❌ Los investigadores deben subir la foto del frente del carnet')
             if not carnet_reverso:
                 raise forms.ValidationError('❌ Los investigadores deben subir la foto del reverso del carnet')
             # No requiere matrícula
+        
+        # Docente: NO requiere documentos
+        elif tipo_usuario == 'Docente':
+            # No se requieren documentos
+            pass
+        
+        # Administrador: NO requiere documentos
+        elif tipo_usuario == 'Administrador':
+            # No se requieren documentos
+            pass
         
         return cleaned_data
     
@@ -544,6 +549,7 @@ class RegistroUsuarioForm(forms.ModelForm):
             tipo_usuario = self.cleaned_data.get('tipo_usuario')
             
             # Subir documentos según el rol
+            
             # Matrícula - SOLO para estudiantes
             if tipo_usuario == 'Estudiante':
                 if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
@@ -556,27 +562,31 @@ class RegistroUsuarioForm(forms.ModelForm):
                     if url:
                         usuario.google_drive_matricula_url = url
             
-            # Carnet Frente - TODOS los roles
-            if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
-                url = self._subir_a_drive(
-                    self.cleaned_data['carnet_frente'],
-                    usuario_id,
-                    'carnet_frente',
-                    'Usuarios/Carnets/Frente'
-                )
-                if url:
-                    usuario.google_drive_carnet_frente_url = url
+            # Carnet Frente - SOLO para Estudiante e Investigador
+            if tipo_usuario in ['Estudiante', 'Investigador']:
+                if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
+                    url = self._subir_a_drive(
+                        self.cleaned_data['carnet_frente'],
+                        usuario_id,
+                        'carnet_frente',
+                        'Usuarios/Carnets/Frente'
+                    )
+                    if url:
+                        usuario.google_drive_carnet_frente_url = url
             
-            # Carnet Reverso - TODOS los roles
-            if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
-                url = self._subir_a_drive(
-                    self.cleaned_data['carnet_reverso'],
-                    usuario_id,
-                    'carnet_reverso',
-                    'Usuarios/Carnets/Reverso'
-                )
-                if url:
-                    usuario.google_drive_carnet_reverso_url = url
+            # Carnet Reverso - SOLO para Estudiante e Investigador
+            if tipo_usuario in ['Estudiante', 'Investigador']:
+                if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
+                    url = self._subir_a_drive(
+                        self.cleaned_data['carnet_reverso'],
+                        usuario_id,
+                        'carnet_reverso',
+                        'Usuarios/Carnets/Reverso'
+                    )
+                    if url:
+                        usuario.google_drive_carnet_reverso_url = url
+            
+            # Docente y Administrador: NO suben documentos
             
             usuario.save()
         

@@ -780,12 +780,12 @@
                 </div>
             </div>
 
-            <!-- DATOS ACADÉMICOS -->
-            <div class="section-title">
+            <!-- DATOS ACADÉMICOS - SOLO PARA ESTUDIANTES -->
+            <div class="section-title" id="academico-section">
                 <i class="fas fa-graduation-cap"></i> Datos Académicos
             </div>
 
-            <div class="row">
+            <div class="row" id="academico-fields">
                 <div class="col-lg-6 col-md-6">
                     <div class="form-group">
                         <label class="form-label">
@@ -833,6 +833,10 @@
             </div>
 
             <!-- TIPO DE USUARIO -->
+            <div class="section-title">
+                <i class="fas fa-user-tag"></i> Tipo de Usuario
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="form-group">
@@ -894,11 +898,11 @@
             </div>
 
             <!-- DOCUMENTOS REQUERIDOS -->
-            <div class="section-title">
+            <div class="section-title" id="documentos-section">
                 <i class="fas fa-file-alt"></i> Documentos Requeridos
             </div>
 
-            <div class="row">
+            <div class="row" id="documentos-fields">
                 <!-- Matrícula - SOLO para estudiantes -->
                 <div class="col-lg-4 col-md-6" id="matricula-group">
                     <div class="form-group">
@@ -919,7 +923,7 @@
                     </div>
                 </div>
 
-                <!-- Carnet Frente - TODOS -->
+                <!-- Carnet Frente - TODOS excepto Docente y Administrador -->
                 <div class="col-lg-4 col-md-6" id="carnet-frente-group">
                     <div class="form-group">
                         <label class="form-label">
@@ -939,7 +943,7 @@
                     </div>
                 </div>
 
-                <!-- Carnet Reverso - TODOS -->
+                <!-- Carnet Reverso - TODOS excepto Docente y Administrador -->
                 <div class="col-lg-4 col-md-6" id="carnet-reverso-group">
                     <div class="form-group">
                         <label class="form-label">
@@ -1035,6 +1039,10 @@
         // MOSTRAR/OCULTAR CAMPOS SEGÚN ROL
         // ============================================
         const tipoUsuario = document.querySelector('select[name="tipo_usuario"]');
+        const academicoSection = document.getElementById('academico-section');
+        const academicoFields = document.getElementById('academico-fields');
+        const documentosSection = document.getElementById('documentos-section');
+        const documentosFields = document.getElementById('documentos-fields');
         const matriculaGroup = document.getElementById('matricula-group');
         const matriculaStar = document.getElementById('matricula-star');
         const carnetFrenteGroup = document.getElementById('carnet-frente-group');
@@ -1044,24 +1052,43 @@
             if (!tipoUsuario) return;
             const tipo = tipoUsuario.value;
 
-            // Mostrar todos los grupos por defecto
-            matriculaGroup.style.display = 'block';
-            carnetFrenteGroup.style.display = 'block';
-            carnetReversoGroup.style.display = 'block';
-
-            // Mostrar/ocultar asteriscos según rol
+            // ============================================
+            // DATOS ACADÉMICOS - SOLO PARA ESTUDIANTES
+            // ============================================
             if (tipo === 'Estudiante') {
-                // Todos los documentos requeridos
+                academicoSection.style.display = 'flex';
+                academicoFields.style.display = 'flex';
+            } else {
+                academicoSection.style.display = 'none';
+                academicoFields.style.display = 'none';
+            }
+
+            // ============================================
+            // DOCUMENTOS
+            // ============================================
+            if (tipo === 'Docente' || tipo === 'Administrador') {
+                // Docente y Administrador: NO documentos
+                documentosSection.style.display = 'none';
+                documentosFields.style.display = 'none';
+                matriculaGroup.style.display = 'none';
+                carnetFrenteGroup.style.display = 'none';
+                carnetReversoGroup.style.display = 'none';
+            } else if (tipo === 'Estudiante') {
+                // Estudiante: TODOS los documentos
+                documentosSection.style.display = 'flex';
+                documentosFields.style.display = 'flex';
+                matriculaGroup.style.display = 'block';
+                carnetFrenteGroup.style.display = 'block';
+                carnetReversoGroup.style.display = 'block';
                 matriculaStar.style.display = 'inline';
-                document.querySelector('label[for="id_matricula_pdf"] .required-star').style.display = 'inline';
-            } else if (tipo === 'Docente') {
-                // Solo carnet (frente y reverso), sin matrícula
-                matriculaGroup.style.display = 'none';
-                matriculaStar.style.display = 'none';
             } else if (tipo === 'Investigador') {
-                // Solo carnet (frente y reverso), sin matrícula
+                // Investigador: SOLO carnet (frente y reverso), sin matrícula
+                documentosSection.style.display = 'flex';
+                documentosFields.style.display = 'flex';
                 matriculaGroup.style.display = 'none';
                 matriculaStar.style.display = 'none';
+                carnetFrenteGroup.style.display = 'block';
+                carnetReversoGroup.style.display = 'block';
             }
         }
 
