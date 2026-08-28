@@ -124,6 +124,51 @@
             text-align: center;
         }
 
+        /* ============================================
+           TIPO DE USUARIO - DESTACADO
+        ============================================ */
+        .tipo-usuario-section {
+            background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid var(--accent);
+            position: relative;
+        }
+
+        .tipo-usuario-section .section-title {
+            border-bottom-color: var(--accent);
+            color: #92400E;
+            margin-top: 0;
+        }
+
+        .tipo-usuario-section .section-title i {
+            color: var(--accent);
+        }
+
+        .tipo-usuario-section .form-text {
+            color: #92400E;
+        }
+
+        .tipo-usuario-section .form-control,
+        .tipo-usuario-section .form-select {
+            border-color: var(--accent);
+            background-color: #FFFBEB;
+            height: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tipo-usuario-section .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            background-color: white;
+        }
+
+        .tipo-usuario-section .input-icon {
+            color: var(--accent);
+        }
+
         .form-group {
             margin-bottom: 1.25rem;
         }
@@ -507,6 +552,13 @@
                 justify-content: center;
                 padding: 0.7rem;
             }
+            .tipo-usuario-section {
+                padding: 1rem;
+            }
+            .tipo-usuario-section .form-control,
+            .tipo-usuario-section .form-select {
+                height: 44px;
+            }
         }
 
         @media (max-width: 576px) {
@@ -574,6 +626,14 @@
                 padding-top: 1rem;
                 gap: 10px;
             }
+            .tipo-usuario-section {
+                padding: 0.8rem;
+            }
+            .tipo-usuario-section .form-control,
+            .tipo-usuario-section .form-select {
+                height: 40px;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -618,6 +678,31 @@
 
         <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
             {% csrf_token %}
+
+            <!-- ==========================================
+                 TIPO DE USUARIO - DESTACADO ARRIBA
+            ========================================== -->
+            <div class="tipo-usuario-section">
+                <div class="section-title">
+                    <i class="fas fa-user-tag"></i> Selecciona tu Tipo de Usuario
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="input-group-custom">
+                                <i class="fas fa-user-tag input-icon"></i>
+                                {{ form.tipo_usuario|add_class:"form-select" }}
+                            </div>
+                            <div class="form-text" style="margin-top: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
+                            </div>
+                            {% if form.tipo_usuario.errors %}
+                                <div class="invalid-feedback">{{ form.tipo_usuario.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- DATOS PERSONALES -->
             <div class="section-title">
@@ -827,31 +912,6 @@
                         </div>
                         {% if form.anio_ingreso.errors %}
                             <div class="invalid-feedback">{{ form.anio_ingreso.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- TIPO DE USUARIO -->
-            <div class="section-title">
-                <i class="fas fa-user-tag"></i> Tipo de Usuario
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-user-tag"></i> {{ form.tipo_usuario.label }} <span class="required-star">*</span>
-                        </label>
-                        <div class="input-group-custom">
-                            <i class="fas fa-user-tag input-icon"></i>
-                            {{ form.tipo_usuario|add_class:"form-select" }}
-                        </div>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
-                        </div>
-                        {% if form.tipo_usuario.errors %}
-                            <div class="invalid-feedback">{{ form.tipo_usuario.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
