@@ -29,7 +29,14 @@ from .admin_views import (
     listar_sugerencias,
     aprobar_sugerencia, 
     usuarios_activos, 
-    ver_historial_usuario
+    ver_historial_usuario,
+    # ============================================
+    # NUEVAS VISTAS PARA GESTIÓN DE SOLICITUDES
+    # ============================================
+    gestionar_solicitudes,
+    aprobar_solicitud,
+    rechazar_solicitud,
+    ver_documentos_solicitud,
 )
 
 from .usuario_views import (
@@ -105,6 +112,13 @@ __all__ = [
     'aprobar_sugerencia', 
     'usuarios_activos', 
     'ver_historial_usuario',
+    # ============================================
+    # NUEVAS VISTAS PARA GESTIÓN DE SOLICITUDES
+    # ============================================
+    'gestionar_solicitudes',
+    'aprobar_solicitud',
+    'rechazar_solicitud',
+    'ver_documentos_solicitud',
     
     # Usuario views
     'inicio', 
