@@ -12,14 +12,19 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 import re
 import threading
+import os
+import tempfile
 
 from ..decorators import admin_required
 from ..email_utils import enviar_codigo_verificacion, verificar_codigo
 from ..forms import RegistroUsuarioForm, RestablecerPasswordForm, LoginForm
+from ..google_drive_utils import drive_service
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -421,3 +426,89 @@ def restablecer_password_api(request):
     except Exception as e:
         logger.error(f"Error al restablecer contraseña: {str(e)}", exc_info=True)
         return JsonResponse({'success': False, 'error': 'Error interno del servidor'})
+
+
+# ============================================
+# SUBIDA A GOOGLE DRIVE VÍA AJAX
+# ============================================
+
+@csrf_exempt
+def upload_to_drive_ajax(request):
+    """Vista AJAX para subir archivos a Google Drive en tiempo real"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        # Obtener el archivo
+        archivo = request.FILES.get('file')
+        if not archivo:
+            return JsonResponse({'success': False, 'error': 'No se recibió ningún archivo'})
+        
+        # Obtener el tipo de documento
+        tipo_documento = request.POST.get('tipo', 'documento')
+        
+        # Mapeo de tipos a carpetas
+        carpetas = {
+            'matricula': 'Usuarios/Matriculas',
+            'carnet_frente': 'Usuarios/Carnets/Frente',
+            'carnet_reverso': 'Usuarios/Carnets/Reverso'
+        }
+        
+        folder_path = carpetas.get(tipo_documento, 'Usuarios/General')
+        
+        # Guardar archivo temporalmente
+        ext = os.path.splitext(archivo.name)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
+            for chunk in archivo.chunks():
+                tmp_file.write(chunk)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Obtener o crear la carpeta en Google Drive
+            folder_id = drive_service.get_or_create_folder(
+                folder_path,
+                settings.GOOGLE_DRIVE_FOLDER_ID
+            )
+            
+            if not folder_id:
+                return JsonResponse({'success': False, 'error': 'No se pudo crear la carpeta en Drive'})
+            
+            # Generar nombre único (usamos timestamp para evitar colisiones)
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            nombre_archivo = f"temp_{timestamp}_{tipo_documento}{ext}"
+            
+            # Subir a Google Drive
+            resultado = drive_service.upload_file(
+                file_path=tmp_path,
+                file_name=nombre_archivo,
+                folder_id=folder_id
+            )
+            
+            # Eliminar archivo temporal
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            
+            if resultado and resultado.get('download_link'):
+                # Devolver la URL de descarga y el ID del archivo
+                return JsonResponse({
+                    'success': True,
+                    'url': resultado['download_link'],
+                    'file_id': resultado['file_id'],
+                    'message': 'Archivo subido correctamente'
+                })
+            else:
+                return JsonResponse({'success': False, 'error': 'Error al subir archivo a Drive'})
+                
+        except Exception as e:
+            # Limpiar archivo temporal en caso de error
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

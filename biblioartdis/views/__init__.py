@@ -12,6 +12,7 @@ from .auth_views import (
     rechazar_usuario,
     restablecer_password_admin,
     restablecer_password_api,
+    upload_to_drive_ajax,  # ← NUEVA IMPORTACIÓN
 )
 
 from .admin_views import (
@@ -95,6 +96,7 @@ __all__ = [
     'rechazar_usuario',
     'restablecer_password_admin',
     'restablecer_password_api',
+    'upload_to_drive_ajax',  # ← NUEVO EN __ALL__
     
     # Admin views
     'lista_usuarios', 

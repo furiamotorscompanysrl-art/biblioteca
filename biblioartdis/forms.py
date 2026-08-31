@@ -270,7 +270,7 @@ class CambiarPasswordForm(forms.Form):
 
 # ============================================
 # FORMULARIO DE REGISTRO CON APROBACIÓN
-# CON SUBIDA A GOOGLE DRIVE
+# CON SUBIDA A GOOGLE DRIVE (AJAX EN TIEMPO REAL)
 # ============================================
 
 class RegistroUsuarioForm(forms.ModelForm):
@@ -299,7 +299,10 @@ class RegistroUsuarioForm(forms.ModelForm):
             'correo', 'telefono', 'direccion',
             'carrera', 'semestre', 'anio_ingreso',
             'tipo_usuario',
-            'matricula_pdf', 'carnet_frente', 'carnet_reverso'
+            'matricula_pdf', 'carnet_frente', 'carnet_reverso',
+            'google_drive_matricula_url', 
+            'google_drive_carnet_frente_url', 
+            'google_drive_carnet_reverso_url'
         ]
         widgets = {
             'nombres': forms.TextInput(attrs={
@@ -365,6 +368,9 @@ class RegistroUsuarioForm(forms.ModelForm):
                 'class': 'form-control-file',
                 'accept': 'image/*'
             }),
+            'google_drive_matricula_url': forms.HiddenInput(),
+            'google_drive_carnet_frente_url': forms.HiddenInput(),
+            'google_drive_carnet_reverso_url': forms.HiddenInput(),
         }
         labels = {
             'nombres': 'Nombre',
@@ -461,84 +467,6 @@ class RegistroUsuarioForm(forms.ModelForm):
         
         return cleaned_data
     
-    def _guardar_archivo_temporal(self, archivo):
-        """Guarda un archivo subido en un archivo temporal y retorna la ruta"""
-        if not archivo:
-            return None
-        
-        try:
-            # Obtener la extensión del archivo
-            ext = os.path.splitext(archivo.name)[1]
-            
-            # Crear archivo temporal
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
-                # Escribir los datos del archivo subido
-                for chunk in archivo.chunks():
-                    tmp_file.write(chunk)
-                tmp_path = tmp_file.name
-            
-            return tmp_path
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error guardando archivo temporal: {e}")
-            return None
-    
-    def _subir_a_drive(self, archivo, usuario_id, tipo, carpeta_destino):
-        """Subir un archivo a Google Drive"""
-        try:
-            from .google_drive_utils import drive_service
-            from django.conf import settings
-            
-            if not archivo:
-                return None
-            
-            # Guardar archivo temporal
-            tmp_path = self._guardar_archivo_temporal(archivo)
-            if not tmp_path:
-                return None
-            
-            # Obtener o crear la carpeta
-            folder_id = drive_service.get_or_create_folder(
-                carpeta_destino,
-                settings.GOOGLE_DRIVE_FOLDER_ID
-            )
-            
-            if not folder_id:
-                # Eliminar archivo temporal si no se pudo crear la carpeta
-                try:
-                    os.unlink(tmp_path)
-                except:
-                    pass
-                return None
-            
-            # Nombre del archivo
-            ext = os.path.splitext(archivo.name)[1]
-            nombre_archivo = f"{usuario_id}_{tipo}{ext}"
-            
-            # Subir a Google Drive
-            resultado = drive_service.upload_file(
-                file_path=tmp_path,
-                file_name=nombre_archivo,
-                folder_id=folder_id
-            )
-            
-            # Eliminar archivo temporal
-            try:
-                os.unlink(tmp_path)
-            except:
-                pass
-            
-            if resultado:
-                return resultado['download_link']
-            return None
-            
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error subiendo archivo a Drive: {e}")
-            return None
-    
     def save(self, commit=True):
         correo = self.cleaned_data['correo'].lower().strip()
         
@@ -565,52 +493,10 @@ class RegistroUsuarioForm(forms.ModelForm):
         usuario.esta_activo = False
         
         if commit:
-            usuario.save()
-            
-            usuario_id = usuario.usuario_id
-            tipo_usuario = self.cleaned_data.get('tipo_usuario')
-            
-            # ============================================
-            # SUBIR DOCUMENTOS SEGÚN EL ROL
-            # ============================================
-            
-            # Matrícula - SOLO para estudiantes
-            if tipo_usuario == 'Estudiante':
-                if 'matricula_pdf' in self.cleaned_data and self.cleaned_data['matricula_pdf']:
-                    url = self._subir_a_drive(
-                        self.cleaned_data['matricula_pdf'],
-                        usuario_id,
-                        'matricula',
-                        'Usuarios/Matriculas'
-                    )
-                    if url:
-                        usuario.google_drive_matricula_url = url
-            
-            # Carnet Frente - SOLO para Estudiante e Investigador
-            if tipo_usuario in ['Estudiante', 'Investigador']:
-                if 'carnet_frente' in self.cleaned_data and self.cleaned_data['carnet_frente']:
-                    url = self._subir_a_drive(
-                        self.cleaned_data['carnet_frente'],
-                        usuario_id,
-                        'carnet_frente',
-                        'Usuarios/Carnets/Frente'
-                    )
-                    if url:
-                        usuario.google_drive_carnet_frente_url = url
-            
-            # Carnet Reverso - SOLO para Estudiante e Investigador
-            if tipo_usuario in ['Estudiante', 'Investigador']:
-                if 'carnet_reverso' in self.cleaned_data and self.cleaned_data['carnet_reverso']:
-                    url = self._subir_a_drive(
-                        self.cleaned_data['carnet_reverso'],
-                        usuario_id,
-                        'carnet_reverso',
-                        'Usuarios/Carnets/Reverso'
-                    )
-                    if url:
-                        usuario.google_drive_carnet_reverso_url = url
-            
-            # Docente y Administrador: NO suben documentos
+            # Guardar las URLs de Google Drive (ya subidas por AJAX)
+            usuario.google_drive_matricula_url = self.cleaned_data.get('google_drive_matricula_url', '')
+            usuario.google_drive_carnet_frente_url = self.cleaned_data.get('google_drive_carnet_frente_url', '')
+            usuario.google_drive_carnet_reverso_url = self.cleaned_data.get('google_drive_carnet_reverso_url', '')
             
             usuario.save()
         

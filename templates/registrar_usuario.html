@@ -480,6 +480,33 @@
             margin-top: 8px;
         }
 
+        .upload-status {
+            display: none;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .upload-status.show {
+            display: block;
+        }
+
+        .upload-status.success {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-status.error {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .upload-status.loading {
+            color: var(--accent);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -971,12 +998,14 @@
                             <span class="required-star" id="matricula-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-matricula">
-                            <i class="fas fa-file-pdf file-icon"></i>
+                            <i class="fas fa-file-pdf file-icon" id="matricula-icon"></i>
                             <div class="file-text">Haz clic para subir</div>
                             <div class="file-name" id="matricula-name">Ningún archivo seleccionado</div>
                             {{ form.matricula_pdf }}
                             <div class="file-requirements"><i class="fas fa-info-circle"></i> PDF hasta 5MB</div>
                         </div>
+                        <div class="upload-status" id="matricula-status"></div>
+                        {{ form.google_drive_matricula_url }}
                         {% if form.matricula_pdf.errors %}
                             <div class="invalid-feedback">{{ form.matricula_pdf.errors.0 }}</div>
                         {% endif %}
@@ -991,12 +1020,14 @@
                             <span class="required-star" id="carnet-frente-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-frente">
-                            <i class="fas fa-id-card file-icon"></i>
+                            <i class="fas fa-id-card file-icon" id="frente-icon"></i>
                             <div class="file-text">Haz clic para subir</div>
                             <div class="file-name" id="frente-name">Ningún archivo seleccionado</div>
                             {{ form.carnet_frente }}
                             <div class="file-requirements"><i class="fas fa-info-circle"></i> JPG, PNG</div>
                         </div>
+                        <div class="upload-status" id="frente-status"></div>
+                        {{ form.google_drive_carnet_frente_url }}
                         {% if form.carnet_frente.errors %}
                             <div class="invalid-feedback">{{ form.carnet_frente.errors.0 }}</div>
                         {% endif %}
@@ -1011,12 +1042,14 @@
                             <span class="required-star" id="carnet-reverso-star">*</span>
                         </label>
                         <div class="file-input-wrapper" id="wrapper-reverso">
-                            <i class="fas fa-id-card file-icon"></i>
+                            <i class="fas fa-id-card file-icon" id="reverso-icon"></i>
                             <div class="file-text">Haz clic para subir</div>
                             <div class="file-name" id="reverso-name">Ningún archivo seleccionado</div>
                             {{ form.carnet_reverso }}
                             <div class="file-requirements"><i class="fas fa-info-circle"></i> JPG, PNG</div>
                         </div>
+                        <div class="upload-status" id="reverso-status"></div>
+                        {{ form.google_drive_carnet_reverso_url }}
                         {% if form.carnet_reverso.errors %}
                             <div class="invalid-feedback">{{ form.carnet_reverso.errors.0 }}</div>
                         {% endif %}
@@ -1112,9 +1145,6 @@
             if (!tipoUsuario) return;
             const tipo = tipoUsuario.value;
 
-            // ============================================
-            // DATOS ACADÉMICOS - SOLO PARA ESTUDIANTES
-            // ============================================
             if (tipo === 'Estudiante') {
                 academicoSection.style.display = 'flex';
                 academicoFields.style.display = 'flex';
@@ -1123,18 +1153,13 @@
                 academicoFields.style.display = 'none';
             }
 
-            // ============================================
-            // DOCUMENTOS
-            // ============================================
             if (tipo === 'Docente' || tipo === 'Administrador') {
-                // Docente y Administrador: NO documentos
                 documentosSection.style.display = 'none';
                 documentosFields.style.display = 'none';
                 matriculaGroup.style.display = 'none';
                 carnetFrenteGroup.style.display = 'none';
                 carnetReversoGroup.style.display = 'none';
             } else if (tipo === 'Estudiante') {
-                // Estudiante: TODOS los documentos
                 documentosSection.style.display = 'flex';
                 documentosFields.style.display = 'flex';
                 matriculaGroup.style.display = 'block';
@@ -1142,7 +1167,6 @@
                 carnetReversoGroup.style.display = 'block';
                 matriculaStar.style.display = 'inline';
             } else if (tipo === 'Investigador') {
-                // Investigador: SOLO carnet (frente y reverso), sin matrícula
                 documentosSection.style.display = 'flex';
                 documentosFields.style.display = 'flex';
                 matriculaGroup.style.display = 'none';
@@ -1154,44 +1178,127 @@
 
         if (tipoUsuario) {
             tipoUsuario.addEventListener('change', actualizarCampos);
-            // Ejecutar al cargar la página
             setTimeout(actualizarCampos, 100);
         }
 
         // ============================================
-        // MOSTRAR NOMBRE DE ARCHIVOS
+        // SUBIDA A GOOGLE DRIVE EN TIEMPO REAL
         // ============================================
-        const fileConfigs = [
-            { input: document.querySelector('input[name="matricula_pdf"]'), nameId: 'matricula-name', wrapperId: 'wrapper-matricula' },
-            { input: document.querySelector('input[name="carnet_frente"]'), nameId: 'frente-name', wrapperId: 'wrapper-frente' },
-            { input: document.querySelector('input[name="carnet_reverso"]'), nameId: 'reverso-name', wrapperId: 'wrapper-reverso' }
+        
+        const uploadConfigs = [
+            { 
+                inputId: 'id_matricula_pdf', 
+                statusId: 'matricula-status', 
+                urlId: 'id_google_drive_matricula_url',
+                nameId: 'matricula-name',
+                wrapperId: 'wrapper-matricula',
+                iconId: 'matricula-icon',
+                tipo: 'matricula'
+            },
+            { 
+                inputId: 'id_carnet_frente', 
+                statusId: 'frente-status', 
+                urlId: 'id_google_drive_carnet_frente_url',
+                nameId: 'frente-name',
+                wrapperId: 'wrapper-frente',
+                iconId: 'frente-icon',
+                tipo: 'carnet_frente'
+            },
+            { 
+                inputId: 'id_carnet_reverso', 
+                statusId: 'reverso-status', 
+                urlId: 'id_google_drive_carnet_reverso_url',
+                nameId: 'reverso-name',
+                wrapperId: 'wrapper-reverso',
+                iconId: 'reverso-icon',
+                tipo: 'carnet_reverso'
+            }
         ];
 
-        fileConfigs.forEach(({ input, nameId, wrapperId }) => {
+        uploadConfigs.forEach(function(config) {
+            const input = document.getElementById(config.inputId);
+            const status = document.getElementById(config.statusId);
+            const urlInput = document.getElementById(config.urlId);
+            const nameDisplay = document.getElementById(config.nameId);
+            const wrapper = document.getElementById(config.wrapperId);
+            const icon = document.getElementById(config.iconId);
+
             if (input) {
                 input.addEventListener('change', function() {
-                    const nameDisplay = document.getElementById(nameId);
-                    const wrapper = document.getElementById(wrapperId);
-                    if (this.files.length > 0) {
-                        const fileName = this.files[0].name;
-                        nameDisplay.textContent = fileName;
-                        nameDisplay.style.color = '#10B981';
-                        wrapper.classList.add('has-file');
-                        const icon = wrapper.querySelector('.file-icon');
-                        if (icon) {
-                            icon.className = 'fas fa-check-circle file-icon';
-                            icon.style.color = '#10B981';
+                    const file = this.files[0];
+                    if (!file) {
+                        return;
+                    }
+
+                    // Mostrar nombre del archivo
+                    nameDisplay.textContent = file.name;
+                    nameDisplay.style.color = '#10B981';
+                    wrapper.classList.add('has-file');
+                    if (icon) {
+                        icon.className = 'fas fa-spinner fa-pulse file-icon';
+                        icon.style.color = '#F59E0B';
+                    }
+
+                    // Mostrar estado de subida
+                    status.className = 'upload-status show loading';
+                    status.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subiendo a Google Drive...';
+
+                    // Crear FormData para subir
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('tipo', config.tipo);
+
+                    // Obtener el token CSRF
+                    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+                    // Subir a Google Drive vía AJAX
+                    fetch('/upload-to-drive/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Guardar la URL en el campo oculto
+                            urlInput.value = data.url;
+                            
+                            status.className = 'upload-status show success';
+                            status.innerHTML = '<i class="fas fa-check-circle"></i> Archivo subido a Google Drive';
+                            
+                            if (icon) {
+                                icon.className = 'fas fa-check-circle file-icon';
+                                icon.style.color = '#10B981';
+                            }
+                        } else {
+                            status.className = 'upload-status show error';
+                            status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + data.error;
+                            
+                            nameDisplay.textContent = 'Ningún archivo seleccionado';
+                            nameDisplay.style.color = '#6B7280';
+                            wrapper.classList.remove('has-file');
+                            if (icon) {
+                                icon.className = 'fas fa-file-pdf file-icon';
+                                icon.style.color = '#F59E0B';
+                            }
+                            urlInput.value = '';
                         }
-                    } else {
+                    })
+                    .catch(function(error) {
+                        status.className = 'upload-status show error';
+                        status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error de conexión';
+                        
                         nameDisplay.textContent = 'Ningún archivo seleccionado';
                         nameDisplay.style.color = '#6B7280';
                         wrapper.classList.remove('has-file');
-                        const icon = wrapper.querySelector('.file-icon');
                         if (icon) {
                             icon.className = 'fas fa-file-pdf file-icon';
                             icon.style.color = '#F59E0B';
                         }
-                    }
+                        urlInput.value = '';
+                    });
                 });
             }
         });
@@ -1218,7 +1325,7 @@
                 `;
                 const container = document.querySelector('.card-body-custom');
                 container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
+                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
 
@@ -1235,7 +1342,7 @@
                 `;
                 const container = document.querySelector('.card-body-custom');
                 container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
+                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
 
@@ -1252,7 +1359,47 @@
                 `;
                 const container = document.querySelector('.card-body-custom');
                 container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(() => { if (alertDiv) alertDiv.remove(); }, 5000);
+                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
+                return false;
+            }
+
+            // Verificar que los archivos requeridos estén subidos a Drive
+            const tipoUsuarioVal = tipoUsuario ? tipoUsuario.value : '';
+            let archivosRequeridos = [];
+            
+            if (tipoUsuarioVal === 'Estudiante') {
+                archivosRequeridos = ['matricula', 'carnet_frente', 'carnet_reverso'];
+            } else if (tipoUsuarioVal === 'Investigador') {
+                archivosRequeridos = ['carnet_frente', 'carnet_reverso'];
+            }
+            
+            let todosSubidos = true;
+            archivosRequeridos.forEach(function(tipo) {
+                const urlInput = document.getElementById('id_google_drive_' + tipo + '_url');
+                if (urlInput && !urlInput.value) {
+                    todosSubidos = false;
+                    const status = document.getElementById(tipo + '-status');
+                    if (status) {
+                        status.className = 'upload-status show error';
+                        status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Debes subir este archivo a Drive';
+                    }
+                }
+            });
+            
+            if (!todosSubidos) {
+                e.preventDefault();
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-custom alert-error';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    ❌ Debes subir todos los documentos requeridos antes de enviar la solicitud.
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                const container = document.querySelector('.card-body-custom');
+                container.insertBefore(alertDiv, container.firstChild);
+                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
 
@@ -1261,7 +1408,7 @@
             loading.classList.add('show');
         });
 
-        document.querySelectorAll('.close-btn').forEach(btn => {
+        document.querySelectorAll('.close-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 this.parentElement.remove();
             });

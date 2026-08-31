@@ -31,6 +31,11 @@ urlpatterns = [
     path('ver-documentos/<int:usuario_id>/', views.ver_documentos_solicitud, name='ver_documentos_solicitud'),
     
     # ============================================
+    # SUBIDA A DRIVE VÍA AJAX
+    # ============================================
+    path('upload-to-drive/', views.upload_to_drive_ajax, name='upload_to_drive_ajax'),
+    
+    # ============================================
     # RESTABLECER CONTRASEÑA (ADMIN)
     # ============================================
     path('restablecer-password-admin/', views.restablecer_password_admin, name='restablecer_password_admin'),
