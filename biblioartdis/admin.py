@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 # NO importar reversion si no lo estás usando
 # from reversion.admin import VersionAdmin
-# reversion.register(Libro)  # Comentar esto temporalmente
-
+# reversion.register(Libro)  # Comentar esto temporalmente     
+  
 class LibroResource(resources.ModelResource):
     autores_list = Field()
     categorias_list = Field()
