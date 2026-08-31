@@ -1,13 +1,19 @@
 # biblioartdis/google_drive_utils.py
 import os
 import logging
-from google.oauth2 import service_account
+import json
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from django.conf import settings
 import io
 
 logger = logging.getLogger(__name__)
+
+# Alcances necesarios para Google Drive
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 class GoogleDriveService:
     def __init__(self):
@@ -16,75 +22,126 @@ class GoogleDriveService:
         self._authenticate()
     
     def _authenticate(self):
-        """Autenticar con Google Drive usando credenciales de service account"""
+        """Autenticar con Google Drive usando OAuth 2.0"""
         try:
-            import json
-            creds_json = json.loads(settings.GOOGLE_DRIVE_CREDENTIALS_JSON)
+            # Obtener credenciales OAuth desde variables de entorno
+            creds_json = os.environ.get('GOOGLE_DRIVE_OAUTH_CREDENTIALS')
+            token_json = os.environ.get('GOOGLE_DRIVE_TOKEN')
             
-            self.credentials = service_account.Credentials.from_service_account_info(
-                creds_json,
-                scopes=['https://www.googleapis.com/auth/drive']
-            )
+            if not creds_json:
+                logger.error("❌ GOOGLE_DRIVE_OAUTH_CREDENTIALS no encontrada")
+                raise Exception("Faltan credenciales OAuth")
+            
+            # Cargar credenciales desde JSON
+            client_config = json.loads(creds_json)
+            
+            # Si tenemos token guardado, usarlo
+            if token_json:
+                try:
+                    token_data = json.loads(token_json)
+                    self.credentials = Credentials(
+                        token=token_data.get('token'),
+                        refresh_token=token_data.get('refresh_token'),
+                        token_uri=token_data.get('token_uri'),
+                        client_id=token_data.get('client_id'),
+                        client_secret=token_data.get('client_secret'),
+                        scopes=token_data.get('scopes', SCOPES)
+                    )
+                    logger.info("✅ Token OAuth cargado")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error cargando token: {e}")
+                    self.credentials = None
+            
+            # Si no hay credenciales válidas, autenticar
+            if not self.credentials or not self.credentials.valid:
+                if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                    logger.info("🔄 Refrescando token OAuth...")
+                    self.credentials.refresh(Request())
+                    self._save_token()
+                else:
+                    # Si no hay token, necesitamos autenticación manual
+                    logger.info("🔑 Iniciando flujo OAuth...")
+                    flow = InstalledAppFlow.from_client_config(
+                        client_config, SCOPES
+                    )
+                    self.credentials = flow.run_local_server(port=0)
+                    self._save_token()
+            
             self.service = build('drive', 'v3', credentials=self.credentials)
-            logger.info("✅ Autenticación Google Drive exitosa")
+            logger.info("✅ Autenticación Google Drive OAuth exitosa")
+            
         except Exception as e:
-            logger.error(f"❌ Error autenticando Google Drive: {e}")
+            logger.error(f"❌ Error autenticando Google Drive OAuth: {e}")
             raise
     
-    def create_folder(self, folder_name, parent_folder_id=None):
-        """Crear una carpeta en Google Drive"""
-        try:
-            file_metadata = {
-                'name': folder_name,
-                'mimeType': 'application/vnd.google-apps.folder'
+    def _save_token(self):
+        """Guardar el token para usarlo después"""
+        if self.credentials:
+            token_data = {
+                'token': self.credentials.token,
+                'refresh_token': self.credentials.refresh_token,
+                'token_uri': self.credentials.token_uri,
+                'client_id': self.credentials.client_id,
+                'client_secret': self.credentials.client_secret,
+                'scopes': self.credentials.scopes
             }
-            if parent_folder_id:
-                file_metadata['parents'] = [parent_folder_id]
-            
-            folder = self.service.files().create(
-                body=file_metadata,
-                fields='id'
-            ).execute()
-            
-            folder_id = folder.get('id')
-            logger.info(f"✅ Carpeta creada: {folder_name} (ID: {folder_id})")
-            return folder_id
-        except Exception as e:
-            logger.error(f"❌ Error creando carpeta {folder_name}: {e}")
-            return None
+            logger.info("✅ Token guardado (en memoria)")
+            # Mostrar el token para copiar a Railway (solo en desarrollo)
+            if os.environ.get('DEBUG', 'False') == 'True':
+                print("\n" + "="*60)
+                print("TOKEN GENERADO - COPIA ESTE JSON EN RAILWAY:")
+                print("="*60)
+                print(json.dumps(token_data, indent=2))
+                print("="*60)
     
-    def get_or_create_folder(self, folder_name, parent_folder_id=None):
-        """Obtener o crear una carpeta"""
+    def get_or_create_folder(self, folder_path, parent_folder_id=None):
+        """Obtener o crear una carpeta por ruta (ej: Usuarios/Matriculas)"""
         try:
-            # Buscar si la carpeta ya existe
-            query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
-            if parent_folder_id:
-                query += f" and '{parent_folder_id}' in parents"
+            parts = folder_path.split('/')
+            current_parent = parent_folder_id
             
-            results = self.service.files().list(
-                q=query,
-                spaces='drive',
-                fields='files(id, name)'
-            ).execute()
+            for part in parts:
+                query = f"name='{part}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+                if current_parent:
+                    query += f" and '{current_parent}' in parents"
+                
+                results = self.service.files().list(
+                    q=query,
+                    spaces='drive',
+                    fields='files(id, name)'
+                ).execute()
+                
+                files = results.get('files', [])
+                
+                if files:
+                    current_parent = files[0].get('id')
+                    logger.info(f"✅ Carpeta encontrada: {part} (ID: {current_parent})")
+                else:
+                    file_metadata = {
+                        'name': part,
+                        'mimeType': 'application/vnd.google-apps.folder'
+                    }
+                    if current_parent:
+                        file_metadata['parents'] = [current_parent]
+                    
+                    folder = self.service.files().create(
+                        body=file_metadata,
+                        fields='id'
+                    ).execute()
+                    
+                    current_parent = folder.get('id')
+                    logger.info(f"✅ Carpeta creada: {part} (ID: {current_parent})")
             
-            files = results.get('files', [])
+            return current_parent
             
-            if files:
-                folder_id = files[0].get('id')
-                logger.info(f"✅ Carpeta encontrada: {folder_name} (ID: {folder_id})")
-                return folder_id
-            else:
-                # Crear si no existe
-                return self.create_folder(folder_name, parent_folder_id)
         except Exception as e:
-            logger.error(f"❌ Error buscando carpeta {folder_name}: {e}")
-            return self.create_folder(folder_name, parent_folder_id)
+            logger.error(f"❌ Error con carpeta {folder_path}: {e}")
+            return None
     
     def upload_file(self, file_path, file_name, folder_id, mime_type=None):
         """Subir un archivo a Google Drive"""
         try:
             if not mime_type:
-                # Detectar MIME type por extensión
                 ext = os.path.splitext(file_name)[1].lower()
                 mime_types = {
                     '.pdf': 'application/pdf',
@@ -166,7 +223,6 @@ class GoogleDriveService:
             created_folders[main_folder] = main_id
             
             for subfolder in subfolders:
-                # Manejar subcarpetas anidadas (ej: Libros/Portadas)
                 if '/' in subfolder:
                     parts = subfolder.split('/')
                     parent_id = main_id
