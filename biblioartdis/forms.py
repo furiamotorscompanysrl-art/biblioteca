@@ -443,7 +443,6 @@ class RegistroUsuarioForm(forms.ModelForm):
         carnet_frente = cleaned_data.get('carnet_frente')
         carnet_reverso = cleaned_data.get('carnet_reverso')
         
-        # Estudiante: requiere matrícula + carnet (frente y reverso)
         if tipo_usuario == 'Estudiante':
             if not matricula:
                 raise forms.ValidationError('❌ Los estudiantes deben subir la matrícula en PDF')
@@ -452,25 +451,38 @@ class RegistroUsuarioForm(forms.ModelForm):
             if not carnet_reverso:
                 raise forms.ValidationError('❌ Los estudiantes deben subir la foto del reverso del carnet')
         
-        # Investigador: solo requiere carnet (frente y reverso), sin matrícula
         elif tipo_usuario == 'Investigador':
             if not carnet_frente:
                 raise forms.ValidationError('❌ Los investigadores deben subir la foto del frente del carnet')
             if not carnet_reverso:
                 raise forms.ValidationError('❌ Los investigadores deben subir la foto del reverso del carnet')
-            # No requiere matrícula
         
-        # Docente: NO requiere documentos
-        elif tipo_usuario == 'Docente':
-            # No se requieren documentos
-            pass
-        
-        # Administrador: NO requiere documentos
-        elif tipo_usuario == 'Administrador':
-            # No se requieren documentos
-            pass
+        # Docente y Administrador: NO requieren documentos
         
         return cleaned_data
+    
+    def _guardar_archivo_temporal(self, archivo):
+        """Guarda un archivo subido en un archivo temporal y retorna la ruta"""
+        if not archivo:
+            return None
+        
+        try:
+            # Obtener la extensión del archivo
+            ext = os.path.splitext(archivo.name)[1]
+            
+            # Crear archivo temporal
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
+                # Escribir los datos del archivo subido
+                for chunk in archivo.chunks():
+                    tmp_file.write(chunk)
+                tmp_path = tmp_file.name
+            
+            return tmp_path
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error guardando archivo temporal: {e}")
+            return None
     
     def _subir_a_drive(self, archivo, usuario_id, tipo, carpeta_destino):
         """Subir un archivo a Google Drive"""
@@ -481,28 +493,41 @@ class RegistroUsuarioForm(forms.ModelForm):
             if not archivo:
                 return None
             
+            # Guardar archivo temporal
+            tmp_path = self._guardar_archivo_temporal(archivo)
+            if not tmp_path:
+                return None
+            
+            # Obtener o crear la carpeta
             folder_id = drive_service.get_or_create_folder(
                 carpeta_destino,
                 settings.GOOGLE_DRIVE_FOLDER_ID
             )
             
             if not folder_id:
+                # Eliminar archivo temporal si no se pudo crear la carpeta
+                try:
+                    os.unlink(tmp_path)
+                except:
+                    pass
                 return None
             
+            # Nombre del archivo
             ext = os.path.splitext(archivo.name)[1]
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
-                for chunk in archivo.chunks():
-                    tmp_file.write(chunk)
-                tmp_path = tmp_file.name
-            
             nombre_archivo = f"{usuario_id}_{tipo}{ext}"
+            
+            # Subir a Google Drive
             resultado = drive_service.upload_file(
                 file_path=tmp_path,
                 file_name=nombre_archivo,
                 folder_id=folder_id
             )
             
-            os.unlink(tmp_path)
+            # Eliminar archivo temporal
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
             
             if resultado:
                 return resultado['download_link']
@@ -515,9 +540,6 @@ class RegistroUsuarioForm(forms.ModelForm):
             return None
     
     def save(self, commit=True):
-        from .google_drive_utils import drive_service
-        from django.conf import settings
-        
         correo = self.cleaned_data['correo'].lower().strip()
         
         username = correo.split('@')[0]
@@ -548,7 +570,9 @@ class RegistroUsuarioForm(forms.ModelForm):
             usuario_id = usuario.usuario_id
             tipo_usuario = self.cleaned_data.get('tipo_usuario')
             
-            # Subir documentos según el rol
+            # ============================================
+            # SUBIR DOCUMENTOS SEGÚN EL ROL
+            # ============================================
             
             # Matrícula - SOLO para estudiantes
             if tipo_usuario == 'Estudiante':
