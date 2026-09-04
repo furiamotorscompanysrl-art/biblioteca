@@ -571,6 +571,8 @@ def listar_imagenes(request):
     return render(request, 'lista_imagenes.html', {'page_obj': page_obj})
 
 
+# biblioartdis/views/libro_views.py
+
 @admin_required
 def agregar_imagen(request):
     categorias = Categoria.objects.all()
@@ -597,27 +599,32 @@ def agregar_imagen(request):
                 messages.error(request, 'El autor es obligatorio')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
+            # ============================================
+            # VERIFICAR QUE HAYA UNA IMAGEN
+            # ============================================
+            if 'img_portada' not in request.FILES:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'Debes seleccionar una imagen'}, status=400)
+                messages.error(request, 'Debes seleccionar una imagen')
+                return render(request, 'agregar_imagen.html', {'categorias': categorias})
+            
             nueva_imagen = Imagen(
                 titulo=titulo,
                 descripcion=descripcion,
                 autorImg=autorImg,
             )
             
-            # ============================================
-            # IMAGEN - Subir a Drive en lugar de Cloudinary
-            # ============================================
-            if 'img_portada' in request.FILES:
-                imagen_original = request.FILES['img_portada']
-                tamaño_mb = imagen_original.size / (1024 * 1024)
-                
-                if tamaño_mb > 5:
-                    if is_ajax:
-                        return JsonResponse({'success': False, 'error': 'La imagen no puede superar los 5MB'}, status=400)
-                    messages.error(request, 'La imagen no puede superar los 5MB')
-                    return render(request, 'agregar_imagen.html', {'categorias': categorias})
-                
-                # Guardar la imagen en Cloudinary temporalmente
-                nueva_imagen.img_portada = imagen_original
+            # IMAGEN - Guardar en Cloudinary temporalmente
+            imagen_original = request.FILES['img_portada']
+            tamaño_mb = imagen_original.size / (1024 * 1024)
+            
+            if tamaño_mb > 5:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'La imagen no puede superar los 5MB'}, status=400)
+                messages.error(request, 'La imagen no puede superar los 5MB')
+                return render(request, 'agregar_imagen.html', {'categorias': categorias})
+            
+            nueva_imagen.img_portada = imagen_original
             
             # PDF (opcional)
             if 'pdf' in request.FILES:
@@ -634,16 +641,19 @@ def agregar_imagen(request):
             imagen_id = nueva_imagen.id_Imagen
             
             # ============================================
-            # Subir imagen a Drive en segundo plano
+            # Subir imagen a Drive en segundo plano (SIN BLOQUEAR)
             # ============================================
-            if 'img_portada' in request.FILES:
+            try:
+                from ..drive_utils import subir_imagen_a_drive_async
                 thread = threading.Thread(
                     target=subir_imagen_a_drive_async,
-                    args=(request.FILES['img_portada'], titulo, imagen_id)
+                    args=(imagen_original, titulo, imagen_id)
                 )
                 thread.daemon = True
                 thread.start()
                 logger.info(f"🔄 Hilo de subida de imagen a Drive iniciado para imagen ID {imagen_id}")
+            except Exception as e:
+                logger.error(f"⚠️ Error iniciando subida a Drive (la imagen se guardó en Cloudinary): {e}")
             
             # Agregar categorías
             for cat_id in request.POST.getlist('categorias'):
@@ -653,6 +663,9 @@ def agregar_imagen(request):
                 except:
                     pass
             
+            # ============================================
+            # ✅ RESPONDER CON JSON (PARA AJAX)
+            # ============================================
             if is_ajax:
                 return JsonResponse({
                     'success': True, 
@@ -666,7 +679,7 @@ def agregar_imagen(request):
         except Exception as e:
             logger.error(f"Error agregando imagen: {str(e)}", exc_info=True)
             if is_ajax:
-                return JsonResponse({'success': False, 'error': str(e)}, status=500)
+                return JsonResponse({'success': False, 'error': f'Error: {str(e)}'}, status=500)
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'agregar_imagen.html', {'categorias': categorias, 'error': str(e)})
     
