@@ -603,9 +603,7 @@ def agregar_imagen(request):
                 messages.error(request, 'Debes seleccionar una imagen')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # ============================================
-            # ✅ LEER EL CONTENIDO DEL ARCHIVO
-            # ============================================
+            # Leer el contenido del archivo
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
@@ -615,10 +613,10 @@ def agregar_imagen(request):
                 messages.error(request, 'La imagen no puede superar los 5MB')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # ✅ Guardar nombre y contenido en bytes
+            # Guardar nombre y contenido en bytes
             nombre_archivo = imagen_original.name
-            contenido_bytes = imagen_original.read()  # ← LEER AQUÍ
-            imagen_original.seek(0)  # Resetear para Cloudinary
+            contenido_bytes = imagen_original.read()
+            imagen_original.seek(0)
             
             # Crear la imagen
             nueva_imagen = Imagen(
@@ -644,12 +642,9 @@ def agregar_imagen(request):
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
-            # ============================================
-            # ✅ Subir imagen a Drive EN SEGUNDO PLANO
-            # ============================================
+            # Subir imagen a Drive EN SEGUNDO PLANO
             try:
                 from ..drive_utils import subir_imagen_a_drive_async
-                # ✅ Pasar el contenido del archivo como bytes
                 thread = threading.Thread(
                     target=subir_imagen_a_drive_async,
                     args=(contenido_bytes, nombre_archivo, imagen_id)
@@ -668,6 +663,7 @@ def agregar_imagen(request):
                 except:
                     pass
             
+            # ✅ RESPONDER CON JSON PARA AJAX
             if is_ajax:
                 return JsonResponse({
                     'success': True, 
@@ -675,6 +671,7 @@ def agregar_imagen(request):
                     'id': nueva_imagen.id_Imagen
                 })
             
+            # Para peticiones normales (no AJAX)
             messages.success(request, 'Imagen agregada correctamente')
             return redirect('lista_imagenes')
             
@@ -685,6 +682,7 @@ def agregar_imagen(request):
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'agregar_imagen.html', {'categorias': categorias, 'error': str(e)})
     
+    # Para GET, renderizar el formulario
     return render(request, 'agregar_imagen.html', {'categorias': categorias})
     
 

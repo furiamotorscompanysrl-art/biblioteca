@@ -26,7 +26,6 @@
         padding: 1.5rem;
     }
 
-    /* Header */
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -80,7 +79,6 @@
         color: white;
     }
 
-    /* Barra de búsqueda */
     .search-wrapper {
         background: white;
         border-radius: 12px;
@@ -109,7 +107,6 @@
         font-size: 0.85rem;
     }
 
-    /* Tabla */
     .table-wrapper {
         background: white;
         border-radius: 16px;
@@ -148,7 +145,6 @@
         background-color: var(--bg-light);
     }
 
-    /* Imagen miniatura */
     .image-thumb {
         width: 60px;
         height: 60px;
@@ -157,13 +153,24 @@
         cursor: pointer;
         border: 1px solid var(--border-light);
         transition: transform 0.2s;
+        background: var(--bg-light);
     }
 
     .image-thumb:hover {
         transform: scale(1.05);
     }
 
-    /* Badges de categorías */
+    .image-thumb.no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-light);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        width: 60px;
+        height: 60px;
+    }
+
     .category-badge {
         display: inline-block;
         padding: 0.2rem 0.6rem;
@@ -174,11 +181,11 @@
         margin: 0.1rem;
     }
 
-    /* Botones de acción */
     .action-buttons {
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
+        justify-content: center;
     }
 
     .btn-action {
@@ -225,7 +232,6 @@
         color: white;
     }
 
-    /* Paginación */
     .pagination-wrapper {
         display: flex;
         justify-content: space-between;
@@ -269,7 +275,6 @@
         color: white;
     }
 
-    /* Modal */
     .modal-modern .modal-content {
         border-radius: 20px;
         overflow: hidden;
@@ -289,7 +294,17 @@
         filter: brightness(0) invert(1);
     }
 
-    /* Responsive */
+    /* ✅ NUEVO: Estilo para enlace de Google Drive */
+    .drive-link {
+        color: var(--info);
+        text-decoration: none;
+        font-size: 0.7rem;
+    }
+
+    .drive-link:hover {
+        text-decoration: underline;
+    }
+
     @media (max-width: 768px) {
         .images-container {
             padding: 1rem;
@@ -303,6 +318,10 @@
         .pagination-wrapper {
             flex-direction: column;
             align-items: center;
+        }
+        .image-thumb {
+            width: 40px;
+            height: 40px;
         }
     }
 </style>
@@ -349,17 +368,32 @@
                 <tr>
                     <td>#{{ imagen.id_Imagen }}</td>
                     <td>
-                        <img src="{{ imagen.img_portada.url }}" 
-                             class="image-thumb" 
-                             onclick="mostrarPortada('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
-                             alt="{{ imagen.titulo }}">
+                        {% if imagen.img_portada %}
+                            <img src="{{ imagen.img_portada.url }}" 
+                                 class="image-thumb" 
+                                 onclick="mostrarPortada('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
+                                 alt="{{ imagen.titulo }}">
+                        {% elif imagen.google_drive_url %}
+                            <img src="{{ imagen.google_drive_url }}" 
+                                 class="image-thumb" 
+                                 onclick="mostrarPortada('{{ imagen.google_drive_url }}', '{{ imagen.titulo|escapejs }}')"
+                                 alt="{{ imagen.titulo }}">
+                        {% else %}
+                            <div class="image-thumb no-image" title="No hay imagen disponible">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
                     </td>
                     <td><strong>{{ imagen.titulo|truncatechars:40 }}</strong></td>
                     <td>{{ imagen.autorImg|default:"—" }}</td>
                     <td>{{ imagen.descripcion|truncatechars:50|default:"—" }}</td>
                     <td>
                         {% if imagen.pdf %}
-                            <a href="{{ imagen.pdf.url }}" target="_blank" class="file-link">
+                            <a href="{{ imagen.pdf.url }}" target="_blank" class="drive-link">
+                                <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
+                            </a>
+                        {% elif imagen.google_drive_url %}
+                            <a href="{{ imagen.google_drive_url }}" target="_blank" class="drive-link">
                                 <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
                             </a>
                         {% else %}
@@ -459,7 +493,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Mostrar portada en modal
     function mostrarPortada(url, titulo) {
         const modal = new bootstrap.Modal(document.getElementById('portadaModal'));
         document.getElementById('portadaModalLabel').textContent = titulo || 'Vista de Imagen';
@@ -467,7 +500,6 @@
         modal.show();
     }
 
-    // Búsqueda en tiempo real
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#imagenesTableBody tr');
@@ -478,7 +510,6 @@
         });
     });
 
-    // Confirmar eliminación
     function confirmarEliminacion(idImagen) {
         Swal.fire({
             title: '¿Eliminar imagen?',
