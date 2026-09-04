@@ -485,6 +485,8 @@ def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None):
 
 # biblioartdis/drive_utils.py
 
+# biblioartdis/drive_utils.py
+
 def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folder_path='Material_Biblioteca/Imagenes/Obras'):
     """
     Sube una imagen a Google Drive en segundo plano
@@ -507,16 +509,15 @@ def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folde
             if drive_url:
                 # Actualizar la imagen con la URL de Drive
                 imagen = Imagen.objects.get(id_Imagen=imagen_id)
-                # Guardar URL en un campo específico para imágenes
                 if hasattr(imagen, 'google_drive_url'):
                     imagen.google_drive_url = drive_url
-                # Limpiar la imagen de Cloudinary
-                if imagen.img_portada:
-                    try:
-                        imagen.img_portada.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar imagen de Cloudinary: {e}")
-                    imagen.img_portada = None
+                # Limpiar la imagen de Cloudinary (opcional, para ahorrar espacio)
+                # if imagen.img_portada:
+                #     try:
+                #         imagen.img_portada.delete(save=False)
+                #     except Exception as e:
+                #         logger.warning(f"⚠️ No se pudo eliminar imagen de Cloudinary: {e}")
+                #     imagen.img_portada = None
                 imagen.save()
                 logger.info(f"✅ Imagen subida a Google Drive: {drive_url} (Imagen ID: {imagen_id})")
             else:
@@ -532,6 +533,7 @@ def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folde
     thread.daemon = True
     thread.start()
     return thread
+    
 def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Material_Biblioteca/Imagenes/Obras'):
     """
     Sube una imagen a Google Drive

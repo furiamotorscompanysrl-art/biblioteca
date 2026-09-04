@@ -573,6 +573,8 @@ def listar_imagenes(request):
 
 # biblioartdis/views/libro_views.py
 
+# biblioartdis/views/libro_views.py
+
 @admin_required
 def agregar_imagen(request):
     categorias = Categoria.objects.all()
@@ -582,11 +584,13 @@ def agregar_imagen(request):
     
     if request.method == 'POST':
         try:
+            # ============================================
+            # 1. VALIDAR DATOS
+            # ============================================
             titulo = request.POST.get('titulo')
             descripcion = request.POST.get('descripcion', '')
             autorImg = request.POST.get('autorImg')
             
-            # Validaciones
             if not titulo:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
@@ -599,22 +603,15 @@ def agregar_imagen(request):
                 messages.error(request, 'El autor es obligatorio')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # ============================================
-            # VERIFICAR QUE HAYA UNA IMAGEN
-            # ============================================
             if 'img_portada' not in request.FILES:
                 if is_ajax:
-                    return JsonResponse({'success': False, 'error': 'Debes seleccionar una imagen'}, status=400)
-                messages.error(request, 'Debes seleccionar una imagen')
+                    return JsonResponse({'success': False, 'error': 'Debe seleccionar una imagen'}, status=400)
+                messages.error(request, 'Debe seleccionar una imagen')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            nueva_imagen = Imagen(
-                titulo=titulo,
-                descripcion=descripcion,
-                autorImg=autorImg,
-            )
-            
-            # IMAGEN - Guardar en Cloudinary temporalmente
+            # ============================================
+            # 2. CREAR LA IMAGEN
+            # ============================================
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
@@ -624,9 +621,14 @@ def agregar_imagen(request):
                 messages.error(request, 'La imagen no puede superar los 5MB')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            nueva_imagen.img_portada = imagen_original
+            nueva_imagen = Imagen(
+                titulo=titulo,
+                descripcion=descripcion,
+                autorImg=autorImg,
+                img_portada=imagen_original  # Guardar temporalmente en Cloudinary
+            )
             
-            # PDF (opcional)
+            # PDF opcional
             if 'pdf' in request.FILES:
                 pdf = request.FILES['pdf']
                 if pdf.size > 10 * 1024 * 1024:
@@ -636,12 +638,12 @@ def agregar_imagen(request):
                     return render(request, 'agregar_imagen.html', {'categorias': categorias})
                 nueva_imagen.pdf = pdf
             
-            # Guardar la imagen primero
+            # Guardar la imagen (esto guarda en Cloudinary)
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
             # ============================================
-            # Subir imagen a Drive en segundo plano (SIN BLOQUEAR)
+            # 3. SUBIR A DRIVE EN SEGUNDO PLANO (SIN BLOQUEAR)
             # ============================================
             try:
                 from ..drive_utils import subir_imagen_a_drive_async
@@ -651,11 +653,14 @@ def agregar_imagen(request):
                 )
                 thread.daemon = True
                 thread.start()
-                logger.info(f"🔄 Hilo de subida de imagen a Drive iniciado para imagen ID {imagen_id}")
+                logger.info(f"🔄 Hilo de subida a Drive iniciado para imagen ID {imagen_id}")
             except Exception as e:
-                logger.error(f"⚠️ Error iniciando subida a Drive (la imagen se guardó en Cloudinary): {e}")
+                logger.error(f"⚠️ Error al iniciar subida a Drive: {e}")
+                # La imagen ya está en Cloudinary, no pasa nada
             
-            # Agregar categorías
+            # ============================================
+            # 4. AGREGAR CATEGORÍAS
+            # ============================================
             for cat_id in request.POST.getlist('categorias'):
                 try:
                     categoria = Categoria.objects.get(pk=cat_id)
@@ -664,11 +669,11 @@ def agregar_imagen(request):
                     pass
             
             # ============================================
-            # ✅ RESPONDER CON JSON (PARA AJAX)
+            # 5. RESPONDER SEGÚN TIPO DE PETICIÓN
             # ============================================
             if is_ajax:
                 return JsonResponse({
-                    'success': True, 
+                    'success': True,
                     'message': 'Imagen agregada correctamente',
                     'id': nueva_imagen.id_Imagen
                 })
