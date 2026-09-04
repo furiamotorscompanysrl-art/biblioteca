@@ -304,6 +304,46 @@
         text-decoration: underline;
     }
 
+    /* ✅ Nuevo: Estilos para el visor de imágenes */
+    .image-viewer-modal .modal-body {
+        background: rgba(0, 0, 0, 0.9);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+    }
+
+    .image-viewer-modal .modal-body img {
+        max-width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+    }
+
+    .image-viewer-modal .modal-header {
+        background: rgba(0, 0, 0, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .image-viewer-modal .modal-title {
+        color: white;
+    }
+
+    .image-viewer-modal .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* ✅ Nuevo: Badge para estado de Drive */
+    .drive-badge {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border-radius: 4px;
+        font-size: 0.6rem;
+        margin-top: 2px;
+    }
+
     @media (max-width: 768px) {
         .images-container {
             padding: 1rem;
@@ -368,15 +408,25 @@
                     <td>#{{ imagen.id_Imagen }}</td>
                     <td>
                         {% if imagen.img_portada %}
+                            <!-- Imagen desde Cloudinary -->
                             <img src="{{ imagen.img_portada.url }}" 
                                  class="image-thumb" 
-                                 onclick="mostrarPortada('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
-                                 alt="{{ imagen.titulo }}">
+                                 onclick="abrirVisor('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
+                                 alt="{{ imagen.titulo }}"
+                                 loading="lazy">
                         {% elif imagen.google_drive_url %}
-                            <img src="{{ imagen.google_drive_url }}" 
+                            <!-- ✅ Imagen desde Google Drive -->
+                            {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing" %}
+                            <img src="https://drive.google.com/thumbnail?id={{ drive_id }}&sz=w200" 
                                  class="image-thumb" 
-                                 onclick="mostrarPortada('{{ imagen.google_drive_url }}', '{{ imagen.titulo|escapejs }}')"
-                                 alt="{{ imagen.titulo }}">
+                                 onclick="abrirVisor('https://drive.google.com/file/d/{{ drive_id }}/preview', '{{ imagen.titulo|escapejs }}')"
+                                 alt="{{ imagen.titulo }}"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect width=\'60\' height=\'60\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'30\' y=\'30\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'10\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
+                            <div class="drive-badge">
+                                <i class="fas fa-cloud"></i> Drive
+                            </div>
+                            {% endwith %}
                         {% else %}
                             <div class="image-thumb no-image" title="No hay imagen disponible">
                                 <i class="fas fa-image"></i>
@@ -392,9 +442,11 @@
                                 <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
                             </a>
                         {% elif imagen.google_drive_url %}
-                            <a href="{{ imagen.google_drive_url }}" target="_blank" class="drive-link">
+                            {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing" %}
+                            <a href="https://drive.google.com/file/d/{{ drive_id }}/preview" target="_blank" class="drive-link">
                                 <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
                             </a>
+                            {% endwith %}
                         {% else %}
                             <span class="text-muted">—</span>
                         {% endif %}
@@ -475,16 +527,29 @@
     {% endif %}
 </div>
 
-<!-- Modal para portada -->
-<div class="modal fade modal-modern" id="portadaModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="portadaModalLabel">Vista de Imagen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- ✅ Modal mejorado para ver imágenes en grande -->
+<div class="modal fade image-viewer-modal" id="visorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="background: transparent; border: none;">
+            <div class="modal-header" style="background: rgba(0,0,0,0.8); border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title" id="visorModalLabel">
+                    <i class="fas fa-image me-2"></i>
+                    <span id="visorTitulo">Vista de Imagen</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center p-0">
-                <img id="portadaImagen" class="img-fluid" style="max-height: 80vh; width: auto;">
+            <div class="modal-body" style="background: rgba(0,0,0,0.9); border-radius: 0 0 12px 12px; padding: 20px; min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+                <div id="visorContenedor" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <img id="visorImagen" src="" alt="Imagen" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="background: rgba(0,0,0,0.8); border-radius: 0 0 12px 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnAbrirOriginal" onclick="abrirOriginal()">
+                    <i class="fas fa-external-link-alt"></i> Abrir en nueva pestaña
+                </button>
             </div>
         </div>
     </div>
@@ -492,13 +557,43 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function mostrarPortada(url, titulo) {
-        const modal = new bootstrap.Modal(document.getElementById('portadaModal'));
-        document.getElementById('portadaModalLabel').textContent = titulo || 'Vista de Imagen';
-        document.getElementById('portadaImagen').src = url;
+    // Variables globales para el visor
+    let imagenActualUrl = '';
+
+    // ✅ Función mejorada para abrir el visor
+    function abrirVisor(url, titulo) {
+        imagenActualUrl = url;
+        const modal = new bootstrap.Modal(document.getElementById('visorModal'));
+        document.getElementById('visorTitulo').textContent = titulo || 'Vista de Imagen';
+        
+        // Determinar si es un preview de Drive o una imagen directa
+        const imagenElement = document.getElementById('visorImagen');
+        if (url.includes('drive.google.com') && url.includes('/preview')) {
+            // Es un preview de Drive, extraer el ID
+            const driveId = url.split('/file/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
+            if (driveId) {
+                // Usar thumbnail para mejor rendimiento
+                imagenElement.src = `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`;
+                // Guardar la URL completa para "Abrir original"
+                imagenActualUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+            } else {
+                imagenElement.src = url;
+            }
+        } else {
+            imagenElement.src = url;
+        }
+        
         modal.show();
     }
 
+    // ✅ Función para abrir la imagen original en nueva pestaña
+    function abrirOriginal() {
+        if (imagenActualUrl) {
+            window.open(imagenActualUrl, '_blank');
+        }
+    }
+
+    // Búsqueda en tiempo real
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#imagenesTableBody tr');
@@ -509,6 +604,7 @@
         });
     });
 
+    // Confirmar eliminación
     function confirmarEliminacion(idImagen) {
         Swal.fire({
             title: '¿Eliminar imagen?',
@@ -547,5 +643,33 @@
             }
         });
     }
+
+    // ✅ Función para copiar URL de Drive al portapapeles (opcional)
+    function copiarUrlDrive(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            Swal.fire({
+                title: '¡Copiado!',
+                text: 'La URL de la imagen ha sido copiada al portapapeles.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }).catch(() => {
+            Swal.fire('Error', 'No se pudo copiar la URL.', 'error');
+        });
+    }
+
+    // ✅ Manejar errores de carga de imágenes
+    document.addEventListener('DOMContentLoaded', function() {
+        // Para imágenes que fallan al cargar, mostrar un placeholder
+        document.querySelectorAll('.image-thumb').forEach(img => {
+            img.addEventListener('error', function() {
+                if (!this.dataset.fallback) {
+                    this.dataset.fallback = 'true';
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect width=\'60\' height=\'60\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'30\' y=\'30\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'10\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}
