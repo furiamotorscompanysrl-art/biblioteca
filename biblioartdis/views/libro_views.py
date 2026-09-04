@@ -22,28 +22,54 @@ from ..drive_utils import subir_pdf_a_drive
 logger = logging.getLogger(__name__)
 
 
-# ============================================
-# FUNCIÓN DE SUBIDA ASÍNCRONA A GOOGLE DRIVE
-# ============================================
-def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id):
-    """Sube un PDF a Google Drive en segundo plano"""
-    try:
-        from ..models import Libro
-        
-        # Subir a Drive
-        drive_url = subir_pdf_a_drive(pdf_original, nombre_archivo)
-        
-        if drive_url:
-            # Actualizar el libro con la URL de Drive
-            libro = Libro.objects.get(id_libro=libro_id)
-            libro.google_drive_url = drive_url
-            libro.pdf = None
-            libro.save()
-            logger.info(f"✅ PDF subido asíncronamente a Google Drive: {drive_url} (Libro ID: {libro_id})")
-        else:
-            logger.error(f"❌ Falló subida asíncrona a Drive para libro {libro_id}")
-    except Exception as e:
-        logger.error(f"❌ Error en subida asíncrona a Drive: {str(e)}")
+# biblioartdis/drive_utils.py
+
+def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path='Material_Biblioteca/Libros/PDFs'):
+    """
+    Sube un PDF a Google Drive en segundo plano (SIEMPRE a Drive)
+    
+    Args:
+        pdf_original: Archivo subido (InMemoryUploadedFile)
+        nombre_archivo: Nombre del archivo
+        libro_id: ID del libro para actualizar
+        folder_path: Ruta de la carpeta en Drive
+    """
+    def upload_thread():
+        try:
+            from ..models import Libro
+            
+            # Subir a Drive (SIEMPRE)
+            drive_url = subir_pdf_a_drive(pdf_original, nombre_archivo, folder_path)
+            
+            if drive_url:
+                # Actualizar el libro con la URL de Drive
+                libro = Libro.objects.get(id_libro=libro_id)
+                libro.google_drive_url = drive_url
+                # ❌ Ya NO guardamos en Cloudinary
+                libro.pdf = None  
+                libro.save(update_fields=['google_drive_url', 'pdf'])
+                logger.info(f"✅ PDF subido a Google Drive: {drive_url} (Libro ID: {libro_id})")
+            else:
+                logger.error(f"❌ Falló subida a Drive para libro {libro_id}")
+                
+                # Si falla Drive, intentamos guardar en Cloudinary como fallback
+                try:
+                    libro = Libro.objects.get(id_libro=libro_id)
+                    libro.pdf = pdf_original
+                    libro.save(update_fields=['pdf'])
+                    logger.info(f"✅ Fallback: PDF guardado en Cloudinary para libro {libro_id}")
+                except Exception as e:
+                    logger.error(f"❌ Error en fallback a Cloudinary: {e}")
+                    
+        except Libro.DoesNotExist:
+            logger.error(f"❌ Libro {libro_id} no encontrado")
+        except Exception as e:
+            logger.error(f"❌ Error en subida a Drive: {str(e)}")
+    
+    thread = threading.Thread(target=upload_thread)
+    thread.daemon = True
+    thread.start()
+    return thread
 
 
 # ==================== CRUD Libros ====================
@@ -62,6 +88,8 @@ def listar_libros(request):
     page_obj = paginator.get_page(page_number)
     return render(request, 'listar_libros.html', {'libros': page_obj, 'usuario': request.user})
 
+
+# biblioartdis/views/libro_views.py
 
 @admin_required
 def agregar_libro(request):
@@ -99,28 +127,24 @@ def agregar_libro(request):
                 logger.info(f"Portada agregada: {request.FILES['portada'].name}")
             
             # ============================================
-            # MANEJO DE PDF - SUBIDA ASÍNCRONA A DRIVE
+            # ✅ AHORA: TODOS LOS PDFS SE SUBEN A DRIVE
             # ============================================
             pdf_para_subir = None
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 10:
-                    logger.info(f"📄 PDF grande detectado: {tamaño_mb:.1f}MB. Se subirá a Google Drive en segundo plano...")
-                    # Guardar el PDF original para subirlo después
-                    pdf_para_subir = pdf_original
-                    messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano. La URL aparecerá en breve.")
-                else:
-                    # PDFs pequeños a Cloudinary
-                    nuevo_libro.pdf = pdf_original
-                    logger.info(f"📄 PDF de {tamaño_mb:.1f}MB dentro del límite de Cloudinary")
+                logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.1f}MB)")
+                
+                # ✅ SIEMPRE subir a Drive (sin importar el tamaño)
+                pdf_para_subir = pdf_original
+                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano. La URL aparecerá en breve.")
             
             # Guardar el libro primero
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
-            # Si hay PDF grande, subirlo en segundo plano
+            # ✅ Si hay PDF, subirlo a Drive en segundo plano (SIEMPRE)
             if pdf_para_subir:
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
@@ -128,7 +152,7 @@ def agregar_libro(request):
                 )
                 thread.daemon = True
                 thread.start()
-                logger.info(f"🔄 Hilo de subida a Drive iniciado para libro ID {libro_id}")
+                logger.info(f"🔄 Hilo de subida a Drive iniciado para libro ID {libro_id} (SIEMPRE a Drive)")
             
             # Autorización
             if 'autorizacion' in request.FILES:
@@ -197,27 +221,24 @@ def editar_libro(request, libro_id):
             libro.pdf_url = request.POST.get('pdf_url', '').strip()
             libro.google_drive_url = request.POST.get('google_drive_url', '').strip()
             
-            # Manejo de PDF en edición
-            if 'pdf' in request.FILES and not libro.google_drive_url:
+            # ============================================
+            # ✅ SIEMPRE subir a Drive
+            # ============================================
+            if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 10:
-                    logger.info(f"📄 PDF grande detectado en edición: {tamaño_mb:.1f}MB. Subiendo a Drive en segundo plano...")
-                    # Guardar el libro primero
-                    libro.save()
-                    # Subir en segundo plano
-                    thread = threading.Thread(
-                        target=subir_pdf_a_drive_async,
-                        args=(pdf_original, libro.titulo, libro.id_libro)
-                    )
-                    thread.daemon = True
-                    thread.start()
-                    messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
-                else:
-                    libro.pdf = pdf_original
-                    libro.pdf_url = ''
-                    libro.save()
+                logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.1f}MB)")
+                
+                # ✅ SIEMPRE subir a Drive
+                libro.save()  # Guardar primero para tener el ID
+                thread = threading.Thread(
+                    target=subir_pdf_a_drive_async,
+                    args=(pdf_original, libro.titulo, libro.id_libro)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
             
             if 'portada' in request.FILES:
                 libro.img_portada = request.FILES['portada']
