@@ -485,7 +485,9 @@ def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None):
 
 # biblioartdis/drive_utils.py
 
-# biblioartdis/drive_utils.py
+# ============================================
+# FUNCIÓN PARA SUBIR IMÁGENES A DRIVE
+# ============================================
 
 def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folder_path='Material_Biblioteca/Imagenes/Obras'):
     """
@@ -498,10 +500,12 @@ def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folde
         folder_path: Ruta de la carpeta en Drive
     """
     import threading
+    from django.apps import apps  # ✅ Usar apps para importar modelos
     
     def upload_thread():
         try:
-            from ..models import Imagen
+            # ✅ Obtener el modelo Imagen usando apps.get_model()
+            Imagen = apps.get_model('biblioartdis', 'Imagen')
             
             # Subir a Drive
             drive_url = subir_imagen_a_drive(imagen_original, nombre_archivo, folder_path)
@@ -509,23 +513,22 @@ def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folde
             if drive_url:
                 # Actualizar la imagen con la URL de Drive
                 imagen = Imagen.objects.get(id_Imagen=imagen_id)
+                # Guardar URL en un campo específico para imágenes
                 if hasattr(imagen, 'google_drive_url'):
                     imagen.google_drive_url = drive_url
-                # Limpiar la imagen de Cloudinary (opcional, para ahorrar espacio)
-                # if imagen.img_portada:
-                #     try:
-                #         imagen.img_portada.delete(save=False)
-                #     except Exception as e:
-                #         logger.warning(f"⚠️ No se pudo eliminar imagen de Cloudinary: {e}")
-                #     imagen.img_portada = None
+                # Limpiar la imagen de Cloudinary
+                if imagen.img_portada:
+                    try:
+                        imagen.img_portada.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar imagen de Cloudinary: {e}")
+                    imagen.img_portada = None
                 imagen.save()
                 logger.info(f"✅ Imagen subida a Google Drive: {drive_url} (Imagen ID: {imagen_id})")
             else:
                 logger.error(f"❌ Falló subida a Drive para imagen {imagen_id}")
                 # Fallback: mantener en Cloudinary
                 
-        except Imagen.DoesNotExist:
-            logger.error(f"❌ Imagen {imagen_id} no encontrada")
         except Exception as e:
             logger.error(f"❌ Error en subida de imagen a Drive: {str(e)}")
     
@@ -533,7 +536,7 @@ def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folde
     thread.daemon = True
     thread.start()
     return thread
-    
+
 def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Material_Biblioteca/Imagenes/Obras'):
     """
     Sube una imagen a Google Drive
