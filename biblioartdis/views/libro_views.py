@@ -17,13 +17,14 @@ import threading
 from ..decorators import admin_required
 from ..models import Libro, Autor, Categoria, Revista, Coleccion, Imagen
 from ..forms import RevistaForm, ColeccionForm, ImagenForm
-from ..drive_utils import subir_pdf_a_drive
+from ..drive_utils import subir_pdf_a_drive, eliminar_pdf_de_drive, subir_imagen_a_drive_async
 
 logger = logging.getLogger(__name__)
 
 
-# biblioartdis/drive_utils.py
-
+# ============================================
+# FUNCIÓN DE SUBIDA ASÍNCRONA A GOOGLE DRIVE (PDFs)
+# ============================================
 def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path='Material_Biblioteca/Libros/PDFs'):
     """
     Sube un PDF a Google Drive en segundo plano (SIEMPRE a Drive)
@@ -45,7 +46,7 @@ def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path=
                 # Actualizar el libro con la URL de Drive
                 libro = Libro.objects.get(id_libro=libro_id)
                 libro.google_drive_url = drive_url
-                # ❌ Ya NO guardamos en Cloudinary
+                # Ya NO guardamos en Cloudinary
                 libro.pdf = None  
                 libro.save(update_fields=['google_drive_url', 'pdf'])
                 logger.info(f"✅ PDF subido a Google Drive: {drive_url} (Libro ID: {libro_id})")
@@ -89,8 +90,6 @@ def listar_libros(request):
     return render(request, 'listar_libros.html', {'libros': page_obj, 'usuario': request.user})
 
 
-# biblioartdis/views/libro_views.py
-
 @admin_required
 def agregar_libro(request):
     autores = Autor.objects.all()
@@ -127,7 +126,7 @@ def agregar_libro(request):
                 logger.info(f"Portada agregada: {request.FILES['portada'].name}")
             
             # ============================================
-            # ✅ AHORA: TODOS LOS PDFS SE SUBEN A DRIVE
+            # TODOS LOS PDFS SE SUBEN A DRIVE
             # ============================================
             pdf_para_subir = None
             if 'pdf' in request.FILES:
@@ -136,7 +135,7 @@ def agregar_libro(request):
                 
                 logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.1f}MB)")
                 
-                # ✅ SIEMPRE subir a Drive (sin importar el tamaño)
+                # SIEMPRE subir a Drive (sin importar el tamaño)
                 pdf_para_subir = pdf_original
                 messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano. La URL aparecerá en breve.")
             
@@ -144,7 +143,7 @@ def agregar_libro(request):
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
-            # ✅ Si hay PDF, subirlo a Drive en segundo plano (SIEMPRE)
+            # Si hay PDF, subirlo a Drive en segundo plano (SIEMPRE)
             if pdf_para_subir:
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
@@ -152,7 +151,7 @@ def agregar_libro(request):
                 )
                 thread.daemon = True
                 thread.start()
-                logger.info(f"🔄 Hilo de subida a Drive iniciado para libro ID {libro_id} (SIEMPRE a Drive)")
+                logger.info(f"🔄 Hilo de subida a Drive iniciado para libro ID {libro_id}")
             
             # Autorización
             if 'autorizacion' in request.FILES:
@@ -222,7 +221,7 @@ def editar_libro(request, libro_id):
             libro.google_drive_url = request.POST.get('google_drive_url', '').strip()
             
             # ============================================
-            # ✅ SIEMPRE subir a Drive
+            # SIEMPRE subir a Drive cuando hay un nuevo PDF
             # ============================================
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
@@ -230,8 +229,10 @@ def editar_libro(request, libro_id):
                 
                 logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.1f}MB)")
                 
-                # ✅ SIEMPRE subir a Drive
-                libro.save()  # Guardar primero para tener el ID
+                # Guardar el libro primero para tener el ID
+                libro.save()
+                
+                # Subir a Drive en segundo plano
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
                     args=(pdf_original, libro.titulo, libro.id_libro)
@@ -239,23 +240,53 @@ def editar_libro(request, libro_id):
                 thread.daemon = True
                 thread.start()
                 messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
+                
+                # Limpiar el PDF de Cloudinary si existe (se reemplazará con Drive)
+                if libro.pdf:
+                    try:
+                        libro.pdf.delete(save=False)
+                        libro.pdf = None
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo de Cloudinary: {e}")
             
+            # Manejo de portada
             if 'portada' in request.FILES:
+                # Eliminar portada anterior si existe
+                if libro.img_portada:
+                    try:
+                        libro.img_portada.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar portada antigua: {e}")
                 libro.img_portada = request.FILES['portada']
+            
+            # Manejo de autorización
             if 'autorizacion' in request.FILES:
+                # Eliminar autorización anterior si existe
+                if libro.archivo_autorizacion:
+                    try:
+                        libro.archivo_autorizacion.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar autorización antigua: {e}")
                 libro.archivo_autorizacion = request.FILES['autorizacion']
+            
+            # Manejo de autores
             if 'autores' in request.POST:
                 autores = request.POST.getlist('autores')
                 if autores:
                     libro.autores.set(autores)
                 else:
                     libro.autores.clear()
+            
+            # Palabras clave
             libro.palabra_clave = request.POST.get('palabras_claves', '')
+            
+            # Guardar todos los cambios
             libro.save()
             
             logger.info(f"Libro '{libro.titulo}' actualizado por {request.user.username}")
             messages.success(request, f'Libro "{libro.titulo}" actualizado')
             return JsonResponse({'success': True, 'message': 'Libro actualizado'})
+            
         except Exception as e:
             logger.error(f"Error editando libro: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -281,7 +312,6 @@ def eliminar_libro(request, libro_id):
         # Eliminar PDF de Google Drive si existe
         if libro.google_drive_url:
             try:
-                from ..drive_utils import eliminar_pdf_de_drive
                 # Extraer el ID del archivo de la URL
                 file_id = None
                 if '/file/d/' in libro.google_drive_url:
@@ -573,17 +603,23 @@ def agregar_imagen(request):
                 autorImg=autorImg,
             )
             
-            # Procesar imagen
+            # ============================================
+            # IMAGEN - Subir a Drive en lugar de Cloudinary
+            # ============================================
             if 'img_portada' in request.FILES:
-                imagen = request.FILES['img_portada']
-                # Validar tamaño (5MB)
-                if imagen.size > 5 * 1024 * 1024:
+                imagen_original = request.FILES['img_portada']
+                tamaño_mb = imagen_original.size / (1024 * 1024)
+                
+                if tamaño_mb > 5:
                     if is_ajax:
                         return JsonResponse({'success': False, 'error': 'La imagen no puede superar los 5MB'}, status=400)
                     messages.error(request, 'La imagen no puede superar los 5MB')
                     return render(request, 'agregar_imagen.html', {'categorias': categorias})
-                nueva_imagen.img_portada = imagen
+                
+                # Guardar la imagen en Cloudinary temporalmente
+                nueva_imagen.img_portada = imagen_original
             
+            # PDF (opcional)
             if 'pdf' in request.FILES:
                 pdf = request.FILES['pdf']
                 if pdf.size > 10 * 1024 * 1024:
@@ -593,7 +629,21 @@ def agregar_imagen(request):
                     return render(request, 'agregar_imagen.html', {'categorias': categorias})
                 nueva_imagen.pdf = pdf
             
+            # Guardar la imagen primero
             nueva_imagen.save()
+            imagen_id = nueva_imagen.id_Imagen
+            
+            # ============================================
+            # Subir imagen a Drive en segundo plano
+            # ============================================
+            if 'img_portada' in request.FILES:
+                thread = threading.Thread(
+                    target=subir_imagen_a_drive_async,
+                    args=(request.FILES['img_portada'], titulo, imagen_id)
+                )
+                thread.daemon = True
+                thread.start()
+                logger.info(f"🔄 Hilo de subida de imagen a Drive iniciado para imagen ID {imagen_id}")
             
             # Agregar categorías
             for cat_id in request.POST.getlist('categorias'):
@@ -603,7 +653,6 @@ def agregar_imagen(request):
                 except:
                     pass
             
-            # ✅ PARA AJAX: Devolver JSON (esto es lo que espera tu JavaScript)
             if is_ajax:
                 return JsonResponse({
                     'success': True, 
@@ -611,7 +660,6 @@ def agregar_imagen(request):
                     'id': nueva_imagen.id_Imagen
                 })
             
-            # Para peticiones normales (no AJAX)
             messages.success(request, 'Imagen agregada correctamente')
             return redirect('lista_imagenes')
             
@@ -624,19 +672,45 @@ def agregar_imagen(request):
     
     return render(request, 'agregar_imagen.html', {'categorias': categorias})
     
+
 @login_required
 @admin_required
 def editar_imagen(request, id_imagen):
     imagen = get_object_or_404(Imagen, pk=id_imagen)
     categorias = Categoria.objects.all()
+    
     if request.method == 'POST':
         try:
             imagen.titulo = request.POST.get('titulo')
             imagen.descripcion = request.POST.get('descripcion', '')
             imagen.autorImg = request.POST.get('autorImg')
             
+            # ============================================
+            # Subir nueva imagen a Drive
+            # ============================================
             if 'img_portada' in request.FILES:
+                # Eliminar imagen anterior de Cloudinary
+                if imagen.img_portada:
+                    try:
+                        imagen.img_portada.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua: {e}")
+                
+                # Guardar temporalmente en Cloudinary
                 imagen.img_portada = request.FILES['img_portada']
+                
+                # Guardar imagen primero
+                imagen.save()
+                
+                # Subir a Drive en segundo plano
+                thread = threading.Thread(
+                    target=subir_imagen_a_drive_async,
+                    args=(request.FILES['img_portada'], imagen.titulo, imagen.id_Imagen)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
+            
             if 'pdf' in request.FILES:
                 imagen.pdf = request.FILES['pdf']
             
@@ -644,10 +718,12 @@ def editar_imagen(request, id_imagen):
             imagen.categorias.set(request.POST.getlist('categorias'))
             messages.success(request, "Imagen actualizada")
             return redirect('lista_imagenes')
+            
         except Exception as e:
             logger.error(f"Error editando imagen: {str(e)}")
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
+    
     return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
 
 
