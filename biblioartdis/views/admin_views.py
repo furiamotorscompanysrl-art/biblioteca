@@ -291,6 +291,8 @@ def ver_documentos_solicitud(request, usuario_id):
     return render(request, 'ver_documentos_solicitud.html', {'usuario': usuario})
 
 
+# biblioartdis/views/admin_views.py
+
 @login_required
 @admin_required
 def principal(request):
@@ -326,13 +328,16 @@ def principal(request):
         total_revistas = Revista.objects.count()
         total_imagenes = Imagen.objects.count()
 
-        # ============================================
-        # DATOS DE SOLICITUDES PARA EL DASHBOARD
-        # ============================================
         pendientes = Usuario.objects.filter(estado_registro='pendiente').order_by('-fecha_solicitud')
         total_pendientes = pendientes.count()
         total_aprobados = Usuario.objects.filter(estado_registro='aprobado').count()
         total_rechazados = Usuario.objects.filter(estado_registro='rechazado').count()
+
+        # ============================================
+        # ✅ AGREGAR estado_sistema
+        # ============================================
+        from ..utils import get_system_status
+        estado_sistema = get_system_status()
 
         datos = {
             'total_usuarios': total_usuarios,
@@ -345,11 +350,11 @@ def principal(request):
             'visitas_agrupadas_unitarias': visitas_agrupadas_unitarias,
             'vista_opcion': vista_opcion,
             'usuario': request.user.usuario if hasattr(request.user, 'usuario') else None,
-            # Nuevos datos de solicitudes
             'pendientes': pendientes,
             'total_pendientes': total_pendientes,
             'total_aprobados': total_aprobados,
             'total_rechazados': total_rechazados,
+            'estado_sistema': estado_sistema,  # ← AGREGADO
         }
 
         estadisticas = {
