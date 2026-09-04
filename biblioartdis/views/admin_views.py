@@ -334,10 +334,56 @@ def principal(request):
         total_rechazados = Usuario.objects.filter(estado_registro='rechazado').count()
 
         # ============================================
-        # ✅ AGREGAR estado_sistema
+        # ✅ AGREGAR estado_sistema PARA EL TEMPLATE
         # ============================================
-        from ..utils import get_system_status
-        estado_sistema = get_system_status()
+        estado_sistema = {
+            'totales': {
+                'archivos_totales': {
+                    'pdfs': total_libros + total_revistas,
+                    'imagenes': total_imagenes,
+                    'portadas': total_libros + total_revistas + total_imagenes
+                },
+                'espacio_total': {
+                    'pdfs': 0,
+                    'imagenes': 0,
+                    'portadas': 0,
+                    'total': 0
+                }
+            },
+            'libros': {
+                'total': total_libros,
+                'archivos': {
+                    'pdfs': total_libros,
+                    'portadas': total_libros
+                },
+                'espacio': {
+                    'pdfs': 0,
+                    'portadas': 0
+                }
+            },
+            'revistas': {
+                'total': total_revistas,
+                'archivos': {
+                    'pdfs': total_revistas,
+                    'portadas': total_revistas
+                },
+                'espacio': {
+                    'pdfs': 0,
+                    'portadas': 0
+                }
+            },
+            'imagenes': {
+                'total': total_imagenes,
+                'archivos': {
+                    'imagenes': total_imagenes,
+                    'pdfs': 0
+                },
+                'espacio': {
+                    'imagenes': 0,
+                    'pdfs': 0
+                }
+            }
+        }
 
         datos = {
             'total_usuarios': total_usuarios,
