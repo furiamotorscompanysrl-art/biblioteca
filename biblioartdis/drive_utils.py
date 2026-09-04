@@ -482,3 +482,153 @@ def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None):
     except Exception as e:
         logger.error(f"❌ Error subiendo imagen a Drive: {e}")
         return None
+
+# biblioartdis/drive_utils.py
+
+def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folder_path='Material_Biblioteca/Imagenes/Obras'):
+    """
+    Sube una imagen a Google Drive en segundo plano
+    
+    Args:
+        imagen_original: Archivo subido (InMemoryUploadedFile)
+        nombre_archivo: Nombre del archivo
+        imagen_id: ID de la imagen para actualizar
+        folder_path: Ruta de la carpeta en Drive
+    """
+    import threading
+    
+    def upload_thread():
+        try:
+            from ..models import Imagen
+            
+            # Subir a Drive
+            drive_url = subir_imagen_a_drive(imagen_original, nombre_archivo, folder_path)
+            
+            if drive_url:
+                # Actualizar la imagen con la URL de Drive
+                imagen = Imagen.objects.get(id_Imagen=imagen_id)
+                # Guardar URL en un campo específico para imágenes
+                if hasattr(imagen, 'google_drive_url'):
+                    imagen.google_drive_url = drive_url
+                # Limpiar la imagen de Cloudinary
+                if imagen.img_portada:
+                    try:
+                        imagen.img_portada.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar imagen de Cloudinary: {e}")
+                    imagen.img_portada = None
+                imagen.save()
+                logger.info(f"✅ Imagen subida a Google Drive: {drive_url} (Imagen ID: {imagen_id})")
+            else:
+                logger.error(f"❌ Falló subida a Drive para imagen {imagen_id}")
+                # Fallback: mantener en Cloudinary
+                
+        except Imagen.DoesNotExist:
+            logger.error(f"❌ Imagen {imagen_id} no encontrada")
+        except Exception as e:
+            logger.error(f"❌ Error en subida de imagen a Drive: {str(e)}")
+    
+    thread = threading.Thread(target=upload_thread)
+    thread.daemon = True
+    thread.start()
+    return thread
+def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Material_Biblioteca/Imagenes/Obras'):
+    """
+    Sube una imagen a Google Drive
+    
+    Args:
+        archivo_imagen: Archivo subido (InMemoryUploadedFile) o ruta de archivo
+        nombre_archivo: Nombre para guardar en Drive (opcional)
+        folder_path: Ruta de la carpeta en Drive (por defecto: Material_Biblioteca/Imagenes/Obras)
+    
+    Returns:
+        str: URL de vista previa o None si falla
+    """
+    try:
+        service = get_drive_service()
+        if not service:
+            logger.error("❌ No se pudo obtener servicio de Drive")
+            return None
+        
+        # Obtener folder principal
+        main_folder_id = os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
+        if not main_folder_id:
+            logger.error("❌ GOOGLE_DRIVE_FOLDER_ID no configurada")
+            return None
+        
+        # Obtener o crear la carpeta
+        folder_id = get_or_create_folder(service, folder_path, main_folder_id)
+        if not folder_id:
+            logger.error(f"❌ No se pudo obtener/crear carpeta: {folder_path}")
+            return None
+        
+        # Nombre del archivo
+        if not nombre_archivo:
+            if hasattr(archivo_imagen, 'name'):
+                nombre_archivo = archivo_imagen.name
+            else:
+                nombre_archivo = 'imagen.jpg'
+        
+        # Limpiar nombre
+        nombre_limpio = ''.join(c for c in nombre_archivo if c.isalnum() or c in ' ._-')
+        if not nombre_limpio:
+            nombre_limpio = 'imagen'
+        
+        # Detectar MIME type por extensión
+        ext = os.path.splitext(nombre_limpio)[1].lower()
+        mime_types = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.bmp': 'image/bmp',
+            '.svg': 'image/svg+xml'
+        }
+        mime_type = mime_types.get(ext, 'image/jpeg')
+        
+        # Asegurar extensión
+        if not ext or ext not in mime_types:
+            nombre_limpio += '.jpg'
+        
+        # Leer el contenido del archivo
+        if hasattr(archivo_imagen, 'read'):
+            contenido = archivo_imagen.read()
+            archivo_imagen.seek(0)
+        else:
+            with open(archivo_imagen, 'rb') as f:
+                contenido = f.read()
+        
+        if not contenido:
+            logger.error("❌ El archivo de imagen está vacío")
+            return None
+        
+        # Subir a Google Drive
+        media = MediaIoBaseUpload(
+            io.BytesIO(contenido),
+            mimetype=mime_type,
+            resumable=True,
+            chunksize=1024 * 1024
+        )
+        
+        file_metadata = {
+            'name': nombre_limpio,
+            'parents': [folder_id]
+        }
+        
+        logger.info(f"📤 Subiendo imagen a Google Drive: {nombre_limpio} ({len(contenido) / 1024:.1f} KB)")
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, webViewLink'
+        ).execute()
+        
+        file_id = file.get('id')
+        preview_url = f"https://drive.google.com/file/d/{file_id}/preview"
+        
+        logger.info(f"✅ Imagen subida a Google Drive: {preview_url}")
+        return preview_url
+        
+    except Exception as e:
+        logger.error(f"❌ Error subiendo imagen a Drive: {e}")
+        return None

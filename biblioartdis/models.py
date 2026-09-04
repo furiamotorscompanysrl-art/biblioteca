@@ -495,6 +495,15 @@ class Imagen(models.Model):
         blank=True
     )
     
+    # ✅ NUEVO: URL de Google Drive para imágenes
+    google_drive_url = models.URLField(
+        'URL de Google Drive',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Enlace de Google Drive para la imagen'
+    )
+    
     categorias = models.ManyToManyField(Categoria, blank=True)
 
     def __str__(self):
