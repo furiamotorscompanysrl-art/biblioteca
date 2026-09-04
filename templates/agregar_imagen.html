@@ -345,7 +345,7 @@
         </div>
 
         <div class="form-body">
-            <form method="post" enctype="multipart/form-data" id="uploadForm">
+            <form method="post" enctype="multipart/form-data" id="uploadForm" action="{% url 'agregar_imagen' %}">
                 {% csrf_token %}
                 
                 <div class="form-grid">
@@ -609,7 +609,8 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
@@ -636,7 +637,7 @@
                     modal.hide();
                 });
             } else {
-                Swal.fire('Error', data.error, 'error');
+                Swal.fire('Error', data.error || 'Error al procesar la solicitud', 'error');
             }
         })
         .catch(() => {
@@ -682,15 +683,22 @@
                 body: formData,
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+            
+            // ✅ IMPORTANTE: Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('La respuesta no es JSON. Posible error en el servidor.');
+            }
             
             const data = await response.json();
             
             if (data.success) {
                 Swal.fire({
                     title: '¡Imagen subida!',
-                    text: 'La imagen se ha agregado correctamente a la galería',
+                    text: data.message || 'La imagen se ha agregado correctamente a la galería',
                     icon: 'success',
                     confirmButtonColor: '#F59E0B',
                     confirmButtonText: 'Ver lista de imágenes'
@@ -701,6 +709,7 @@
                 throw new Error(data.error || 'Error al subir la imagen');
             }
         } catch (error) {
+            console.error('Error:', error);
             Swal.fire({
                 title: 'Error',
                 text: error.message || 'Hubo un problema al subir la imagen',

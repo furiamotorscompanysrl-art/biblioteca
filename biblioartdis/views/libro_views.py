@@ -584,7 +584,7 @@ def agregar_imagen(request):
             descripcion = request.POST.get('descripcion', '')
             autorImg = request.POST.get('autorImg')
             
-            # Validaciones
+            # ✅ VALIDACIONES - SIEMPRE RETORNAR JSON PARA AJAX
             if not titulo:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
