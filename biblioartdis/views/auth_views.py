@@ -359,7 +359,7 @@ Biblioteca ARTyDIS
 @login_required
 @admin_required
 def restablecer_password_admin(request):
-    """Vista para que el administrador restablezca contraseñas"""
+    """Vista para que el administrador restablezca contraseñas a CI"""
     if not request.user.is_superuser:
         messages.error(request, 'No tienes permiso')
         return redirect('inicio')
@@ -371,24 +371,27 @@ def restablecer_password_admin(request):
         usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
     
     if request.method == 'POST':
-        form = RestablecerPasswordForm(request.POST)
-        if form.is_valid():
-            usuario_id = form.cleaned_data['usuario_id']
-            nueva_password = form.cleaned_data['nueva_password']
-            usuario_obj = get_object_or_404(Usuario, usuario_id=usuario_id)
-            
-            usuario_obj.user.set_password(nueva_password)
-            usuario_obj.user.save()
-            usuario_obj.puede_restablecer_password = False
-            usuario_obj.save()
-            
-            messages.success(request, f'🔑 Contraseña restablecida para {usuario_obj.nombres}')
-            return redirect('lista_usuarios')
-    else:
-        form = RestablecerPasswordForm(initial={'usuario_id': usuario_id})
+        usuario_id = request.POST.get('usuario_id')
+        usuario_obj = get_object_or_404(Usuario, usuario_id=usuario_id)
+        
+        # La nueva contraseña es el CI del usuario
+        nueva_password = usuario_obj.ci
+        
+        if len(nueva_password) < 4:
+            messages.error(request, f'El CI ({nueva_password}) es demasiado corto. Debe tener al menos 4 caracteres.')
+            return render(request, 'restablecer_password_admin.html', {
+                'usuario': usuario_obj
+            })
+        
+        usuario_obj.user.set_password(nueva_password)
+        usuario_obj.user.save()
+        usuario_obj.puede_restablecer_password = False
+        usuario_obj.save()
+        
+        messages.success(request, f'🔑 Contraseña restablecida para {usuario_obj.nombres} a su CI: {nueva_password}')
+        return redirect('lista_usuarios')
     
     return render(request, 'restablecer_password_admin.html', {
-        'form': form,
         'usuario': usuario
     })
 
@@ -397,27 +400,40 @@ def restablecer_password_admin(request):
 @login_required
 @admin_required
 def restablecer_password_api(request):
-    """API para restablecer contraseña vía AJAX"""
+    """API para restablecer contraseña vía AJAX - La nueva contraseña será el CI del usuario"""
     try:
         data = json.loads(request.body)
         usuario_id = data.get('usuario_id')
-        nueva_password = data.get('nueva_password')
+        ci = data.get('ci')  # Recibimos el CI del usuario
         
-        if not usuario_id or not nueva_password:
+        if not usuario_id or not ci:
             return JsonResponse({'success': False, 'error': 'Faltan datos'})
         
-        if len(nueva_password) < 9:
-            return JsonResponse({'success': False, 'error': 'La contraseña debe tener al menos 9 caracteres'})
-        
         usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        
+        # Verificar que el CI coincida
+        if usuario.ci != ci:
+            return JsonResponse({'success': False, 'error': 'El CI no coincide con el usuario'})
+        
+        # La nueva contraseña es el CI
+        nueva_password = ci
+        
+        # Validar longitud mínima
+        if len(nueva_password) < 4:
+            return JsonResponse({'success': False, 'error': 'El CI debe tener al menos 4 caracteres'})
+        
+        # Cambiar la contraseña
         usuario.user.set_password(nueva_password)
         usuario.user.save()
         usuario.puede_restablecer_password = False
         usuario.save()
         
-        logger.info(f"Contraseña restablecida para usuario: {usuario.user.username} por admin: {request.user.username}")
+        logger.info(f"Contraseña restablecida a CI para usuario: {usuario.user.username} por admin: {request.user.username}")
         
-        return JsonResponse({'success': True, 'message': 'Contraseña restablecida correctamente'})
+        return JsonResponse({
+            'success': True, 
+            'message': f'Contraseña restablecida exitosamente. Nueva contraseña: {ci}'
+        })
         
     except Usuario.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Usuario no encontrado'})

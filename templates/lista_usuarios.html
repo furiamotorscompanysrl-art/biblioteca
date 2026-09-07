@@ -497,7 +497,6 @@ function confirmarEliminacion(usuarioId, nombreUsuario) {
     });
 }
 
-// Confirmar restablecimiento de contraseña
 function confirmarRestablecerPassword(usuarioId, nombreUsuario, ci) {
     Swal.fire({
         title: '¿Restablecer contraseña?',
@@ -521,7 +520,7 @@ function confirmarRestablecerPassword(usuarioId, nombreUsuario, ci) {
                 },
                 body: JSON.stringify({
                     usuario_id: usuarioId,
-                    ci: ci
+                    ci: ci  // Enviamos el CI
                 })
             })
             .then(response => response.json())
