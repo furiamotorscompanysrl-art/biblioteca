@@ -20,6 +20,11 @@ import threading
 import os
 import tempfile
 
+# ============================================
+# ✅ IMPORTAR EL MODELO USUARIO
+# ============================================
+from ..models import Usuario  # <--- AGREGAR ESTA LÍNEA
+
 from ..decorators import admin_required
 from ..email_utils import enviar_codigo_verificacion, verificar_codigo
 from ..forms import RegistroUsuarioForm, RestablecerPasswordForm, LoginForm
