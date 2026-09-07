@@ -38,8 +38,14 @@ urlpatterns = [
     # ============================================
     # RESTABLECER CONTRASEÑA (ADMIN)
     # ============================================
+    # ✅ Ruta para el ADMIN (vista con formulario)
     path('restablecer-password-admin/', views.restablecer_password_admin, name='restablecer_password_admin'),
+    
+    # ✅ Ruta para la API (usada por el frontend con fetch)
     path('restablecer-password-api/', views.restablecer_password_api, name='restablecer_password_api'),
+    
+    # ✅ Ruta SIN GUIONES para compatibilidad con el frontend (la que usa el fetch)
+    path('restablecer_password/', views.restablecer_password_api, name='restablecer_password'),
     
     # Perfil y usuarios
     path('perfil/', views.perfil, name='perfil'),
@@ -47,7 +53,7 @@ urlpatterns = [
     path('modificar_usuario/<int:usuario_id>/', views.modificar_usuario, name='modificar_usuario'),
     path('eliminar_usuario/<int:usuario_id>/', views.eliminar_usuario, name='eliminar_usuario'),
     path('lista_usuarios/', views.lista_usuarios, name='lista_usuarios'),
-    path('restablecer_password/', views.restablecer_password, name='restablecer_password'),
+    path('restablecer_password/', views.restablecer_password, name='restablecer_password'),  # Esta ya existe pero apunta a otra función, cuidado!
     path('cambiar-password/', views.cambiar_password, name='cambiar_password'),
 
     # Gestión de libros
