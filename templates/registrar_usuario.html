@@ -124,9 +124,7 @@
             text-align: center;
         }
 
-        /* ============================================
-           TIPO DE USUARIO - DESTACADO
-        ============================================ */
+        /* TIPO DE USUARIO - DESTACADO */
         .tipo-usuario-section {
             background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
             border-radius: 16px;
@@ -208,7 +206,7 @@
         .form-select {
             width: 100%;
             height: 46px;
-            padding: 0 1rem 0 2.6rem;
+            padding: 0 3rem 0 2.6rem;
             border: 1.5px solid var(--border-light);
             border-radius: 16px;
             font-size: 0.9rem;
@@ -270,6 +268,26 @@
             display: flex;
             align-items: center;
             gap: 4px;
+        }
+
+        /* Botón toggle password */
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.1rem;
+            z-index: 3;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-password:hover {
+            color: var(--accent);
         }
 
         .file-input-wrapper {
@@ -522,9 +540,6 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* ============================================
-           RESPONSIVE
-        ============================================ */
         @media (max-width: 992px) {
             .register-card {
                 max-width: 96%;
@@ -560,7 +575,7 @@
             .form-select {
                 height: 44px;
                 font-size: 0.85rem;
-                padding: 0 0.8rem 0 2.4rem;
+                padding: 0 3rem 0 2.4rem;
             }
             .form-label {
                 font-size: 0.8rem;
@@ -608,12 +623,16 @@
             .form-select {
                 height: 42px;
                 font-size: 0.82rem;
-                padding: 0 0.7rem 0 2.2rem;
+                padding: 0 3rem 0 2.2rem;
                 border-radius: 14px;
             }
             .input-icon {
                 left: 0.7rem;
                 font-size: 0.85rem;
+            }
+            .toggle-password {
+                right: 8px;
+                font-size: 0.95rem;
             }
             .form-group {
                 margin-bottom: 0.9rem;
@@ -706,9 +725,7 @@
         <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
             {% csrf_token %}
 
-            <!-- ==========================================
-                 TIPO DE USUARIO - DESTACADO ARRIBA
-            ========================================== -->
+            <!-- TIPO DE USUARIO - DESTACADO ARRIBA -->
             <div class="tipo-usuario-section">
                 <div class="section-title">
                     <i class="fas fa-user-tag"></i> Selecciona tu Tipo de Usuario
@@ -958,6 +975,10 @@
                         <div class="input-group-custom">
                             <i class="fas fa-lock input-icon"></i>
                             {{ form.password|add_class:"form-control" }}
+                            <button type="button" class="toggle-password" 
+                                    onclick="togglePasswordVisibility('id_password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i> {{ form.password.help_text }}
@@ -976,6 +997,10 @@
                         <div class="input-group-custom">
                             <i class="fas fa-check-circle input-icon"></i>
                             {{ form.password_confirm|add_class:"form-control" }}
+                            <button type="button" class="toggle-password" 
+                                    onclick="togglePasswordVisibility('id_password_confirm', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
                         {% if form.password_confirm.errors %}
                             <div class="invalid-feedback">{{ form.password_confirm.errors.0 }}</div>
@@ -1078,6 +1103,27 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // ============================================
+    // FUNCIÓN PARA MOSTRAR/OCULTAR CONTRASEÑA
+    // ============================================
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+        
+        if (!input) return;
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    // ============================================
+    // INICIALIZACIÓN
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
 
         const correoInput = document.querySelector('input[name="correo"]');
@@ -1230,7 +1276,6 @@
                         return;
                     }
 
-                    // Mostrar nombre del archivo
                     nameDisplay.textContent = file.name;
                     nameDisplay.style.color = '#10B981';
                     wrapper.classList.add('has-file');
@@ -1239,19 +1284,15 @@
                         icon.style.color = '#F59E0B';
                     }
 
-                    // Mostrar estado de subida
                     status.className = 'upload-status show loading';
                     status.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Subiendo a Google Drive...';
 
-                    // Crear FormData para subir
                     const formData = new FormData();
                     formData.append('file', file);
                     formData.append('tipo', config.tipo);
 
-                    // Obtener el token CSRF
                     const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-                    // Subir a Google Drive vía AJAX
                     fetch('/upload-to-drive/', {
                         method: 'POST',
                         headers: {
@@ -1262,7 +1303,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Guardar la URL en el campo oculto
                             urlInput.value = data.url;
                             
                             status.className = 'upload-status show success';
@@ -1363,7 +1403,6 @@
                 return false;
             }
 
-            // Verificar que los archivos requeridos estén subidos a Drive
             const tipoUsuarioVal = tipoUsuario ? tipoUsuario.value : '';
             let archivosRequeridos = [];
             

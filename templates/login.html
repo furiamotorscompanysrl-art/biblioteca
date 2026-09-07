@@ -129,7 +129,7 @@
 
         .form-control {
             width: 100%;
-            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            padding: 0.85rem 3rem 0.85rem 2.5rem;
             border: 1.5px solid var(--border-light);
             border-radius: 16px;
             font-size: 0.9rem;
@@ -144,10 +144,34 @@
             background-color: white;
         }
 
+        .form-control.is-invalid {
+            border-color: var(--danger);
+        }
+
         .form-text {
             font-size: 0.7rem;
             color: var(--text-secondary);
             margin-top: 0.3rem;
+        }
+
+        /* Botón toggle password */
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.1rem;
+            z-index: 3;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-password:hover {
+            color: var(--accent);
         }
 
         .btn-login {
@@ -350,6 +374,10 @@
                         <i class="fas fa-lock input-icon"></i>
                         <input type="password" class="form-control" id="password" name="password" 
                                placeholder="Ingrese su contraseña" required>
+                        <button type="button" class="toggle-password" 
+                                onclick="togglePasswordVisibility('password', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
                 
@@ -375,6 +403,22 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Función para mostrar/ocultar contraseña
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (!input) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
         // Validación del formulario
         document.querySelector('form').addEventListener('submit', function(e) {
             const email = document.getElementById('email');
