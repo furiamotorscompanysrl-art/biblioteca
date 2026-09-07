@@ -533,3 +533,41 @@ def upload_to_drive_ajax(request):
             
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def perfil(request):
+    """Vista del perfil del usuario"""
+    usuario = request.user.usuario
+    
+    if request.method == 'POST':
+        password_actual = request.POST.get('password_actual')
+        password_nuevo = request.POST.get('password_nuevo')
+        password_confirm = request.POST.get('password_confirm')
+        
+        # Si es una solicitud de cambio de contraseña
+        if password_actual or password_nuevo or password_confirm:
+            if not password_actual or not password_nuevo or not password_confirm:
+                messages.error(request, '❌ Todos los campos son obligatorios.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            if len(password_nuevo) < 9:
+                messages.error(request, '❌ La nueva contraseña debe tener al menos 9 caracteres.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            if password_nuevo != password_confirm:
+                messages.error(request, '❌ Las contraseñas no coinciden.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            if not request.user.check_password(password_actual):
+                messages.error(request, '❌ La contraseña actual es incorrecta.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            # Cambiar contraseña
+            request.user.set_password(password_nuevo)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            
+            messages.success(request, '✅ Contraseña cambiada exitosamente.')
+            return redirect('perfil')
+    
+    return render(request, 'perfil.html', {'usuario': usuario})
