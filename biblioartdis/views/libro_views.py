@@ -17,13 +17,19 @@ import threading
 from ..decorators import admin_required
 from ..models import Libro, Autor, Categoria, Revista, Coleccion, Imagen
 from ..forms import RevistaForm, ColeccionForm, ImagenForm
-from ..drive_utils import subir_pdf_a_drive, eliminar_pdf_de_drive, subir_imagen_a_drive_async
+from ..drive_utils import (
+    subir_pdf_a_drive, 
+    eliminar_pdf_de_drive, 
+    subir_imagen_a_drive_async,
+    subir_imagen_a_drive,
+    eliminar_imagen_de_drive
+)
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================
-# FUNCIÓN DE SUBIDA ASÍNCRONA A GOOGLE DRIVE (PDFs)
+# FUNCIÓN DE SUBIDA ASÍNCRONA A GOOGLE DRIVE (PDFs de Libros)
 # ============================================
 def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path='Material_Biblioteca/Libros/PDFs'):
     """
@@ -66,6 +72,118 @@ def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path=
             logger.error(f"❌ Libro {libro_id} no encontrado")
         except Exception as e:
             logger.error(f"❌ Error en subida a Drive: {str(e)}")
+    
+    thread = threading.Thread(target=upload_thread)
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
+# ============================================
+# FUNCIÓN DE SUBIDA ASÍNCRONA PARA REVISTAS (PDF)
+# ============================================
+def subir_revista_pdf_a_drive_async(pdf_original, nombre_archivo, revista_id, folder_path='Material_Biblioteca/Revistas/PDFs'):
+    """
+    Sube un PDF de revista a Google Drive en segundo plano
+    
+    Args:
+        pdf_original: Archivo subido (InMemoryUploadedFile)
+        nombre_archivo: Nombre del archivo
+        revista_id: ID de la revista para actualizar
+        folder_path: Ruta de la carpeta en Drive
+    """
+    def upload_thread():
+        try:
+            from ..models import Revista
+            
+            # Subir a Drive
+            drive_url = subir_pdf_a_drive(pdf_original, nombre_archivo, folder_path)
+            
+            if drive_url:
+                # Actualizar la revista con la URL de Drive
+                revista = Revista.objects.get(id_revista=revista_id)
+                revista.google_drive_url = drive_url
+                # Eliminar el PDF de Cloudinary si existe
+                if revista.pdf:
+                    try:
+                        revista.pdf.delete(save=False)
+                        revista.pdf = None
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo de Cloudinary: {e}")
+                revista.save(update_fields=['google_drive_url', 'pdf'])
+                logger.info(f"✅ PDF de revista subido a Google Drive: {drive_url} (Revista ID: {revista_id})")
+            else:
+                logger.error(f"❌ Falló subida a Drive para revista {revista_id}")
+                
+                # Si falla Drive, intentamos guardar en Cloudinary como fallback
+                try:
+                    revista = Revista.objects.get(id_revista=revista_id)
+                    revista.pdf = pdf_original
+                    revista.save(update_fields=['pdf'])
+                    logger.info(f"✅ Fallback: PDF de revista guardado en Cloudinary para revista {revista_id}")
+                except Exception as e:
+                    logger.error(f"❌ Error en fallback a Cloudinary para revista: {e}")
+                    
+        except Revista.DoesNotExist:
+            logger.error(f"❌ Revista {revista_id} no encontrada")
+        except Exception as e:
+            logger.error(f"❌ Error en subida a Drive para revista: {str(e)}")
+    
+    thread = threading.Thread(target=upload_thread)
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
+# ============================================
+# FUNCIÓN DE SUBIDA DE IMAGEN DE REVISTA A DRIVE
+# ============================================
+def subir_imagen_revista_a_drive_async(imagen_original, nombre_archivo, revista_id, folder_path='Material_Biblioteca/Revistas/Portadas'):
+    """
+    Sube una imagen de portada de revista a Google Drive en segundo plano
+    
+    Args:
+        imagen_original: Archivo subido (InMemoryUploadedFile)
+        nombre_archivo: Nombre del archivo
+        revista_id: ID de la revista para actualizar
+        folder_path: Ruta de la carpeta en Drive
+    """
+    def upload_thread():
+        try:
+            from ..models import Revista
+            
+            # Subir imagen a Drive
+            drive_url = subir_imagen_a_drive(imagen_original, nombre_archivo, folder_path)
+            
+            if drive_url:
+                # Actualizar la revista con la URL de Drive
+                revista = Revista.objects.get(id_revista=revista_id)
+                revista.google_drive_img_url = drive_url
+                # Eliminar la imagen de Cloudinary si existe
+                if revista.img_portada:
+                    try:
+                        revista.img_portada.delete(save=False)
+                        revista.img_portada = None
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua de Cloudinary: {e}")
+                revista.save(update_fields=['google_drive_img_url', 'img_portada'])
+                logger.info(f"✅ Imagen de revista subida a Google Drive: {drive_url} (Revista ID: {revista_id})")
+            else:
+                logger.error(f"❌ Falló subida de imagen a Drive para revista {revista_id}")
+                
+                # Si falla Drive, intentamos guardar en Cloudinary como fallback
+                try:
+                    revista = Revista.objects.get(id_revista=revista_id)
+                    revista.img_portada = imagen_original
+                    revista.save(update_fields=['img_portada'])
+                    logger.info(f"✅ Fallback: Imagen de revista guardada en Cloudinary para revista {revista_id}")
+                except Exception as e:
+                    logger.error(f"❌ Error en fallback a Cloudinary para imagen de revista: {e}")
+                    
+        except Revista.DoesNotExist:
+            logger.error(f"❌ Revista {revista_id} no encontrada")
+        except Exception as e:
+            logger.error(f"❌ Error en subida de imagen a Drive para revista: {str(e)}")
     
     thread = threading.Thread(target=upload_thread)
     thread.daemon = True
@@ -448,28 +566,94 @@ def agregar_revista(request):
             coleccion = Coleccion.objects.get(id_coleccion=request.POST['coleccion'])
             nro_revista = request.POST.get('nro_revista')
             nro_revista = int(nro_revista) if nro_revista else None
-            if not request.FILES.get('img_portada'):
-                raise ValueError('La imagen de portada es requerida')
+            
+            # Crear la revista
             revista = Revista(
                 nro_revista=nro_revista,
                 coleccion=coleccion,
                 descripcion=request.POST.get('descripcion', '').strip(),
-                img_portada=request.FILES.get('img_portada'),
-                pdf=request.FILES.get('pdf'),
                 url=request.POST.get('url', '').strip(),
-                google_drive_url=request.POST.get('google_drive_url', '').strip()
+                google_drive_url='',
+                google_drive_img_url=''
             )
+            
+            # ============================================
+            # MANEJO DE IMAGEN DE PORTADA - SUBIR A DRIVE
+            # ============================================
+            if 'img_portada' in request.FILES:
+                imagen_original = request.FILES['img_portada']
+                tamaño_mb = imagen_original.size / (1024 * 1024)
+                
+                if tamaño_mb > 5:
+                    raise ValueError('La imagen no puede superar los 5MB')
+                
+                # Guardar temporalmente en Cloudinary (fallback)
+                revista.img_portada = imagen_original
+                logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.1f}MB)")
+            
+            # ============================================
+            # MANEJO DE PDF - SUBIR A DRIVE
+            # ============================================
+            pdf_para_subir = None
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                tamaño_mb = pdf_original.size / (1024 * 1024)
+                
+                if tamaño_mb > 10:
+                    raise ValueError('El PDF no puede superar los 10MB')
+                
+                logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.1f}MB)")
+                pdf_para_subir = pdf_original
+            
+            # Guardar la revista primero
             revista.save()
+            revista_id = revista.id_revista
+            
+            # ============================================
+            # SUBIR IMAGEN A DRIVE EN SEGUNDO PLANO
+            # ============================================
+            if 'img_portada' in request.FILES:
+                imagen_original = request.FILES['img_portada']
+                nombre_imagen = f"{coleccion.nomb_colecc}_{nro_revista or 'portada'}"
+                thread_img = threading.Thread(
+                    target=subir_imagen_revista_a_drive_async,
+                    args=(imagen_original, nombre_imagen, revista_id)
+                )
+                thread_img.daemon = True
+                thread_img.start()
+                logger.info(f"🔄 Hilo de subida de imagen a Drive iniciado para revista ID {revista_id}")
+                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
+            
+            # ============================================
+            # SUBIR PDF A DRIVE EN SEGUNDO PLANO
+            # ============================================
+            if pdf_para_subir:
+                nombre_pdf = f"{coleccion.nomb_colecc}_{nro_revista or 'revista'}"
+                thread_pdf = threading.Thread(
+                    target=subir_revista_pdf_a_drive_async,
+                    args=(pdf_para_subir, nombre_pdf, revista_id)
+                )
+                thread_pdf.daemon = True
+                thread_pdf.start()
+                logger.info(f"🔄 Hilo de subida de PDF a Drive iniciado para revista ID {revista_id}")
+                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
+            
+            # ============================================
+            # RESPUESTA
+            # ============================================
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Revista agregada', 'id': revista.id_revista})
-            messages.success(request, 'Revista agregada')
+            messages.success(request, 'Revista agregada correctamente. Los archivos se subirán a Google Drive en segundo plano.')
             return redirect('listar_revistas')
+            
         except Exception as e:
             logger.error(f"Error agregando revista: {str(e)}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'message': str(e)}, status=400)
             messages.error(request, str(e))
             return redirect('agregar_revista')
+    
+    # GET - mostrar formulario
     colecciones = Coleccion.objects.all().order_by('nomb_colecc')
     return render(request, 'agregar_revista.html', {'colecciones': colecciones, 'max_upload_size_mb': {'imagen': 5, 'pdf': 10}})
 
@@ -478,19 +662,110 @@ def agregar_revista(request):
 @admin_required
 def modificar_revista(request, id_revista):
     revista = get_object_or_404(Revista, id_revista=id_revista)
+    
     if request.method == 'POST':
-        form = RevistaForm(request.POST, request.FILES, instance=revista)
-        if form.is_valid():
-            try:
-                revista = form.save()
+        try:
+            # Actualizar campos básicos
+            if request.POST.get('nro_revista'):
+                revista.nro_revista = int(request.POST.get('nro_revista'))
+            else:
+                revista.nro_revista = None
+            revista.descripcion = request.POST.get('descripcion', '').strip()
+            revista.url = request.POST.get('url', '').strip()
+            
+            # Actualizar colección
+            if request.POST.get('coleccion'):
+                coleccion = Coleccion.objects.get(id_coleccion=request.POST['coleccion'])
+                revista.coleccion = coleccion
+            
+            # ============================================
+            # MANEJO DE NUEVA IMAGEN DE PORTADA
+            # ============================================
+            if 'img_portada' in request.FILES:
+                imagen_original = request.FILES['img_portada']
+                tamaño_mb = imagen_original.size / (1024 * 1024)
+                
+                if tamaño_mb > 5:
+                    raise ValueError('La imagen no puede superar los 5MB')
+                
+                # Eliminar imagen anterior de Cloudinary si existe
+                if revista.img_portada:
+                    try:
+                        revista.img_portada.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua: {e}")
+                
+                # Guardar temporalmente
+                revista.img_portada = imagen_original
+                logger.info(f"📷 Nueva imagen de portada detectada: {imagen_original.name}")
+                
+                # Guardar la revista primero
+                revista.save()
+                
+                # Subir a Drive en segundo plano
+                nombre_imagen = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'portada'}"
+                thread_img = threading.Thread(
+                    target=subir_imagen_revista_a_drive_async,
+                    args=(imagen_original, nombre_imagen, revista.id_revista)
+                )
+                thread_img.daemon = True
+                thread_img.start()
+                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
+            
+            # ============================================
+            # MANEJO DE NUEVO PDF
+            # ============================================
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                tamaño_mb = pdf_original.size / (1024 * 1024)
+                
+                if tamaño_mb > 10:
+                    raise ValueError('El PDF no puede superar los 10MB')
+                
+                # Eliminar PDF anterior de Cloudinary si existe
+                if revista.pdf:
+                    try:
+                        revista.pdf.delete(save=False)
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo: {e}")
+                
+                # Guardar la revista primero
+                revista.save()
+                
+                # Subir a Drive en segundo plano
+                nombre_pdf = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'revista'}"
+                thread_pdf = threading.Thread(
+                    target=subir_revista_pdf_a_drive_async,
+                    args=(pdf_original, nombre_pdf, revista.id_revista)
+                )
+                thread_pdf.daemon = True
+                thread_pdf.start()
+                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
+            
+            # Guardar cambios finales
+            revista.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Revista actualizada', 'data': {'id': revista.id_revista}})
-            except Exception as e:
-                logger.error(f"Error modificando revista: {str(e)}")
+            messages.success(request, 'Revista actualizada correctamente')
+            return redirect('listar_revistas')
+            
+        except Exception as e:
+            logger.error(f"Error modificando revista: {str(e)}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
-        else:
-            return JsonResponse({'success': False, 'message': 'Errores en formulario', 'errors': form.errors}, status=400)
+            messages.error(request, str(e))
+            return redirect('modificar_revista', id_revista=id_revista)
+    
+    # GET - mostrar formulario
     form = RevistaForm(instance=revista)
-    return render(request, 'modificar_revista.html', {'form': form, 'revista': revista, 'max_upload_size_mb': {'imagen': 5, 'pdf': 10}})
+    colecciones = Coleccion.objects.all().order_by('nomb_colecc')
+    return render(request, 'modificar_revista.html', {
+        'form': form, 
+        'revista': revista, 
+        'colecciones': colecciones,
+        'max_upload_size_mb': {'imagen': 5, 'pdf': 10}
+    })
 
 
 @login_required
@@ -498,8 +773,43 @@ def modificar_revista(request, id_revista):
 def eliminar_revista(request, id_revista):
     if request.method == 'POST':
         revista = get_object_or_404(Revista, id_revista=id_revista)
+        
+        # Eliminar PDF de Google Drive si existe
+        if revista.google_drive_url:
+            try:
+                file_id = None
+                if '/file/d/' in revista.google_drive_url:
+                    file_id = revista.google_drive_url.split('/file/d/')[1].split('/')[0]
+                elif 'id=' in revista.google_drive_url:
+                    file_id = revista.google_drive_url.split('id=')[1].split('&')[0]
+                if file_id:
+                    eliminar_pdf_de_drive(file_id)
+                    logger.info(f"✅ PDF de revista eliminado de Google Drive: {file_id}")
+            except Exception as e:
+                logger.error(f"Error eliminando PDF de revista de Drive: {e}")
+        
+        # Eliminar imagen de Google Drive si existe
+        if revista.google_drive_img_url:
+            try:
+                file_id = None
+                if '/file/d/' in revista.google_drive_img_url:
+                    file_id = revista.google_drive_img_url.split('/file/d/')[1].split('/')[0]
+                elif 'id=' in revista.google_drive_img_url:
+                    file_id = revista.google_drive_img_url.split('id=')[1].split('&')[0]
+                if file_id:
+                    eliminar_imagen_de_drive(file_id)
+                    logger.info(f"✅ Imagen de revista eliminada de Google Drive: {file_id}")
+            except Exception as e:
+                logger.error(f"Error eliminando imagen de revista de Drive: {e}")
+        
+        # Eliminar la revista
         revista.delete()
-        return JsonResponse({'success': True})
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        messages.success(request, 'Revista eliminada correctamente')
+        return redirect('listar_revistas')
+    
     return JsonResponse({'success': False})
 
 

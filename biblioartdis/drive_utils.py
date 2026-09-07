@@ -614,6 +614,38 @@ def subir_imagen_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path
         logger.error(f"❌ Error subiendo imagen a Drive: {e}")
         return None
 
+
+def eliminar_imagen_de_drive(file_id):
+    """
+    Elimina una imagen de Google Drive por su ID
+    
+    Args:
+        file_id: ID del archivo en Google Drive
+    
+    Returns:
+        bool: True si se eliminó correctamente
+    """
+    try:
+        service = get_drive_service()
+        if not service:
+            logger.error("❌ No se pudo obtener servicio de Drive")
+            return False
+        
+        service.files().delete(fileId=file_id).execute()
+        logger.info(f"✅ Imagen de Drive eliminada: {file_id}")
+        return True
+        
+    except HttpError as e:
+        if e.resp.status == 404:
+            logger.warning(f"⚠️ Imagen no encontrada en Drive: {file_id}")
+            return True  # Ya no existe
+        logger.error(f"❌ Error HTTP eliminando imagen de Drive: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"❌ Error eliminando imagen de Drive: {e}")
+        return False
+
+        
 def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Material_Biblioteca/Imagenes/Obras'):
     """
     Sube una imagen a Google Drive

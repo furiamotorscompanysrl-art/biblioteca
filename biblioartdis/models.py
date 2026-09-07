@@ -404,17 +404,27 @@ class Revista(models.Model):
     )
     
     google_drive_url = models.URLField(
-        'URL de Google Drive',
+        'URL de Google Drive (PDF)',
         max_length=500,
         blank=True,
         null=True,
         help_text='Enlace de Google Drive para PDFs grandes'
     )
     
+    # ✅ NUEVO: Campo para URL de Google Drive de la IMAGEN
+    google_drive_img_url = models.URLField(
+        'URL de Google Drive (Imagen)',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Enlace de Google Drive para la imagen de portada'
+    )
+    
     url = models.URLField(max_length=200, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
     def get_pdf_display_url(self):
+        """Devuelve la URL del PDF (prioriza Drive)"""
         if self.google_drive_url:
             if 'drive.google.com' in self.google_drive_url:
                 file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None
@@ -425,6 +435,18 @@ class Revista(models.Model):
             return self.url
         if self.pdf:
             return self.pdf.url
+        return None
+
+    def get_img_display_url(self):
+        """Devuelve la URL de la imagen de portada (prioriza Drive)"""
+        if self.google_drive_img_url:
+            if 'drive.google.com' in self.google_drive_img_url:
+                file_id = self.google_drive_img_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_img_url else None
+                if file_id:
+                    return f'https://drive.google.com/uc?id={file_id}'
+            return self.google_drive_img_url
+        if self.img_portada:
+            return self.img_portada.url
         return None
 
     def __str__(self):
