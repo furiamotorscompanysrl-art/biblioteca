@@ -12,7 +12,7 @@ from .auth_views import (
     rechazar_usuario,
     restablecer_password_admin,
     restablecer_password_api,
-    upload_to_drive_ajax,  # ← NUEVA IMPORTACIÓN
+    upload_to_drive_ajax,
 )
 
 from .admin_views import (
@@ -31,15 +31,13 @@ from .admin_views import (
     aprobar_sugerencia, 
     usuarios_activos, 
     ver_historial_usuario,
-    # ============================================
-    # NUEVAS VISTAS PARA GESTIÓN DE SOLICITUDES
-    # ============================================
     gestionar_solicitudes,
     aprobar_solicitud,
     rechazar_solicitud,
     ver_documentos_solicitud,
 )
 
+# ✅ AHORA INCLUYE restablecer_password
 from .usuario_views import (
     inicio, 
     perfil, 
@@ -58,7 +56,7 @@ from .usuario_views import (
     chatbot_view,
     obtener_novedades, 
     chat_con_gemini,
-    restablecer_password,
+    restablecer_password,  # ✅ AHORA SÍ EXISTE
 )
 
 from .libro_views import (
@@ -96,7 +94,7 @@ __all__ = [
     'rechazar_usuario',
     'restablecer_password_admin',
     'restablecer_password_api',
-    'upload_to_drive_ajax',  # ← NUEVO EN __ALL__
+    'upload_to_drive_ajax',
     
     # Admin views
     'lista_usuarios', 
@@ -114,9 +112,6 @@ __all__ = [
     'aprobar_sugerencia', 
     'usuarios_activos', 
     'ver_historial_usuario',
-    # ============================================
-    # NUEVAS VISTAS PARA GESTIÓN DE SOLICITUDES
-    # ============================================
     'gestionar_solicitudes',
     'aprobar_solicitud',
     'rechazar_solicitud',
@@ -140,7 +135,7 @@ __all__ = [
     'chatbot_view',
     'obtener_novedades', 
     'chat_con_gemini',
-    'restablecer_password',
+    'restablecer_password',  # ✅ AHORA SÍ EXISTE
     
     # Libro views
     'listar_libros', 
