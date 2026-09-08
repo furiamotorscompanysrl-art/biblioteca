@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.db.models import Q, Count
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -11,7 +12,7 @@ from django.contrib.auth.hashers import check_password
 import random
 import logging
 import json
-
+import re
 
 from ..models import (
     Usuario, Libro, Autor, Categoria, Sugerencia, Coleccion, Revista,
@@ -20,6 +21,7 @@ from ..models import (
 from ..utils.text_cleaner import limpiar_busqueda
 from ..utils.chat_responses import ChatResponses
 from ..groq_config import get_ai_response
+from django.conf import settings
 
 try:
     import spacy
@@ -30,18 +32,127 @@ except:
 logger = logging.getLogger(__name__)
 
 
-# ==================== Perfil e Historial ====================
+# ============================================
+# PERFIL - CON CAMBIO DE CONTRASEÑA INCLUIDO
+# ============================================
 @login_required
 def perfil(request):
+    """Vista del perfil del usuario con cambio de contraseña"""
     try:
         usuario = request.user.usuario
+        
+        # ============================================
+        # PROCESAR CAMBIO DE CONTRASEÑA (POST)
+        # ============================================
+        if request.method == 'POST':
+            password_actual = request.POST.get('password_actual')
+            password_nuevo = request.POST.get('password_nuevo')
+            password_confirm = request.POST.get('password_confirm')
+            
+            # Validar campos obligatorios
+            if not password_actual or not password_nuevo or not password_confirm:
+                messages.error(request, '❌ Todos los campos son obligatorios.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            # Validar longitud mínima
+            if len(password_nuevo) < 9:
+                messages.error(request, '❌ La nueva contraseña debe tener al menos 9 caracteres.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            # Validar que coincidan
+            if password_nuevo != password_confirm:
+                messages.error(request, '❌ Las contraseñas no coinciden.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            # Validar contraseña actual
+            if not request.user.check_password(password_actual):
+                messages.error(request, '❌ La contraseña actual es incorrecta.')
+                return render(request, 'perfil.html', {'usuario': usuario})
+            
+            # Cambiar contraseña
+            request.user.set_password(password_nuevo)
+            request.user.save()
+            
+            # Mantener la sesión activa
+            update_session_auth_hash(request, request.user)
+            
+            logger.info(f"Contraseña cambiada para usuario: {request.user.username}")
+            
+            # Para peticiones AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': '✅ Contraseña cambiada exitosamente.'
+                })
+            
+            messages.success(request, '✅ Contraseña cambiada exitosamente.')
+            return redirect('perfil')
+        
+        # GET - Mostrar perfil
         usando_ci_como_password = check_password(usuario.ci, usuario.user.password)
-        return render(request, 'perfil.html', {'usuario': usuario, 'usando_ci_como_password': usando_ci_como_password})
+        return render(request, 'perfil.html', {
+            'usuario': usuario,
+            'usando_ci_como_password': usando_ci_como_password
+        })
+        
     except Usuario.DoesNotExist:
         messages.error(request, "Tu cuenta no está configurada correctamente.")
         return redirect('inicio')
 
 
+# ============================================
+# API PARA CAMBIO DE CONTRASEÑA (AJAX)
+# ============================================
+@login_required
+def cambiar_password_ajax(request):
+    """API para cambiar contraseña vía AJAX"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        # Intentar parsear JSON primero
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+        
+        password_actual = data.get('password_actual')
+        password_nuevo = data.get('password_nuevo')
+        password_confirm = data.get('password_confirm')
+        
+        # Validaciones
+        if not password_actual or not password_nuevo or not password_confirm:
+            return JsonResponse({'success': False, 'error': 'Todos los campos son obligatorios'})
+        
+        if len(password_nuevo) < 9:
+            return JsonResponse({'success': False, 'error': 'La nueva contraseña debe tener al menos 9 caracteres'})
+        
+        if password_nuevo != password_confirm:
+            return JsonResponse({'success': False, 'error': 'Las contraseñas no coinciden'})
+        
+        if not request.user.check_password(password_actual):
+            return JsonResponse({'success': False, 'error': 'La contraseña actual es incorrecta'})
+        
+        # Cambiar contraseña
+        request.user.set_password(password_nuevo)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+        
+        logger.info(f"Contraseña cambiada para usuario: {request.user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': '✅ Contraseña cambiada exitosamente.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en cambiar_password_ajax: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============================================
+# HISTORIAL DE VISITAS
+# ============================================
 @login_required
 def historial_visitas(request):
     try:
@@ -75,7 +186,9 @@ def registrar_visita_libro(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
-# ==================== Catálogo y Búsqueda ====================
+# ============================================
+# CATÁLOGO Y BÚSQUEDA
+# ============================================
 @login_required
 def inicio(request):
     libros = Libro.objects.prefetch_related('autores', 'categorias')
@@ -188,10 +301,11 @@ def catalogo(request):
     return render(request, 'catalogo.html', {'colecciones': colecciones})
 
 
-# ==================== Sugerencias de Usuario ====================
+# ============================================
+# SUGERENCIAS DE USUARIO
+# ============================================
 @login_required
 def sugerir_libro(request):
-    # Verificar que el usuario tiene un perfil
     if not hasattr(request.user, 'usuario'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': 'Perfil de usuario no encontrado'}, status=400)
@@ -205,14 +319,12 @@ def sugerir_libro(request):
             edicion = request.POST.get('edicion')
             descripcion = request.POST.get('descripcion')
             
-            # Validaciones básicas
             if not autor_sugerencia or not titulo_sugerencia or not descripcion:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': 'Todos los campos obligatorios deben ser completados'}, status=400)
                 messages.error(request, 'Todos los campos obligatorios deben ser completados')
                 return render(request, 'sugerir_libro.html')
             
-            # Crear la sugerencia
             nueva_sugerencia = Sugerencia(
                 solicitante=request.user.usuario,
                 autor_sugerencia=autor_sugerencia,
@@ -223,7 +335,6 @@ def sugerir_libro(request):
             )
             nueva_sugerencia.save()
             
-            # Respuesta para AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Sugerencia enviada correctamente'})
             
@@ -237,7 +348,6 @@ def sugerir_libro(request):
             messages.error(request, f'Error al enviar sugerencia: {str(e)}')
             return render(request, 'sugerir_libro.html')
     
-    # GET request - mostrar formulario
     return render(request, 'sugerir_libro.html')
 
 
@@ -261,14 +371,18 @@ def descartar_sugerencia(request, sugerencia_id):
     return redirect('listar_sugerencias')
 
 
-# ==================== Visualización de PDF ====================
+# ============================================
+# VISUALIZACIÓN DE PDF
+# ============================================
 @login_required
 def ver_pdf(request, libro_id):
     libro = get_object_or_404(Libro, id_libro=libro_id)
     return HttpResponse(libro.pdf, content_type='application/pdf')
 
 
-# ==================== Galería de Imágenes ====================
+# ============================================
+# GALERÍA DE IMÁGENES
+# ============================================
 def galeria_artistica(request):
     imagenes = Imagen.objects.all()
     categorias = Categoria.objects.all()
@@ -280,7 +394,9 @@ def ver_imagen(request, id):
     return render(request, 'ver_imagen.html', {'imagen': imagen})
 
 
-# ==================== Búsqueda Inteligente y Chatbot ====================
+# ============================================
+# BÚSQUEDA INTELIGENTE Y CHATBOT
+# ============================================
 def obtener_recomendaciones_personalizadas(usuario):
     historial = HistorialBusqueda.objects.filter(usuario=usuario).order_by('-fecha_busqueda')[:5]
     terminos_busqueda = [b.termino_busqueda for b in historial]
@@ -321,7 +437,6 @@ def buscar_libros(request):
             except Exception as e:
                 logger.warning(f"Error guardando historial: {e}")
 
-        # Búsqueda por tipo
         if query.startswith('tipo:'):
             tipo = query.split(':', 1)[1].upper()
             if tipo == 'TODOS':
@@ -347,11 +462,9 @@ def buscar_libros(request):
             else:
                 return JsonResponse([{'mensaje': f"No encontré {tipo.lower()}s disponibles."}], safe=False)
 
-        # Respuestas conversacionales
         respuesta_chat = ChatResponses.procesar_mensaje(query)
         if respuesta_chat.get("mensaje"):
             if respuesta_chat.get("accion") == "novedades":
-                # ✅ CORREGIDO: usar fecha_publicacion en lugar de fecha_registro
                 ultimos_libros = Libro.objects.prefetch_related('autores', 'categorias').order_by('-fecha_publicacion')[:10]
                 if ultimos_libros:
                     resultados = [{
@@ -373,7 +486,6 @@ def buscar_libros(request):
             else:
                 return JsonResponse([respuesta_chat], safe=False)
 
-        # Búsqueda normal
         query_limpia = limpiar_busqueda(query)
         es_busqueda_autor = 'autor' in query.lower() or 'del autor' in query.lower()
         if es_busqueda_autor:
@@ -425,7 +537,6 @@ def obtener_novedades(request):
         ultimos_libros = Libro.objects.all().order_by('-fecha_publicacion')[:3]
         novedades = []
         for libro in ultimos_libros:
-            # ✅ CORREGIDO: categoria es un CharField, no tiene atributo nombre
             categoria_nombre = libro.categoria if libro.categoria else 'Sin categoría'
             novedades.append({
                 'titulo': libro.titulo,
@@ -444,7 +555,9 @@ def obtener_novedades(request):
         return JsonResponse({'status': 'error', 'mensaje': str(e)})
 
 
-# ==================== Chat con Groq API y Acceso a BD ====================
+# ============================================
+# CHAT CON GROQ API Y ACCESO A BD
+# ============================================
 def chat_con_gemini(request):
     """Endpoint para chat con Groq API con acceso a base de datos"""
     if request.method == 'POST':
@@ -455,7 +568,6 @@ def chat_con_gemini(request):
             if not mensaje:
                 return JsonResponse({'error': 'Mensaje vacío', 'success': False}, status=400)
             
-            # Verificar si la pregunta es sobre libros disponibles
             palabras_clave_libros = ['libro', 'título', 'autor', 'tiene', 'hay', 'existe', 
                                       'buscar', 'encuentra', 'óleo', 'pintura', 'arte', 
                                       'dibujo', 'escultura', 'diseño', 'recomienda', 'sugiere']
@@ -463,16 +575,12 @@ def chat_con_gemini(request):
             es_pregunta_libro = any(palabra in mensaje.lower() for palabra in palabras_clave_libros)
             
             if es_pregunta_libro:
-                # Buscar en la base de datos local
-                from django.db.models import Q
-                
                 terminos = mensaje.lower().split()
                 palabras_utiles = [p for p in terminos if len(p) > 2 and p not in ['para', 'por', 'con', 'sin', 'del', 'la', 'los', 'las', 'el', 'un', 'una']]
                 
                 resultados = []
                 
                 if palabras_utiles:
-                    # Construir consulta
                     q = Q()
                     for palabra in palabras_utiles:
                         q |= Q(titulo__icontains=palabra)
@@ -497,10 +605,8 @@ def chat_con_gemini(request):
                         respuesta += "¿Te gustaría ver más detalles de algún libro?"
                         return JsonResponse({'response': respuesta, 'success': True})
             
-            # Si no es pregunta de libro o no hay resultados, usar Groq
             respuesta = get_ai_response(mensaje)
             
-            # Guardar en historial
             if request.user.is_authenticated:
                 try:
                     HistorialBusqueda.objects.create(
@@ -519,54 +625,3 @@ def chat_con_gemini(request):
             return JsonResponse({'error': str(e), 'success': False}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
-
-# ============================================
-# RESTABLECER CONTRASEÑA (ADMIN)
-# ============================================
-
-@login_required
-def restablecer_password(request):
-    """
-    Vista para que el administrador restablezca la contraseña de un usuario.
-    La nueva contraseña será el número de CI del usuario.
-    """
-    # Verificar que el usuario es administrador
-    if not hasattr(request.user, 'usuario') or request.user.usuario.tipo_usuario != 'Administrador':
-        messages.error(request, 'No tienes permisos para realizar esta acción.')
-        return redirect('inicio')
-    
-    if request.method == 'POST':
-        try:
-            usuario_id = request.POST.get('usuario_id')
-            if not usuario_id:
-                messages.error(request, 'ID de usuario no proporcionado.')
-                return redirect('lista_usuarios')
-            
-            usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
-            
-            # Establecer la contraseña como el CI del usuario
-            nueva_password = usuario.ci
-            usuario.user.set_password(nueva_password)
-            usuario.user.save()
-            
-            logger.info(f"Contraseña restablecida para usuario: {usuario.user.username} por admin: {request.user.username}")
-            messages.success(request, f'✅ Contraseña restablecida para {usuario.nombres} {usuario.apepat}. Nueva contraseña: {nueva_password}')
-            
-            return redirect('lista_usuarios')
-            
-        except Usuario.DoesNotExist:
-            messages.error(request, 'Usuario no encontrado.')
-            return redirect('lista_usuarios')
-        except Exception as e:
-            logger.error(f"Error al restablecer contraseña: {str(e)}")
-            messages.error(request, f'Error al restablecer contraseña: {str(e)}')
-            return redirect('lista_usuarios')
-    
-    # GET - Mostrar confirmación
-    usuario_id = request.GET.get('usuario_id')
-    if usuario_id:
-        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
-        return render(request, 'confirmar_restablecer_password.html', {'usuario': usuario})
-    
-    messages.error(request, 'ID de usuario no proporcionado.')
-    return redirect('lista_usuarios')
