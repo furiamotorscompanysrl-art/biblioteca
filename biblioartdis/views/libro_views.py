@@ -660,26 +660,31 @@ def agregar_revista(request):
 
 # views/admin_views.py
 
+# views/admin_views.py
+
 @login_required
 @admin_required
 def modificar_revista(request, id_revista):
     revista = get_object_or_404(Revista, id_revista=id_revista)
     
     if request.method == 'POST':
-        # Procesar el formulario
         form = RevistaForm(request.POST, request.FILES, instance=revista)
+        
         if form.is_valid():
             try:
-                form.save()
+                revista = form.save()
+                
                 # ✅ SI ES AJAX, devuelve JSON
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
-                        'message': 'Revista actualizada correctamente'
+                        'message': '✅ Revista actualizada correctamente',
+                        'redirect_url': reverse('listar_revistas')
                     })
-                # SI ES NORMAL, redirige
-                messages.success(request, 'Revista actualizada correctamente')
+                
+                messages.success(request, '✅ Revista actualizada correctamente')
                 return redirect('listar_revistas')
+                
             except Exception as e:
                 logger.error(f"Error al modificar revista: {e}")
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -689,7 +694,7 @@ def modificar_revista(request, id_revista):
                     })
                 messages.error(request, f'Error: {str(e)}')
         else:
-            # Errores del formulario
+            # ✅ Errores del formulario
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': False,
