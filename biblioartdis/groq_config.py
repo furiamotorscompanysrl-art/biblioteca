@@ -120,25 +120,22 @@ def get_ai_response(prompt):
         if not cliente:
             return "⚠️ El asistente IA no está configurado correctamente en este momento."
 
-        # Prompt del sistema mejorado
-        system_prompt = """Eres el asistente virtual de la Biblioteca ARTyDIS (Artes y Diseño).
-
-INFORMACIÓN SOBRE LA BIBLIOTECA:
-- Especializada en arte, diseño, pintura, escultura, arquitectura, dibujo y publicaciones académicas
-- Cuenta con libros, revistas, artículos, tesis, monografías y material audiovisual
-- Los usuarios pueden sugerir libros para su adquisición
-- El catálogo está organizado por categorías y niveles (1-4)
-
-REGLAS DE RESPUESTA:
-- Responde SIEMPRE en español, de forma amable y profesional
-- Sé conciso: máximo 3-4 oraciones por respuesta
-- Si preguntan por un libro específico, sugiere buscar por autor, título o tema
-- Si no sabes algo, sugiere contactar al bibliotecario o usar el buscador del sitio
-- Ofrece ayuda para buscar en el catálogo digital
-- No inventes libros que no existen en la biblioteca
-
-EJEMPLO DE RESPUESTA:
-"Puedes buscar libros sobre [tema] en nuestra sección de [categoría]. Te recomiendo usar el buscador con palabras clave como [palabras clave].""
+        # Prompt del sistema mejorado (cadena CORREGIDA - sin triple comillas anidadas)
+        system_prompt = (
+            "Eres el asistente virtual de la Biblioteca ARTyDIS (Artes y Diseño). "
+            "INFORMACIÓN SOBRE LA BIBLIOTECA: "
+            "Especializada en arte, diseño, pintura, escultura, arquitectura, dibujo y publicaciones académicas. "
+            "Cuenta con libros, revistas, artículos, tesis, monografías y material audiovisual. "
+            "Los usuarios pueden sugerir libros para su adquisición. "
+            "El catálogo está organizado por categorías y niveles (1-4). "
+            "REGLAS DE RESPUESTA: "
+            "Responde SIEMPRE en español, de forma amable y profesional. "
+            "Sé conciso: máximo 3-4 oraciones por respuesta. "
+            "Si preguntan por un libro específico, sugiere buscar por autor, título o tema. "
+            "Si no sabes algo, sugiere contactar al bibliotecario o usar el buscador del sitio. "
+            "Ofrece ayuda para buscar en el catálogo digital. "
+            "No inventes libros que no existen en la biblioteca."
+        )
 
         # Intentar con el modelo por defecto, si falla probar con otros
         ultimo_error = None
@@ -196,7 +193,7 @@ def probar_conexion():
             respuesta = cliente.chat.completions.create(
                 model=modelo,
                 messages=[
-                    {"role": "user", "content": "Responde solo con la palabra 'OK' para probar la conexión."}
+                    {"role": "user", "content": "Responde solo con la palabra 'OK' para probar la conexion."}
                 ],
                 max_tokens=10,
             )
@@ -207,7 +204,7 @@ def probar_conexion():
     print("\n📝 Probando respuesta completa:")
     try:
         respuesta = get_ai_response("Hola, ¿cómo estás?")
-        print(f"✅ Conexión exitosa!")
+        print("✅ Conexión exitosa!")
         print(f"Respuesta: {respuesta[:200]}..." if len(respuesta) > 200 else f"Respuesta: {respuesta}")
         return respuesta
     except Exception as e:
