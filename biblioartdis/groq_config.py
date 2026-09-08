@@ -17,18 +17,6 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY and hasattr(settings, 'GROQ_API_KEY'):
     GROQ_API_KEY = settings.GROQ_API_KEY
 
-# ✅ MODELOS VÁLIDOS DE GROQ (octubre 2024)
-# Basado en: https://console.groq.com/docs/models
-MODELOS_DISPONIBLES = [
-    "llama-3.1-70b-versatile",  # Mejor calidad (recomendado)
-    "llama-3.1-8b-instant",     # Rápido y eficiente
-    "mixtral-8x7b-32768",       # Buen equilibrio
-    "gemma2-9b-it",             # Modelo de Google
-]
-
-# Modelo por defecto
-MODELO_POR_DEFECTO = "llama-3.1-70b-versatile"
-
 # Validar existencia de API KEY
 if not GROQ_API_KEY:
     logger.warning("GROQ_API_KEY no encontrada en variables de entorno - El chatbot no funcionará")
@@ -44,6 +32,24 @@ else:
     except Exception as e:
         logger.error(f"❌ Error inicializando cliente Groq: {str(e)}")
         cliente = None
+
+
+def listar_modelos_disponibles():
+    """
+    Lista los modelos disponibles en Groq para tu API Key.
+    Útil para diagnosticar qué modelos funcionan.
+    """
+    if not cliente:
+        return "Cliente no inicializado"
+    
+    try:
+        modelos = cliente.models.list()
+        disponibles = []
+        for modelo in modelos.data:
+            disponibles.append(modelo.id)
+        return disponibles
+    except Exception as e:
+        return f"Error al listar modelos: {e}"
 
 
 def buscar_libros_en_bd(prompt):
@@ -119,27 +125,49 @@ def get_ai_response(prompt):
         if not cliente:
             return "⚠️ El asistente IA no está configurado correctamente en este momento."
 
-        # Prompt del sistema mejorado
+        # Prompt del sistema
         system_prompt = (
             "Eres el asistente virtual de la Biblioteca ARTyDIS (Artes y Diseño). "
             "INFORMACIÓN SOBRE LA BIBLIOTECA: "
             "Especializada en arte, diseño, pintura, escultura, arquitectura, dibujo y publicaciones académicas. "
-            "Cuenta con libros, revistas, artículos, tesis, monografías y material audiovisual. "
-            "Los usuarios pueden sugerir libros para su adquisición. "
-            "El catálogo está organizado por categorías y niveles (1-4). "
             "REGLAS DE RESPUESTA: "
             "Responde SIEMPRE en español, de forma amable y profesional. "
-            "Sé conciso: máximo 3-4 oraciones por respuesta. "
-            "Si preguntan por un libro específico, sugiere buscar por autor, título o tema. "
-            "Si no sabes algo, sugiere contactar al bibliotecario o usar el buscador del sitio. "
-            "Ofrece ayuda para buscar en el catálogo digital. "
-            "No inventes libros que no existen en la biblioteca."
+            "Sé conciso: máximo 3-4 oraciones por respuesta."
         )
 
-        # Intentar con el modelo por defecto, si falla probar con otros
-        ultimo_error = None
+        # 🔥 PRIMERO: Intentar obtener la lista de modelos disponibles
+        try:
+            modelos_disponibles = cliente.models.list()
+            modelos_ids = [m.id for m in modelos_disponibles.data]
+            logger.info(f"📋 Modelos disponibles en tu cuenta: {modelos_ids}")
+            
+            # Usar el primer modelo disponible
+            modelo_a_usar = modelos_ids[0] if modelos_ids else None
+            
+            if modelo_a_usar:
+                logger.info(f"✅ Usando modelo: {modelo_a_usar}")
+                respuesta = cliente.chat.completions.create(
+                    model=modelo_a_usar,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500,
+                )
+                return respuesta.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudo listar modelos: {e}")
+
+        # 🔥 SEGUNDO: Intentar con modelos comunes (uno por uno)
+        modelos_a_probar = [
+            "llama3-70b-8192",
+            "llama3-8b-8192", 
+            "mixtral-8x7b-32768",
+            "gemma-7b-it",
+        ]
         
-        for modelo in MODELOS_DISPONIBLES:
+        for modelo in modelos_a_probar:
             try:
                 respuesta = cliente.chat.completions.create(
                     model=modelo,
@@ -149,19 +177,13 @@ def get_ai_response(prompt):
                     ],
                     temperature=0.7,
                     max_tokens=500,
-                    top_p=0.9,
                 )
-                
                 logger.info(f"✅ Groq respondió usando modelo: {modelo}")
                 return respuesta.choices[0].message.content
-                
             except Exception as e:
                 logger.warning(f"⚠️ Modelo {modelo} falló: {str(e)}")
-                ultimo_error = e
                 continue
-        
-        # Si todos los modelos fallaron
-        logger.error(f"❌ Todos los modelos fallaron. Último error: {ultimo_error}")
+
         return "Lo siento, el asistente no está disponible en este momento. Por favor intenta más tarde o usa el buscador de la biblioteca."
 
     except Exception as e:
@@ -173,9 +195,9 @@ def probar_conexion():
     """
     Prueba conexión con Groq API (útil para diagnóstico)
     """
-    print("=" * 50)
+    print("=" * 60)
     print("🔍 Probando conexión con Groq API...")
-    print("=" * 50)
+    print("=" * 60)
 
     if not GROQ_API_KEY:
         print("❌ ERROR: GROQ_API_KEY no está configurada")
@@ -184,30 +206,20 @@ def probar_conexion():
         return None
 
     print("✅ API Key encontrada")
-    print(f"📋 Probando modelos: {', '.join(MODELOS_DISPONIBLES)}")
 
-    # Probar cada modelo disponible
-    print("\n📋 Probando modelos disponibles:")
-    for modelo in MODELOS_DISPONIBLES:
-        try:
-            respuesta = cliente.chat.completions.create(
-                model=modelo,
-                messages=[
-                    {"role": "user", "content": "Responde solo con la palabra 'OK' para probar la conexion."}
-                ],
-                max_tokens=10,
-            )
-            print(f"   ✅ {modelo} - FUNCIONA")
-        except Exception as e:
-            error_msg = str(e)
-            if "decommissioned" in error_msg:
-                print(f"   ❌ {modelo} - DESCONTINUADO")
-            elif "not found" in error_msg:
-                print(f"   ❌ {modelo} - NO EXISTE")
-            else:
-                print(f"   ❌ {modelo} - Error: {error_msg[:60]}...")
+    if not cliente:
+        print("❌ Cliente no inicializado")
+        return None
 
-    print("\n📝 Probando respuesta completa:")
+    print("\n📋 Listando modelos disponibles en tu cuenta:")
+    try:
+        modelos = cliente.models.list()
+        for modelo in modelos.data:
+            print(f"   ✅ {modelo.id}")
+    except Exception as e:
+        print(f"   ❌ Error al listar modelos: {e}")
+
+    print("\n📝 Probando respuesta con el primer modelo disponible:")
     try:
         respuesta = get_ai_response("Hola, ¿cómo estás?")
         print("✅ Conexión exitosa!")
