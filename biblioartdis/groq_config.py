@@ -19,16 +19,13 @@ if not GROQ_API_KEY and hasattr(settings, 'GROQ_API_KEY'):
 
 # ✅ MODELOS VÁLIDOS DE GROQ (actualizado septiembre 2024)
 MODELOS_DISPONIBLES = [
-    "llama-3.1-70b-versatile",  # Recomendado - mejor calidad
-    "llama-3.1-8b-instant",     # Más rápido
-    "mixtral-8x7b-32768",       # Buen equilibrio
-    "gemma2-9b-it",             # Alternativa de Google
-    "llama3-70b-8192",          # Versión anterior 70B
-    "llama3-8b-8192",           # Versión anterior 8B
+    "llama-3.2-90b-vision-preview",  # Recomendado - mejor calidad
+    "llama-3.2-11b-vision-preview",  # Rápido y eficiente
+    "llama-3.2-3b-preview",          # Más rápido, menos preciso
 ]
 
 # Modelo por defecto (el más estable)
-MODELO_POR_DEFECTO = "llama-3.1-70b-versatile"
+MODELO_POR_DEFECTO = "llama-3.2-90b-vision-preview"
 
 # Validar existencia de API KEY
 if not GROQ_API_KEY:
@@ -120,7 +117,7 @@ def get_ai_response(prompt):
         if not cliente:
             return "⚠️ El asistente IA no está configurado correctamente en este momento."
 
-        # Prompt del sistema mejorado (cadena CORREGIDA - sin triple comillas anidadas)
+        # Prompt del sistema mejorado
         system_prompt = (
             "Eres el asistente virtual de la Biblioteca ARTyDIS (Artes y Diseño). "
             "INFORMACIÓN SOBRE LA BIBLIOTECA: "
@@ -199,7 +196,7 @@ def probar_conexion():
             )
             print(f"   ✅ {modelo} - FUNCIONA")
         except Exception as e:
-            print(f"   ❌ {modelo} - Error: {str(e)[:50]}...")
+            print(f"   ❌ {modelo} - Error: {str(e)[:80]}...")
 
     print("\n📝 Probando respuesta completa:")
     try:
