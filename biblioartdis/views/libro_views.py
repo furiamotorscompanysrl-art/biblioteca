@@ -658,113 +658,51 @@ def agregar_revista(request):
     return render(request, 'agregar_revista.html', {'colecciones': colecciones, 'max_upload_size_mb': {'imagen': 5, 'pdf': 10}})
 
 
+# views/admin_views.py
+
 @login_required
 @admin_required
 def modificar_revista(request, id_revista):
     revista = get_object_or_404(Revista, id_revista=id_revista)
     
     if request.method == 'POST':
-        try:
-            # Actualizar campos básicos
-            if request.POST.get('nro_revista'):
-                revista.nro_revista = int(request.POST.get('nro_revista'))
-            else:
-                revista.nro_revista = None
-            revista.descripcion = request.POST.get('descripcion', '').strip()
-            revista.url = request.POST.get('url', '').strip()
-            
-            # Actualizar colección
-            if request.POST.get('coleccion'):
-                coleccion = Coleccion.objects.get(id_coleccion=request.POST['coleccion'])
-                revista.coleccion = coleccion
-            
-            # ============================================
-            # MANEJO DE NUEVA IMAGEN DE PORTADA
-            # ============================================
-            if 'img_portada' in request.FILES:
-                imagen_original = request.FILES['img_portada']
-                tamaño_mb = imagen_original.size / (1024 * 1024)
-                
-                if tamaño_mb > 5:
-                    raise ValueError('La imagen no puede superar los 5MB')
-                
-                # Eliminar imagen anterior de Cloudinary si existe
-                if revista.img_portada:
-                    try:
-                        revista.img_portada.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua: {e}")
-                
-                # Guardar temporalmente
-                revista.img_portada = imagen_original
-                logger.info(f"📷 Nueva imagen de portada detectada: {imagen_original.name}")
-                
-                # Guardar la revista primero
-                revista.save()
-                
-                # Subir a Drive en segundo plano
-                nombre_imagen = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'portada'}"
-                thread_img = threading.Thread(
-                    target=subir_imagen_revista_a_drive_async,
-                    args=(imagen_original, nombre_imagen, revista.id_revista)
-                )
-                thread_img.daemon = True
-                thread_img.start()
-                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
-            
-            # ============================================
-            # MANEJO DE NUEVO PDF
-            # ============================================
-            if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                tamaño_mb = pdf_original.size / (1024 * 1024)
-                
-                if tamaño_mb > 10:
-                    raise ValueError('El PDF no puede superar los 10MB')
-                
-                # Eliminar PDF anterior de Cloudinary si existe
-                if revista.pdf:
-                    try:
-                        revista.pdf.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo: {e}")
-                
-                # Guardar la revista primero
-                revista.save()
-                
-                # Subir a Drive en segundo plano
-                nombre_pdf = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'revista'}"
-                thread_pdf = threading.Thread(
-                    target=subir_revista_pdf_a_drive_async,
-                    args=(pdf_original, nombre_pdf, revista.id_revista)
-                )
-                thread_pdf.daemon = True
-                thread_pdf.start()
-                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
-            
-            # Guardar cambios finales
-            revista.save()
-            
+        # Procesar el formulario
+        form = RevistaForm(request.POST, request.FILES, instance=revista)
+        if form.is_valid():
+            try:
+                form.save()
+                # ✅ SI ES AJAX, devuelve JSON
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Revista actualizada correctamente'
+                    })
+                # SI ES NORMAL, redirige
+                messages.success(request, 'Revista actualizada correctamente')
+                return redirect('listar_revistas')
+            except Exception as e:
+                logger.error(f"Error al modificar revista: {e}")
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Error: {str(e)}'
+                    })
+                messages.error(request, f'Error: {str(e)}')
+        else:
+            # Errores del formulario
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': 'Revista actualizada', 'data': {'id': revista.id_revista}})
-            messages.success(request, 'Revista actualizada correctamente')
-            return redirect('listar_revistas')
-            
-        except Exception as e:
-            logger.error(f"Error modificando revista: {str(e)}")
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': str(e)}, status=500)
-            messages.error(request, str(e))
-            return redirect('modificar_revista', id_revista=id_revista)
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Error de validación en el formulario',
+                    'errors': form.errors
+                })
+            messages.error(request, 'Por favor corrige los errores del formulario')
     
-    # GET - mostrar formulario
+    # GET - Mostrar formulario
     form = RevistaForm(instance=revista)
-    colecciones = Coleccion.objects.all().order_by('nomb_colecc')
     return render(request, 'modificar_revista.html', {
-        'form': form, 
-        'revista': revista, 
-        'colecciones': colecciones,
-        'max_upload_size_mb': {'imagen': 5, 'pdf': 10}
+        'form': form,
+        'revista': revista
     })
 
 
