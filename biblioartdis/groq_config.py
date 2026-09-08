@@ -17,15 +17,17 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY and hasattr(settings, 'GROQ_API_KEY'):
     GROQ_API_KEY = settings.GROQ_API_KEY
 
-# ✅ MODELOS VÁLIDOS DE GROQ (actualizado septiembre 2024)
+# ✅ MODELOS VÁLIDOS DE GROQ (octubre 2024)
+# Basado en: https://console.groq.com/docs/models
 MODELOS_DISPONIBLES = [
-    "llama-3.2-90b-vision-preview",  # Recomendado - mejor calidad
-    "llama-3.2-11b-vision-preview",  # Rápido y eficiente
-    "llama-3.2-3b-preview",          # Más rápido, menos preciso
+    "llama-3.1-70b-versatile",  # Mejor calidad (recomendado)
+    "llama-3.1-8b-instant",     # Rápido y eficiente
+    "mixtral-8x7b-32768",       # Buen equilibrio
+    "gemma2-9b-it",             # Modelo de Google
 ]
 
-# Modelo por defecto (el más estable)
-MODELO_POR_DEFECTO = "llama-3.2-90b-vision-preview"
+# Modelo por defecto
+MODELO_POR_DEFECTO = "llama-3.1-70b-versatile"
 
 # Validar existencia de API KEY
 if not GROQ_API_KEY:
@@ -182,6 +184,7 @@ def probar_conexion():
         return None
 
     print("✅ API Key encontrada")
+    print(f"📋 Probando modelos: {', '.join(MODELOS_DISPONIBLES)}")
 
     # Probar cada modelo disponible
     print("\n📋 Probando modelos disponibles:")
@@ -196,7 +199,13 @@ def probar_conexion():
             )
             print(f"   ✅ {modelo} - FUNCIONA")
         except Exception as e:
-            print(f"   ❌ {modelo} - Error: {str(e)[:80]}...")
+            error_msg = str(e)
+            if "decommissioned" in error_msg:
+                print(f"   ❌ {modelo} - DESCONTINUADO")
+            elif "not found" in error_msg:
+                print(f"   ❌ {modelo} - NO EXISTE")
+            else:
+                print(f"   ❌ {modelo} - Error: {error_msg[:60]}...")
 
     print("\n📝 Probando respuesta completa:")
     try:
