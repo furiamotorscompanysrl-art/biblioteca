@@ -3,9 +3,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA LISTA DE LIBROS        */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -22,7 +19,6 @@
         --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    /* Header */
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -70,7 +66,6 @@
         color: white;
     }
 
-    /* Filtros */
     .filters-bar {
         background: white;
         border-radius: 16px;
@@ -138,7 +133,6 @@
         border-color: var(--accent);
     }
 
-    /* Tabla */
     .table-wrapper {
         background: white;
         border-radius: 16px;
@@ -176,7 +170,6 @@
         background-color: var(--bg-light);
     }
 
-    /* Portada */
     .book-cover {
         width: 50px;
         height: 65px;
@@ -201,9 +194,9 @@
         justify-content: center;
         color: var(--text-secondary);
         border: 1px dashed var(--border-light);
+        font-size: 1.2rem;
     }
 
-    /* Badges */
     .badge-category {
         display: inline-block;
         padding: 0.2rem 0.6rem;
@@ -229,7 +222,6 @@
         font-style: italic;
     }
 
-    /* Botones de acción */
     .action-buttons {
         display: flex;
         gap: 6px;
@@ -290,7 +282,6 @@
         color: white;
     }
 
-    /* Links de archivos */
     .file-link {
         display: inline-flex;
         align-items: center;
@@ -303,6 +294,7 @@
         color: var(--text-primary);
         transition: all 0.2s;
         cursor: pointer;
+        border: none;
     }
 
     .file-link:hover {
@@ -334,7 +326,30 @@
         color: white;
     }
 
-    /* Modal visor PDF */
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .status-authorized {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .status-restricted {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .status-uploading {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
     .pdf-modal .modal-dialog {
         max-width: 95%;
         margin: 1rem auto;
@@ -358,7 +373,6 @@
         border-radius: 0 0 16px 16px;
     }
 
-    /* Paginación */
     .pagination-wrapper {
         display: flex;
         justify-content: space-between;
@@ -403,27 +417,6 @@
         color: white;
     }
 
-    /* Badge de estado */
-    .status-badge {
-        display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 20px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        margin-left: 0.5rem;
-    }
-    
-    .status-authorized {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-    }
-    
-    .status-restricted {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
         .filters-bar {
             flex-direction: column;
@@ -502,10 +495,10 @@
                 <tr>
                     <td>#{{ libro.id_libro }}</td>
                     <td>
-                        {% if libro.img_portada %}
-                            <img src="{{ libro.img_portada.url }}" 
+                        {% if libro.google_drive_portada_url %}
+                            <img src="{{ libro.google_drive_portada_url }}" 
                                  class="book-cover" 
-                                 onclick="mostrarPortada('{{ libro.img_portada.url }}', '{{ libro.titulo|escapejs }}')"
+                                 onclick="mostrarPortada('{{ libro.google_drive_portada_url }}', '{{ libro.titulo|escapejs }}')"
                                  alt="Portada">
                         {% else %}
                             <div class="cover-placeholder">
@@ -532,7 +525,7 @@
                     </td>
                     <td>
                         {% for autor in libro.autores.all %}
-                            <span class="badge-category" style="background: #F1F5F9;">{{ autor.nombre }}</span>{% if not forloop.last %}{% endif %}
+                            <span class="badge-category" style="background: #F1F5F9;">{{ autor.nombre }}</span>
                         {% empty %}
                             <span class="badge-category badge-no-data">Sin autor</span>
                         {% endfor %}
@@ -558,7 +551,7 @@
                     <!-- Columna de Acceso al Libro -->
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            {% if libro.pdf or libro.pdf_url or libro.google_drive_url %}
+                            {% if libro.google_drive_url or libro.pdf_url %}
                                 {% if libro.descarga_autorizada %}
                                     <!-- Modo DESCARGAR: enlace directo para descargar -->
                                     <a href="{% url 'ver_descargar_libro' libro.id_libro %}" 
@@ -576,7 +569,7 @@
                                 {% endif %}
                             {% else %}
                                 <span class="file-link" style="background: none; color: var(--text-secondary); cursor: not-allowed;">
-                                    <i class="fas fa-ban"></i> No disponible
+                                    <i class="fas fa-clock"></i> Subiendo...
                                 </span>
                             {% endif %}
                         </div>
@@ -593,7 +586,6 @@
                                     <i class="fas fa-trash-alt"></i> Eliminar
                                 </button>
                             </form>
-                            <!-- Botón Restringir/Autorizar - SIEMPRE VISIBLE -->
                             <form method="post" action="{% url 'cambiar_estado_descarga' libro.id_libro %}" class="d-inline">
                                 {% csrf_token %}
                                 {% if libro.descarga_autorizada %}
@@ -606,6 +598,14 @@
                                     </button>
                                 {% endif %}
                             </form>
+                            {% if libro.google_drive_autorizacion_url %}
+                                <form method="post" action="{% url 'eliminar_autorizacion' libro.id_libro %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;" title="Eliminar autorización">
+                                        <i class="fas fa-file-contract"></i> Autorización
+                                    </button>
+                                </form>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -634,10 +634,10 @@
         </div>
         <div class="pagination-buttons">
             {% if libros.has_previous %}
-                <a href="?page=1" class="page-btn">
+                <a href="?page=1{% if ordenar %}&ordenar={{ ordenar }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" class="page-btn">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?page={{ libros.previous_page_number }}" class="page-btn">
+                <a href="?page={{ libros.previous_page_number }}{% if ordenar %}&ordenar={{ ordenar }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" class="page-btn">
                     <i class="fas fa-chevron-left"></i> Anterior
                 </a>
             {% endif %}
@@ -646,15 +646,15 @@
                 {% if num == libros.number %}
                     <span class="page-btn active">{{ num }}</span>
                 {% elif num > libros.number|add:'-3' and num < libros.number|add:'3' %}
-                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                    <a href="?page={{ num }}{% if ordenar %}&ordenar={{ ordenar }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" class="page-btn">{{ num }}</a>
                 {% endif %}
             {% endfor %}
 
             {% if libros.has_next %}
-                <a href="?page={{ libros.next_page_number }}" class="page-btn">
+                <a href="?page={{ libros.next_page_number }}{% if ordenar %}&ordenar={{ ordenar }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" class="page-btn">
                     Siguiente <i class="fas fa-chevron-right"></i>
                 </a>
-                <a href="?page={{ libros.paginator.num_pages }}" class="page-btn">
+                <a href="?page={{ libros.paginator.num_pages }}{% if ordenar %}&ordenar={{ ordenar }}{% endif %}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}" class="page-btn">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             {% endif %}
@@ -705,11 +705,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Variables globales para los modales
     let portadaModal;
     let visorPDFModal;
     
-    // Inicializar modales cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
         portadaModal = new bootstrap.Modal(document.getElementById('portadaModal'));
         visorPDFModal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
@@ -734,18 +732,13 @@
     
     // Abrir visor de PDF (modo solo lectura)
     window.abrirVisorPDF = function(libroId, titulo) {
-        // Mostrar título en el modal
         document.getElementById('pdfTituloLibro').innerText = titulo;
-        
-        // Cargar el PDF en el iframe usando la vista protegida con parámetro embed
         const pdfUrl = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
         document.getElementById('pdfIframe').src = pdfUrl;
-        
-        // Abrir el modal
         visorPDFModal.show();
     };
     
-    // Limpiar iframe al cerrar el modal para detener la carga
+    // Limpiar iframe al cerrar el modal
     document.getElementById('visorPDFModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('pdfIframe').src = '';
     });
