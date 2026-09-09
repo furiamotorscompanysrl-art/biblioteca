@@ -267,7 +267,7 @@ class Libro(models.Model):
     categoria = models.CharField(max_length=15, choices=opciones_categ)
     
     # ============================================
-    # ✅ SOLO GOOGLE DRIVE - NADA DE CLOUDINARY
+    # SOLO GOOGLE DRIVE - NADA DE CLOUDINARY
     # ============================================
     
     # Portada en Google Drive
@@ -344,6 +344,34 @@ class Libro(models.Model):
             return self.google_drive_autorizacion_url
         return None
 
+    def agregar_palabras_claves(self, palabras):
+        """
+        Agrega palabras clave al libro
+        
+        Args:
+            palabras: String con palabras separadas por coma o lista de palabras
+        """
+        if not palabras:
+            return
+        
+        # Si es una lista, unir con comas
+        if isinstance(palabras, list):
+            palabras = ', '.join(palabras)
+        
+        # Si ya tiene palabras clave, agregar las nuevas
+        if self.palabra_clave:
+            # Dividir las existentes y las nuevas
+            existentes = [p.strip() for p in self.palabra_clave.split(',') if p.strip()]
+            nuevas = [p.strip() for p in palabras.split(',') if p.strip()]
+            
+            # Combinar y eliminar duplicados
+            todas = list(set(existentes + nuevas))
+            self.palabra_clave = ', '.join(todas)
+        else:
+            self.palabra_clave = palabras
+        
+        self.save(update_fields=['palabra_clave'])
+
     def __str__(self):
         try:
             if self.titulo and self.titulo.strip():
@@ -351,7 +379,6 @@ class Libro(models.Model):
             return f"Libro {self.id_libro}"
         except:
             return f"Libro {self.id_libro}"
-
 
 class Sugerencia(models.Model):
     id_sugerencia = models.AutoField(primary_key=True)
