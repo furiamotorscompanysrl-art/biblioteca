@@ -336,6 +336,20 @@
         margin-top: 0.25rem;
     }
 
+    .alert-info {
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        color: #1E40AF;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-info i {
+        margin-right: 8px;
+    }
+
     @media (max-width: 768px) {
         .form-grid {
             grid-template-columns: 1fr;
@@ -363,6 +377,12 @@
         </div>
 
         <div class="form-body">
+            <!-- Alerta informativa -->
+            <div class="alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Google Drive:</strong> Todos los archivos (PDFs, portadas y autorizaciones) se subirán automáticamente a Google Drive.
+            </div>
+
             <form method="post" enctype="multipart/form-data" id="libroForm">
                 {% csrf_token %}
                 
@@ -504,9 +524,10 @@
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-file-upload"></i>
-                        <h4>Archivos</h4>
+                        <h4>Archivos (Google Drive)</h4>
                     </div>
                     <div class="form-grid">
+                        <!-- Portada -->
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-image"></i> Portada
@@ -523,8 +544,10 @@
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             </div>
+                            <small class="text-muted">La portada se subirá a Google Drive automáticamente</small>
                         </div>
                         
+                        <!-- PDF -->
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-file-pdf"></i> PDF del Material
@@ -532,7 +555,7 @@
                             <div class="file-upload-area" onclick="document.getElementById('pdf').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h5>Subir PDF</h5>
-                                <p>Formatos: PDF. Para archivos >10MB, use Google Drive</p>
+                                <p>Formatos: PDF. Máx 50MB (se sube a Google Drive)</p>
                                 <input type="file" id="pdf" name="pdf" accept="application/pdf" style="display: none;" onchange="previewPDF(this)">
                             </div>
                             <div class="compression-bar" id="compressionBar">
@@ -546,7 +569,9 @@
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             </div>
+                            <small class="text-muted">El PDF se subirá a Google Drive automáticamente en segundo plano</small>
                             
+                            <!-- URL alternativas -->
                             <div class="form-group mt-2">
                                 <label class="form-label">
                                     <i class="fas fa-link"></i> URL del PDF (opcional)
@@ -557,24 +582,26 @@
                             
                             <div class="form-group mt-2">
                                 <label class="form-label">
-                                    <i class="fab fa-google-drive"></i> Google Drive URL (para PDFs grandes)
+                                    <i class="fab fa-google-drive"></i> Google Drive URL (manual)
                                 </label>
                                 <input type="url" class="form-control" id="google_drive_url" name="google_drive_url" 
                                        placeholder="https://drive.google.com/file/d/.../preview">
-                                <small class="text-muted">Use esta opción para PDFs mayores a 10MB. Obtenga el enlace de vista previa desde Google Drive (compartir → insertar → copiar iframe o usar enlace /preview).</small>
+                                <small class="text-muted">Use esta opción si ya tiene el PDF en Drive y no quiere subirlo de nuevo.</small>
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <!-- Autorización -->
+                        <div class="form-group full-width">
                             <label class="form-label">
                                 <i class="fas fa-file-contract"></i> Autorización
                             </label>
                             <div class="file-upload-area" onclick="document.getElementById('autorizacion').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h5>Subir autorización</h5>
-                                <p>Formato: PDF. Máx 5MB</p>
+                                <p>Formato: PDF. Máx 5MB (se sube a Google Drive)</p>
                                 <input type="file" id="autorizacion" name="autorizacion" accept="application/pdf" style="display: none;">
                             </div>
+                            <small class="text-muted">El archivo de autorización se subirá a Google Drive automáticamente</small>
                         </div>
                     </div>
                 </div>
@@ -767,7 +794,7 @@
     });
 
     // ============================================
-    // ENVÍO DEL FORMULARIO CON COMPRESIÓN
+    // ENVÍO DEL FORMULARIO
     // ============================================
     document.getElementById('libroForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -778,15 +805,26 @@
         const compressionProgress = document.getElementById('compressionProgress');
         const googleDriveUrl = document.getElementById('google_drive_url').value.trim();
         
+        // Validar título
+        const titulo = document.getElementById('titulo').value.trim();
+        if (!titulo) {
+            Swal.fire('Error', 'El título es obligatorio', 'error');
+            return;
+        }
+        
         // Si tiene Google Drive URL, no procesar PDF
         if (googleDriveUrl) {
-            // No hacer nada con el PDF
             console.log("Usando Google Drive URL, omitiendo subida de PDF");
         } 
         // Verificar si hay PDF y si es grande (> 5 MB)
         else if (pdfInput.files.length > 0) {
             const file = pdfInput.files[0];
             const fileSizeMB = file.size / (1024 * 1024);
+            
+            if (fileSizeMB > 50) {
+                Swal.fire('Error', 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.', 'error');
+                return;
+            }
             
             if (fileSizeMB > 5) {
                 compressionBar.style.display = 'block';
@@ -828,7 +866,7 @@
             if (data.success) {
                 Swal.fire({
                     title: '¡Libro guardado exitosamente!',
-                    text: '¿Qué desea hacer ahora?',
+                    text: 'Los archivos se están subiendo a Google Drive en segundo plano.',
                     icon: 'success',
                     showCancelButton: true,
                     confirmButtonText: 'Ver lista de libros',
