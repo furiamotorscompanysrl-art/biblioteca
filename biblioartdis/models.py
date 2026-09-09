@@ -237,6 +237,8 @@ class Categoria(models.Model):
             return f"Categoría {self.id_categoria}"
 
 
+# models.py (solo la parte de Libro)
+
 class Libro(models.Model):
     opciones_categ = (
         ('NIVEL 1', 'NIVEL 1'),
@@ -264,31 +266,26 @@ class Libro(models.Model):
     edicion = models.CharField(max_length=50, blank=True, null=True)  
     categoria = models.CharField(max_length=15, choices=opciones_categ)
     
-    # Cloudinary SOLO para portadas (imágenes pequeñas)
-    img_portada = CloudinaryField(
-        'Portada',
-        folder='biblioteca/portadas/',
-        transformation={'quality': 'auto', 'fetch_format': 'auto'},
-        null=True,
-        blank=True
-    )
+    # ============================================
+    # ✅ SOLO GOOGLE DRIVE - NADA DE CLOUDINARY
+    # ============================================
     
-    # ⚠️ Cloudinary SOLO para PDFs pequeños (< 10 MB)
-    pdf = CloudinaryField(
-        'PDF',
-        folder='biblioteca/pdfs/',
-        resource_type='auto',
-        null=True,
-        blank=True
-    )
-    
-    # ✅ NUEVO: Campo para URL de Google Drive (PDFs grandes)
-    google_drive_url = models.URLField(
-        'URL de Google Drive',
+    # Portada en Google Drive
+    google_drive_portada_url = models.URLField(
+        'URL de Portada (Google Drive)',
         max_length=500,
         blank=True,
         null=True,
-        help_text='Enlace de Google Drive para PDFs grandes (vista previa embed)'
+        help_text='URL de la imagen de portada en Google Drive'
+    )
+    
+    # PDF en Google Drive
+    google_drive_url = models.URLField(
+        'URL de Google Drive (PDF)',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='URL del PDF en Google Drive (vista previa embed)'
     )
     
     # URL externa alternativa (para otros servicios)
@@ -296,15 +293,16 @@ class Libro(models.Model):
         max_length=500, 
         blank=True, 
         null=True,
-        help_text='URL externa del PDF (Google Drive, OneDrive, etc.)'
+        help_text='URL externa del PDF (alternativa)'
     )
     
-    archivo_autorizacion = CloudinaryField(
-        'Autorización',
-        folder='biblioteca/autorizaciones/',
-        resource_type='auto',
+    # Autorización en Google Drive
+    google_drive_autorizacion_url = models.URLField(
+        'URL de Autorización (Google Drive)',
+        max_length=500,
+        blank=True,
         null=True,
-        blank=True
+        help_text='URL del archivo de autorización en Google Drive'
     )
     
     autores = models.ManyToManyField('Autor')
@@ -314,14 +312,8 @@ class Libro(models.Model):
     descarga_autorizada = models.BooleanField(default=True)
     categorias = models.ManyToManyField(Categoria, blank=True)
 
-    def agregar_palabras_claves(self, palabras):
-        palabras_claves_actuales = self.palabra_clave.split(', ') if self.palabra_clave else []
-        nuevas_palabras = [palabra.strip() for palabra in palabras.split(',')]
-        palabras_claves_actuales.extend(nuevas_palabras)
-        self.palabra_clave = ', '.join(palabras_claves_actuales)
-        self.save()
-
     def get_pdf_display_url(self):
+        """Devuelve la URL del PDF (prioriza Google Drive)"""
         if self.google_drive_url:
             if 'drive.google.com' in self.google_drive_url:
                 file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None
@@ -330,8 +322,26 @@ class Libro(models.Model):
             return self.google_drive_url
         if self.pdf_url:
             return self.pdf_url
-        if self.pdf:
-            return self.pdf.url
+        return None
+    
+    def get_portada_display_url(self):
+        """Devuelve la URL de la portada (Google Drive)"""
+        if self.google_drive_portada_url:
+            if 'drive.google.com' in self.google_drive_portada_url:
+                file_id = self.google_drive_portada_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_portada_url else None
+                if file_id:
+                    return f'https://drive.google.com/uc?id={file_id}'
+            return self.google_drive_portada_url
+        return None
+    
+    def get_autorizacion_display_url(self):
+        """Devuelve la URL de autorización (Google Drive)"""
+        if self.google_drive_autorizacion_url:
+            if 'drive.google.com' in self.google_drive_autorizacion_url:
+                file_id = self.google_drive_autorizacion_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_autorizacion_url else None
+                if file_id:
+                    return f'https://drive.google.com/file/d/{file_id}/preview'
+            return self.google_drive_autorizacion_url
         return None
 
     def __str__(self):

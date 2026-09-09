@@ -8,459 +8,395 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.urls import reverse
+from django.db import models
 import logging
 import io
 import tempfile
 import os
 import threading
+import re
 
 from ..decorators import admin_required
 from ..models import Libro, Autor, Categoria, Revista, Coleccion, Imagen
 from ..forms import RevistaForm, ColeccionForm, ImagenForm
 from ..drive_utils import (
-    subir_pdf_a_drive, 
-    eliminar_pdf_de_drive, 
+    subir_pdf_a_drive,
+    subir_pdf_a_drive_async,
+    subir_portada_a_drive_async,
+    subir_autorizacion_a_drive_async,
     subir_imagen_a_drive_async,
-    subir_imagen_a_drive,
-    eliminar_imagen_de_drive
+    subir_revista_pdf_a_drive_async,
+    subir_imagen_revista_a_drive_async,
+    eliminar_pdf_de_drive,
+    eliminar_imagen_de_drive,
+    extract_file_id_from_url,
+    test_drive_connection
 )
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================
-# FUNCIÓN DE SUBIDA ASÍNCRONA A GOOGLE DRIVE (PDFs de Libros)
+# FUNCIONES AUXILIARES
 # ============================================
-def subir_pdf_a_drive_async(pdf_original, nombre_archivo, libro_id, folder_path='Material_Biblioteca/Libros/PDFs'):
-    """
-    Sube un PDF a Google Drive en segundo plano (SIEMPRE a Drive)
+
+def extract_file_id_from_url(url):
+    """Extrae el ID de archivo de una URL de Google Drive"""
+    if not url:
+        return None
     
-    Args:
-        pdf_original: Archivo subido (InMemoryUploadedFile)
-        nombre_archivo: Nombre del archivo
-        libro_id: ID del libro para actualizar
-        folder_path: Ruta de la carpeta en Drive
-    """
-    def upload_thread():
-        try:
-            from ..models import Libro
-            
-            # Subir a Drive (SIEMPRE)
-            drive_url = subir_pdf_a_drive(pdf_original, nombre_archivo, folder_path)
-            
-            if drive_url:
-                # Actualizar el libro con la URL de Drive
-                libro = Libro.objects.get(id_libro=libro_id)
-                libro.google_drive_url = drive_url
-                # Ya NO guardamos en Cloudinary
-                libro.pdf = None  
-                libro.save(update_fields=['google_drive_url', 'pdf'])
-                logger.info(f"✅ PDF subido a Google Drive: {drive_url} (Libro ID: {libro_id})")
-            else:
-                logger.error(f"❌ Falló subida a Drive para libro {libro_id}")
-                
-                # Si falla Drive, intentamos guardar en Cloudinary como fallback
-                try:
-                    libro = Libro.objects.get(id_libro=libro_id)
-                    libro.pdf = pdf_original
-                    libro.save(update_fields=['pdf'])
-                    logger.info(f"✅ Fallback: PDF guardado en Cloudinary para libro {libro_id}")
-                except Exception as e:
-                    logger.error(f"❌ Error en fallback a Cloudinary: {e}")
-                    
-        except Libro.DoesNotExist:
-            logger.error(f"❌ Libro {libro_id} no encontrado")
-        except Exception as e:
-            logger.error(f"❌ Error en subida a Drive: {str(e)}")
+    patterns = [
+        r'/file/d/([^/]+)',
+        r'id=([^&]+)',
+        r'drive\.google\.com/open\?id=([^&]+)',
+        r'drive\.google\.com/uc\?id=([^&]+)'
+    ]
     
-    thread = threading.Thread(target=upload_thread)
-    thread.daemon = True
-    thread.start()
-    return thread
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    
+    return None
 
 
 # ============================================
-# FUNCIÓN DE SUBIDA ASÍNCRONA PARA REVISTAS (PDF)
+# CRUD LIBROS
 # ============================================
-def subir_revista_pdf_a_drive_async(pdf_original, nombre_archivo, revista_id, folder_path='Material_Biblioteca/Revistas/PDFs'):
-    """
-    Sube un PDF de revista a Google Drive en segundo plano
-    
-    Args:
-        pdf_original: Archivo subido (InMemoryUploadedFile)
-        nombre_archivo: Nombre del archivo
-        revista_id: ID de la revista para actualizar
-        folder_path: Ruta de la carpeta en Drive
-    """
-    def upload_thread():
-        try:
-            from ..models import Revista
-            
-            # Subir a Drive
-            drive_url = subir_pdf_a_drive(pdf_original, nombre_archivo, folder_path)
-            
-            if drive_url:
-                # Actualizar la revista con la URL de Drive
-                revista = Revista.objects.get(id_revista=revista_id)
-                revista.google_drive_url = drive_url
-                # Eliminar el PDF de Cloudinary si existe
-                if revista.pdf:
-                    try:
-                        revista.pdf.delete(save=False)
-                        revista.pdf = None
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo de Cloudinary: {e}")
-                revista.save(update_fields=['google_drive_url', 'pdf'])
-                logger.info(f"✅ PDF de revista subido a Google Drive: {drive_url} (Revista ID: {revista_id})")
-            else:
-                logger.error(f"❌ Falló subida a Drive para revista {revista_id}")
-                
-                # Si falla Drive, intentamos guardar en Cloudinary como fallback
-                try:
-                    revista = Revista.objects.get(id_revista=revista_id)
-                    revista.pdf = pdf_original
-                    revista.save(update_fields=['pdf'])
-                    logger.info(f"✅ Fallback: PDF de revista guardado en Cloudinary para revista {revista_id}")
-                except Exception as e:
-                    logger.error(f"❌ Error en fallback a Cloudinary para revista: {e}")
-                    
-        except Revista.DoesNotExist:
-            logger.error(f"❌ Revista {revista_id} no encontrada")
-        except Exception as e:
-            logger.error(f"❌ Error en subida a Drive para revista: {str(e)}")
-    
-    thread = threading.Thread(target=upload_thread)
-    thread.daemon = True
-    thread.start()
-    return thread
 
-
-# ============================================
-# FUNCIÓN DE SUBIDA DE IMAGEN DE REVISTA A DRIVE
-# ============================================
-def subir_imagen_revista_a_drive_async(imagen_original, nombre_archivo, revista_id, folder_path='Material_Biblioteca/Revistas/Portadas'):
-    """
-    Sube una imagen de portada de revista a Google Drive en segundo plano
-    
-    Args:
-        imagen_original: Archivo subido (InMemoryUploadedFile)
-        nombre_archivo: Nombre del archivo
-        revista_id: ID de la revista para actualizar
-        folder_path: Ruta de la carpeta en Drive
-    """
-    def upload_thread():
-        try:
-            from ..models import Revista
-            
-            # Subir imagen a Drive
-            drive_url = subir_imagen_a_drive(imagen_original, nombre_archivo, folder_path)
-            
-            if drive_url:
-                # Actualizar la revista con la URL de Drive
-                revista = Revista.objects.get(id_revista=revista_id)
-                revista.google_drive_img_url = drive_url
-                # Eliminar la imagen de Cloudinary si existe
-                if revista.img_portada:
-                    try:
-                        revista.img_portada.delete(save=False)
-                        revista.img_portada = None
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua de Cloudinary: {e}")
-                revista.save(update_fields=['google_drive_img_url', 'img_portada'])
-                logger.info(f"✅ Imagen de revista subida a Google Drive: {drive_url} (Revista ID: {revista_id})")
-            else:
-                logger.error(f"❌ Falló subida de imagen a Drive para revista {revista_id}")
-                
-                # Si falla Drive, intentamos guardar en Cloudinary como fallback
-                try:
-                    revista = Revista.objects.get(id_revista=revista_id)
-                    revista.img_portada = imagen_original
-                    revista.save(update_fields=['img_portada'])
-                    logger.info(f"✅ Fallback: Imagen de revista guardada en Cloudinary para revista {revista_id}")
-                except Exception as e:
-                    logger.error(f"❌ Error en fallback a Cloudinary para imagen de revista: {e}")
-                    
-        except Revista.DoesNotExist:
-            logger.error(f"❌ Revista {revista_id} no encontrada")
-        except Exception as e:
-            logger.error(f"❌ Error en subida de imagen a Drive para revista: {str(e)}")
-    
-    thread = threading.Thread(target=upload_thread)
-    thread.daemon = True
-    thread.start()
-    return thread
-
-
-# ==================== CRUD Libros ====================
 @login_required
 @admin_required
 def listar_libros(request):
+    """Lista todos los libros con paginación"""
     libros = Libro.objects.all()
+    
     if request.GET.get('ordenar') == 'fecha_asc':
         libros = libros.order_by('fecha_publicacion')
     elif request.GET.get('ordenar') == 'fecha_desc':
         libros = libros.order_by('-fecha_publicacion')
     else:
         libros = libros.order_by('-id_libro')
+    
+    busqueda = request.GET.get('busqueda', '')
+    if busqueda:
+        libros = libros.filter(
+            models.Q(titulo__icontains=busqueda) |
+            models.Q(autores__nombre__icontains=busqueda) |
+            models.Q(categorias__nom_cat__icontains=busqueda)
+        ).distinct()
+    
     paginator = Paginator(libros, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'listar_libros.html', {'libros': page_obj, 'usuario': request.user})
+    
+    return render(request, 'listar_libros.html', {
+        'libros': page_obj,
+        'usuario': request.user,
+        'busqueda': busqueda
+    })
 
 
 @admin_required
 def agregar_libro(request):
+    """Agrega un nuevo libro al sistema - TODO a Google Drive"""
     autores = Autor.objects.all()
     categorias = Categoria.objects.all()
     
     if request.method == 'POST':
         try:
-            titulo = request.POST.get('titulo')
-            edicion = request.POST.get('edicion')
+            titulo = request.POST.get('titulo', '').strip()
+            edicion = request.POST.get('edicion', '').strip()
             tipo = request.POST.get('tipo')
             categoria = request.POST.get('categoria')
             descripcion = request.POST.get('descripcion', '').strip()
             autores_seleccionados = request.POST.getlist('autores')
             palabras_claves = request.POST.get('palabras_claves', '').split(',')
-            pdf_url = request.POST.get('pdf_url')
-            google_drive_url = request.POST.get('google_drive_url')
+            pdf_url = request.POST.get('pdf_url', '').strip()
+            google_drive_url = request.POST.get('google_drive_url', '').strip()
             categorias_seleccionadas = request.POST.getlist('categorias')
             
-            # Crear el libro (por defecto descarga restringida)
+            if not titulo:
+                return JsonResponse({'success': False, 'error': 'El título es obligatorio'})
+            
+            if not tipo:
+                return JsonResponse({'success': False, 'error': 'El tipo de material es obligatorio'})
+            
             nuevo_libro = Libro(
-                titulo=titulo, 
-                edicion=edicion, 
-                tipo=tipo, 
+                titulo=titulo,
+                edicion=edicion,
+                tipo=tipo,
                 categoria=categoria,
-                descripcion=descripcion, 
+                descripcion=descripcion,
                 pdf_url=pdf_url,
                 google_drive_url=google_drive_url,
                 descarga_autorizada=False
             )
             
-            # Manejo de portada
-            if 'portada' in request.FILES:
-                nuevo_libro.img_portada = request.FILES['portada']
-                logger.info(f"Portada agregada: {request.FILES['portada'].name}")
-            
-            # ============================================
-            # TODOS LOS PDFS SE SUBEN A DRIVE
-            # ============================================
-            pdf_para_subir = None
-            if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                tamaño_mb = pdf_original.size / (1024 * 1024)
-                
-                logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.1f}MB)")
-                
-                # SIEMPRE subir a Drive (sin importar el tamaño)
-                pdf_para_subir = pdf_original
-                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano. La URL aparecerá en breve.")
-            
-            # Guardar el libro primero
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
-            # Si hay PDF, subirlo a Drive en segundo plano (SIEMPRE)
-            if pdf_para_subir:
+            # Subir portada a Drive
+            if 'portada' in request.FILES:
+                portada = request.FILES['portada']
+                logger.info(f"📷 Portada detectada: {portada.name}")
                 thread = threading.Thread(
-                    target=subir_pdf_a_drive_async,
-                    args=(pdf_para_subir, titulo, libro_id)
+                    target=subir_portada_a_drive_async,
+                    args=(portada, titulo, libro_id)
                 )
                 thread.daemon = True
                 thread.start()
-                logger.info(f"🔄 Hilo de subida a Drive iniciado para libro ID {libro_id}")
+                messages.info(request, "✅ La portada se está subiendo a Google Drive en segundo plano.")
             
-            # Autorización
+            # Subir PDF a Drive
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                tamaño_mb = pdf_original.size / (1024 * 1024)
+                logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
+                
+                if tamaño_mb > 50:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.'
+                    })
+                
+                thread = threading.Thread(
+                    target=subir_pdf_a_drive_async,
+                    args=(pdf_original, titulo, libro_id)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
+            
+            # Subir autorización a Drive
             if 'autorizacion' in request.FILES:
-                nuevo_libro.archivo_autorizacion = request.FILES['autorizacion']
-                nuevo_libro.save()
-                logger.info(f"Archivo de autorización agregado: {request.FILES['autorizacion'].name}")
-
-            # Agregar nuevo autor si se proporcionó
-            nuevo_autor_nombre = request.POST.get('nombre_autor')
-            if nuevo_autor_nombre and nuevo_autor_nombre.strip():
-                autor_existente = Autor.objects.filter(nombre=nuevo_autor_nombre).first()
+                autorizacion = request.FILES['autorizacion']
+                logger.info(f"📄 Autorización detectada: {autorizacion.name}")
+                thread = threading.Thread(
+                    target=subir_autorizacion_a_drive_async,
+                    args=(autorizacion, f"{titulo}_autorizacion", libro_id)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ La autorización se está subiendo a Google Drive en segundo plano.")
+            
+            # Agregar autores
+            nuevo_autor_nombre = request.POST.get('nombre_autor', '').strip()
+            if nuevo_autor_nombre:
+                autor_existente = Autor.objects.filter(nombre__iexact=nuevo_autor_nombre).first()
                 if autor_existente:
                     nuevo_libro.autores.add(autor_existente)
                 else:
-                    nuevo_autor = Autor.objects.create(nombre=nuevo_autor_nombre)
+                    nuevo_autor = Autor.objects.create(nombre=nuevo_autor_nombre.title())
                     nuevo_libro.autores.add(nuevo_autor)
-
-            # Agregar autores seleccionados
+            
             for autor_id in autores_seleccionados:
                 try:
                     autor = Autor.objects.get(pk=autor_id)
                     nuevo_libro.autores.add(autor)
-                except:
-                    pass
+                except Autor.DoesNotExist:
+                    logger.warning(f"⚠️ Autor {autor_id} no encontrado")
             
-            # Agregar categorías seleccionadas
+            # Agregar categorías
             for categoria_id in categorias_seleccionadas:
                 try:
                     cat = Categoria.objects.get(pk=categoria_id)
                     nuevo_libro.categorias.add(cat)
-                except:
-                    pass
+                except Categoria.DoesNotExist:
+                    logger.warning(f"⚠️ Categoría {categoria_id} no encontrada")
             
             # Agregar palabras clave
             for palabra in palabras_claves:
-                if palabra.strip():
-                    nuevo_libro.agregar_palabras_claves(palabra.strip())
+                palabra = palabra.strip()
+                if palabra:
+                    nuevo_libro.agregar_palabras_claves(palabra)
             
-            logger.info(f"Libro '{titulo}' creado exitosamente por {request.user.username}")
-            return JsonResponse({'success': True, 'message': 'Libro agregado', 'libro_id': nuevo_libro.id_libro})
+            logger.info(f"✅ Libro '{titulo}' creado exitosamente por {request.user.username}")
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Libro agregado correctamente. Los archivos se están subiendo a Google Drive.',
+                    'libro_id': nuevo_libro.id_libro,
+                    'redirect_url': reverse('listar_libros')
+                })
+            
+            messages.success(request, f'Libro "{titulo}" agregado correctamente')
+            return redirect('listar_libros')
             
         except Exception as e:
-            logger.error(f"Error agregando libro: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)})
+            logger.error(f"❌ Error agregando libro: {str(e)}", exc_info=True)
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(e)})
+            
+            messages.error(request, f'Error al agregar libro: {str(e)}')
+            return render(request, 'agregar_libro.html', {'autores': autores, 'categorias': categorias})
     
-    context = {'autores': autores, 'categorias': categorias}
-    return render(request, 'agregar_libro.html', context)
+    return render(request, 'agregar_libro.html', {
+        'autores': autores,
+        'categorias': categorias
+    })
 
 
 @login_required
 @admin_required
 def editar_libro(request, libro_id):
+    """Edita un libro existente"""
     libro = get_object_or_404(Libro, id_libro=libro_id)
     categorias = Categoria.objects.all()
+    autores = Autor.objects.all()
     
     if request.method == 'POST':
         try:
-            libro.titulo = request.POST.get('titulo').strip()
+            libro.titulo = request.POST.get('titulo', '').strip()
             libro.edicion = request.POST.get('edicion', '').strip()
             libro.tipo = request.POST.get('tipo')
             libro.descripcion = request.POST.get('descripcion', '').strip()
             libro.categoria = request.POST.get('categoria')
             libro.categorias.set(request.POST.getlist('categorias'))
-            
-            # Actualizar URLs
             libro.pdf_url = request.POST.get('pdf_url', '').strip()
             libro.google_drive_url = request.POST.get('google_drive_url', '').strip()
             
-            # ============================================
-            # SIEMPRE subir a Drive cuando hay un nuevo PDF
-            # ============================================
+            # Actualizar portada
+            if 'portada' in request.FILES:
+                if libro.google_drive_portada_url:
+                    file_id = extract_file_id_from_url(libro.google_drive_portada_url)
+                    if file_id:
+                        eliminar_imagen_de_drive(file_id)
+                        logger.info(f"🗑️ Portada anterior eliminada de Drive: {file_id}")
+                
+                thread = threading.Thread(
+                    target=subir_portada_a_drive_async,
+                    args=(request.FILES['portada'], libro.titulo, libro.id_libro)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ La nueva portada se está subiendo a Google Drive en segundo plano.")
+                libro.google_drive_portada_url = ''
+            
+            # Actualizar PDF
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
+                logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 
-                logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.1f}MB)")
+                if tamaño_mb > 50:
+                    messages.error(request, 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.')
+                    return render(request, 'editar_libro.html', {
+                        'libro': libro,
+                        'autores': autores,
+                        'categorias': categorias,
+                        'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
+                    })
                 
-                # Guardar el libro primero para tener el ID
-                libro.save()
+                if libro.google_drive_url:
+                    file_id = extract_file_id_from_url(libro.google_drive_url)
+                    if file_id:
+                        eliminar_pdf_de_drive(file_id)
+                        logger.info(f"🗑️ PDF anterior eliminado de Drive: {file_id}")
                 
-                # Subir a Drive en segundo plano
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
                     args=(pdf_original, libro.titulo, libro.id_libro)
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
-                
-                # Limpiar el PDF de Cloudinary si existe (se reemplazará con Drive)
-                if libro.pdf:
-                    try:
-                        libro.pdf.delete(save=False)
-                        libro.pdf = None
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar PDF antiguo de Cloudinary: {e}")
+                messages.info(request, "✅ El nuevo PDF se está subiendo a Google Drive en segundo plano.")
+                libro.google_drive_url = ''
             
-            # Manejo de portada
-            if 'portada' in request.FILES:
-                # Eliminar portada anterior si existe
-                if libro.img_portada:
-                    try:
-                        libro.img_portada.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar portada antigua: {e}")
-                libro.img_portada = request.FILES['portada']
-            
-            # Manejo de autorización
+            # Actualizar autorización
             if 'autorizacion' in request.FILES:
-                # Eliminar autorización anterior si existe
-                if libro.archivo_autorizacion:
-                    try:
-                        libro.archivo_autorizacion.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar autorización antigua: {e}")
-                libro.archivo_autorizacion = request.FILES['autorizacion']
+                if libro.google_drive_autorizacion_url:
+                    file_id = extract_file_id_from_url(libro.google_drive_autorizacion_url)
+                    if file_id:
+                        eliminar_pdf_de_drive(file_id)
+                        logger.info(f"🗑️ Autorización anterior eliminada de Drive: {file_id}")
+                
+                thread = threading.Thread(
+                    target=subir_autorizacion_a_drive_async,
+                    args=(request.FILES['autorizacion'], f"{libro.titulo}_autorizacion", libro.id_libro)
+                )
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "✅ La nueva autorización se está subiendo a Google Drive en segundo plano.")
+                libro.google_drive_autorizacion_url = ''
             
-            # Manejo de autores
+            # Actualizar autores
             if 'autores' in request.POST:
-                autores = request.POST.getlist('autores')
-                if autores:
-                    libro.autores.set(autores)
+                autores_ids = request.POST.getlist('autores')
+                if autores_ids:
+                    libro.autores.set(autores_ids)
                 else:
                     libro.autores.clear()
             
-            # Palabras clave
             libro.palabra_clave = request.POST.get('palabras_claves', '')
-            
-            # Guardar todos los cambios
             libro.save()
             
-            logger.info(f"Libro '{libro.titulo}' actualizado por {request.user.username}")
-            messages.success(request, f'Libro "{libro.titulo}" actualizado')
-            return JsonResponse({'success': True, 'message': 'Libro actualizado'})
+            logger.info(f"✅ Libro '{libro.titulo}' actualizado por {request.user.username}")
+            messages.success(request, f'Libro "{libro.titulo}" actualizado correctamente')
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Libro actualizado correctamente',
+                    'redirect_url': reverse('listar_libros')
+                })
+            
+            return redirect('listar_libros')
             
         except Exception as e:
-            logger.error(f"Error editando libro: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            logger.error(f"❌ Error editando libro: {str(e)}", exc_info=True)
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+            messages.error(request, f'Error al editar libro: {str(e)}')
+            return render(request, 'editar_libro.html', {
+                'libro': libro,
+                'autores': autores,
+                'categorias': categorias,
+                'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
+            })
     
-    context = {
+    return render(request, 'editar_libro.html', {
         'libro': libro,
-        'autores': Autor.objects.all(),
+        'autores': autores,
         'categorias': categorias,
         'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
-    }
-    return render(request, 'editar_libro.html', context)
+    })
 
 
 @login_required
 @admin_required
 def eliminar_libro(request, libro_id):
-    """Elimina un libro del sistema y su PDF de Google Drive"""
+    """Elimina un libro del sistema y sus archivos de Google Drive"""
     libro = get_object_or_404(Libro, pk=libro_id)
     
     if request.method == 'POST':
         titulo = libro.titulo
         
-        # Eliminar PDF de Google Drive si existe
         if libro.google_drive_url:
-            try:
-                # Extraer el ID del archivo de la URL
-                file_id = None
-                if '/file/d/' in libro.google_drive_url:
-                    file_id = libro.google_drive_url.split('/file/d/')[1].split('/')[0]
-                elif 'id=' in libro.google_drive_url:
-                    file_id = libro.google_drive_url.split('id=')[1].split('&')[0]
-                
-                if file_id:
-                    resultado = eliminar_pdf_de_drive(file_id)
-                    if resultado:
-                        logger.info(f"✅ PDF eliminado de Google Drive: {file_id}")
-                        messages.success(request, f"PDF eliminado de Google Drive")
-                    else:
-                        logger.warning(f"⚠️ No se pudo eliminar PDF de Drive: {file_id}")
-                else:
-                    logger.warning(f"No se pudo extraer ID de Drive URL: {libro.google_drive_url}")
-            except Exception as e:
-                logger.error(f"Error eliminando PDF de Drive: {e}")
+            file_id = extract_file_id_from_url(libro.google_drive_url)
+            if file_id:
+                eliminar_pdf_de_drive(file_id)
         
-        # Eliminar archivo de Cloudinary si existe
-        if libro.pdf:
-            try:
-                libro.pdf.delete(save=False)
-                logger.info(f"PDF eliminado de Cloudinary")
-            except Exception as e:
-                logger.error(f"Error eliminando PDF de Cloudinary: {e}")
+        if libro.google_drive_portada_url:
+            file_id = extract_file_id_from_url(libro.google_drive_portada_url)
+            if file_id:
+                eliminar_imagen_de_drive(file_id)
         
-        # Eliminar el libro de la base de datos
+        if libro.google_drive_autorizacion_url:
+            file_id = extract_file_id_from_url(libro.google_drive_autorizacion_url)
+            if file_id:
+                eliminar_pdf_de_drive(file_id)
+        
         libro.delete()
-        logger.info(f"Libro '{titulo}' eliminado por {request.user.username}")
+        logger.info(f"✅ Libro '{titulo}' eliminado por {request.user.username}")
         messages.success(request, f'Libro "{titulo}" eliminado correctamente')
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Libro eliminado'})
         
         return redirect('listar_libros')
     
@@ -477,35 +413,38 @@ def cambiar_estado_descarga(request, libro_id):
     libro.save()
     
     estado = "AUTORIZADA" if libro.descarga_autorizada else "RESTRINGIDA"
-    logger.info(f"Descarga {estado} para '{libro.titulo}' por {request.user.username}")
+    logger.info(f"📥 Descarga {estado} para '{libro.titulo}' por {request.user.username}")
     messages.success(request, f'Descarga {estado.lower()} para "{libro.titulo}"')
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'descarga_autorizada': libro.descarga_autorizada,
+            'estado': estado
+        })
     
     return redirect('listar_libros')
 
 
 @login_required
 def ver_descargar_libro(request, libro_id):
+    """Ver o descargar un libro - Permite visualización embebida"""
     libro = get_object_or_404(Libro, id_libro=libro_id)
     
     es_admin = hasattr(request.user, 'usuario') and request.user.usuario.tipo_usuario == 'Administrador'
     es_modo_embed = request.GET.get('embed') == 'true'
     
-    # Obtener URL del archivo (siempre)
     archivo_url = libro.get_pdf_display_url()
     
-    # Si no hay archivo disponible
     if not archivo_url:
-        return render(request, 'error_recurso.html', {'mensaje': 'No hay archivo disponible.'}, status=404)
+        return render(request, 'error_recurso.html', {
+            'mensaje': 'No hay archivo disponible para este libro.',
+            'libro': libro
+        }, status=404)
     
-    # Modo embebido - mostrar visor (siempre, independientemente de permisos)
     if es_modo_embed:
-        # Formatear URL de Google Drive para embebido
         if 'drive.google.com' in archivo_url:
-            file_id = None
-            if '/file/d/' in archivo_url:
-                file_id = archivo_url.split('/file/d/')[1].split('/')[0]
-            elif 'id=' in archivo_url:
-                file_id = archivo_url.split('id=')[1].split('&')[0]
+            file_id = extract_file_id_from_url(archivo_url)
             if file_id:
                 archivo_url = f'https://drive.google.com/file/d/{file_id}/preview'
         
@@ -515,14 +454,13 @@ def ver_descargar_libro(request, libro_id):
             'permitir_descarga': libro.descarga_autorizada or es_admin
         })
     
-    # Si no tiene permiso de descarga y no es modo embed, mostrar página de restricción
     if not libro.descarga_autorizada and not es_admin:
         return render(request, 'acceso_restringido.html', {
             'libro': libro,
-            'mensaje': 'Este libro tiene restringida su descarga. Solo puedes leerlo dentro del sistema.'
+            'mensaje': 'Este libro tiene restringida su descarga. Solo puedes leerlo dentro del sistema.',
+            'puede_leer': True
         })
     
-    # Modo normal con permiso de descarga - redirigir
     return redirect(archivo_url)
 
 
@@ -533,41 +471,54 @@ def eliminar_autorizacion(request, libro_id):
     libro = get_object_or_404(Libro, id_libro=libro_id)
     
     if request.method == 'POST':
-        if libro.archivo_autorizacion:
-            libro.archivo_autorizacion.delete(save=False)
-            libro.archivo_autorizacion = None
-            libro.save()
-            logger.info(f"Autorización eliminada para '{libro.titulo}'")
-            messages.success(request, f'Autorización eliminada')
+        if libro.google_drive_autorizacion_url:
+            file_id = extract_file_id_from_url(libro.google_drive_autorizacion_url)
+            if file_id:
+                eliminar_pdf_de_drive(file_id)
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True})
+            libro.google_drive_autorizacion_url = None
+            libro.save()
+        
+        logger.info(f"✅ Autorización eliminada para '{libro.titulo}' por {request.user.username}")
+        messages.success(request, 'Autorización eliminada correctamente')
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        
+        return redirect('listar_libros')
     
     return redirect('listar_libros')
 
 
-# ==================== CRUD Revistas ====================
+# ============================================
+# CRUD REVISTAS
+# ============================================
 
 @login_required
 @admin_required
 def listar_revistas(request):
-    revistas = Revista.objects.all()
-    colecciones = Coleccion.objects.all()
-    return render(request, 'listar_revistas.html', {'revistas': revistas, 'colecciones': colecciones})
+    """Lista todas las revistas"""
+    revistas = Revista.objects.all().order_by('-id_revista')
+    colecciones = Coleccion.objects.all().order_by('orden', 'nomb_colecc')
+    return render(request, 'listar_revistas.html', {
+        'revistas': revistas,
+        'colecciones': colecciones
+    })
 
 
 @login_required
 @admin_required
 def agregar_revista(request):
+    """Agrega una nueva revista - TODO a Google Drive"""
     if request.method == 'POST':
         try:
             if not request.POST.get('coleccion'):
                 raise ValueError('La colección es requerida')
+            
             coleccion = Coleccion.objects.get(id_coleccion=request.POST['coleccion'])
             nro_revista = request.POST.get('nro_revista')
             nro_revista = int(nro_revista) if nro_revista else None
             
-            # Crear la revista
             revista = Revista(
                 nro_revista=nro_revista,
                 coleccion=coleccion,
@@ -577,9 +528,7 @@ def agregar_revista(request):
                 google_drive_img_url=''
             )
             
-            # ============================================
-            # MANEJO DE IMAGEN DE PORTADA - SUBIR A DRIVE
-            # ============================================
+            # Manejar imagen de portada
             if 'img_portada' in request.FILES:
                 imagen_original = request.FILES['img_portada']
                 tamaño_mb = imagen_original.size / (1024 * 1024)
@@ -587,13 +536,9 @@ def agregar_revista(request):
                 if tamaño_mb > 5:
                     raise ValueError('La imagen no puede superar los 5MB')
                 
-                # Guardar temporalmente en Cloudinary (fallback)
-                revista.img_portada = imagen_original
-                logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.1f}MB)")
+                logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.2f} MB)")
             
-            # ============================================
-            # MANEJO DE PDF - SUBIR A DRIVE
-            # ============================================
+            # Manejar PDF
             pdf_para_subir = None
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
@@ -602,16 +547,14 @@ def agregar_revista(request):
                 if tamaño_mb > 10:
                     raise ValueError('El PDF no puede superar los 10MB')
                 
-                logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.1f}MB)")
+                logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 pdf_para_subir = pdf_original
             
-            # Guardar la revista primero
+            # Guardar la revista
             revista.save()
             revista_id = revista.id_revista
             
-            # ============================================
-            # SUBIR IMAGEN A DRIVE EN SEGUNDO PLANO
-            # ============================================
+            # Subir imagen a Drive
             if 'img_portada' in request.FILES:
                 imagen_original = request.FILES['img_portada']
                 nombre_imagen = f"{coleccion.nomb_colecc}_{nro_revista or 'portada'}"
@@ -621,12 +564,9 @@ def agregar_revista(request):
                 )
                 thread_img.daemon = True
                 thread_img.start()
-                logger.info(f"🔄 Hilo de subida de imagen a Drive iniciado para revista ID {revista_id}")
                 messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
             
-            # ============================================
-            # SUBIR PDF A DRIVE EN SEGUNDO PLANO
-            # ============================================
+            # Subir PDF a Drive
             if pdf_para_subir:
                 nombre_pdf = f"{coleccion.nomb_colecc}_{nro_revista or 'revista'}"
                 thread_pdf = threading.Thread(
@@ -635,36 +575,36 @@ def agregar_revista(request):
                 )
                 thread_pdf.daemon = True
                 thread_pdf.start()
-                logger.info(f"🔄 Hilo de subida de PDF a Drive iniciado para revista ID {revista_id}")
                 messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
             
-            # ============================================
-            # RESPUESTA
-            # ============================================
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': 'Revista agregada', 'id': revista.id_revista})
-            messages.success(request, 'Revista agregada correctamente. Los archivos se subirán a Google Drive en segundo plano.')
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Revista agregada correctamente',
+                    'id': revista.id_revista
+                })
+            
+            messages.success(request, 'Revista agregada correctamente')
             return redirect('listar_revistas')
             
         except Exception as e:
-            logger.error(f"Error agregando revista: {str(e)}")
+            logger.error(f"❌ Error agregando revista: {str(e)}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'message': str(e)}, status=400)
             messages.error(request, str(e))
             return redirect('agregar_revista')
     
-    # GET - mostrar formulario
     colecciones = Coleccion.objects.all().order_by('nomb_colecc')
-    return render(request, 'agregar_revista.html', {'colecciones': colecciones, 'max_upload_size_mb': {'imagen': 5, 'pdf': 10}})
+    return render(request, 'agregar_revista.html', {
+        'colecciones': colecciones,
+        'max_upload_size_mb': {'imagen': 5, 'pdf': 10}
+    })
 
-
-# views/admin_views.py
-
-# views/admin_views.py
 
 @login_required
 @admin_required
 def modificar_revista(request, id_revista):
+    """Modifica una revista existente"""
     revista = get_object_or_404(Revista, id_revista=id_revista)
     
     if request.method == 'POST':
@@ -672,9 +612,49 @@ def modificar_revista(request, id_revista):
         
         if form.is_valid():
             try:
+                # Guardar la revista
                 revista = form.save()
                 
-                # ✅ SI ES AJAX, devuelve JSON
+                # Si hay nueva imagen, subir a Drive
+                if 'img_portada' in request.FILES:
+                    # Eliminar imagen anterior
+                    if revista.google_drive_img_url:
+                        file_id = extract_file_id_from_url(revista.google_drive_img_url)
+                        if file_id:
+                            eliminar_imagen_de_drive(file_id)
+                    
+                    imagen_original = request.FILES['img_portada']
+                    nombre_imagen = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'portada'}"
+                    thread_img = threading.Thread(
+                        target=subir_imagen_revista_a_drive_async,
+                        args=(imagen_original, nombre_imagen, revista.id_revista)
+                    )
+                    thread_img.daemon = True
+                    thread_img.start()
+                    messages.info(request, "✅ La nueva imagen se está subiendo a Google Drive en segundo plano.")
+                    revista.google_drive_img_url = ''
+                    revista.save()
+                
+                # Si hay nuevo PDF, subir a Drive
+                if 'pdf' in request.FILES:
+                    # Eliminar PDF anterior
+                    if revista.google_drive_url:
+                        file_id = extract_file_id_from_url(revista.google_drive_url)
+                        if file_id:
+                            eliminar_pdf_de_drive(file_id)
+                    
+                    pdf_original = request.FILES['pdf']
+                    nombre_pdf = f"{revista.coleccion.nomb_colecc}_{revista.nro_revista or 'revista'}"
+                    thread_pdf = threading.Thread(
+                        target=subir_revista_pdf_a_drive_async,
+                        args=(pdf_original, nombre_pdf, revista.id_revista)
+                    )
+                    thread_pdf.daemon = True
+                    thread_pdf.start()
+                    messages.info(request, "✅ El nuevo PDF se está subiendo a Google Drive en segundo plano.")
+                    revista.google_drive_url = ''
+                    revista.save()
+                
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
@@ -686,7 +666,7 @@ def modificar_revista(request, id_revista):
                 return redirect('listar_revistas')
                 
             except Exception as e:
-                logger.error(f"Error al modificar revista: {e}")
+                logger.error(f"❌ Error al modificar revista: {e}")
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': False,
@@ -694,7 +674,6 @@ def modificar_revista(request, id_revista):
                     })
                 messages.error(request, f'Error: {str(e)}')
         else:
-            # ✅ Errores del formulario
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': False,
@@ -703,7 +682,6 @@ def modificar_revista(request, id_revista):
                 })
             messages.error(request, 'Por favor corrige los errores del formulario')
     
-    # GET - Mostrar formulario
     form = RevistaForm(instance=revista)
     return render(request, 'modificar_revista.html', {
         'form': form,
@@ -714,38 +692,22 @@ def modificar_revista(request, id_revista):
 @login_required
 @admin_required
 def eliminar_revista(request, id_revista):
+    """Elimina una revista y sus archivos de Google Drive"""
     if request.method == 'POST':
         revista = get_object_or_404(Revista, id_revista=id_revista)
         
-        # Eliminar PDF de Google Drive si existe
+        # Eliminar PDF de Google Drive
         if revista.google_drive_url:
-            try:
-                file_id = None
-                if '/file/d/' in revista.google_drive_url:
-                    file_id = revista.google_drive_url.split('/file/d/')[1].split('/')[0]
-                elif 'id=' in revista.google_drive_url:
-                    file_id = revista.google_drive_url.split('id=')[1].split('&')[0]
-                if file_id:
-                    eliminar_pdf_de_drive(file_id)
-                    logger.info(f"✅ PDF de revista eliminado de Google Drive: {file_id}")
-            except Exception as e:
-                logger.error(f"Error eliminando PDF de revista de Drive: {e}")
+            file_id = extract_file_id_from_url(revista.google_drive_url)
+            if file_id:
+                eliminar_pdf_de_drive(file_id)
         
-        # Eliminar imagen de Google Drive si existe
+        # Eliminar imagen de Google Drive
         if revista.google_drive_img_url:
-            try:
-                file_id = None
-                if '/file/d/' in revista.google_drive_img_url:
-                    file_id = revista.google_drive_img_url.split('/file/d/')[1].split('/')[0]
-                elif 'id=' in revista.google_drive_img_url:
-                    file_id = revista.google_drive_img_url.split('id=')[1].split('&')[0]
-                if file_id:
-                    eliminar_imagen_de_drive(file_id)
-                    logger.info(f"✅ Imagen de revista eliminada de Google Drive: {file_id}")
-            except Exception as e:
-                logger.error(f"Error eliminando imagen de revista de Drive: {e}")
+            file_id = extract_file_id_from_url(revista.google_drive_img_url)
+            if file_id:
+                eliminar_imagen_de_drive(file_id)
         
-        # Eliminar la revista
         revista.delete()
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -756,18 +718,27 @@ def eliminar_revista(request, id_revista):
     return JsonResponse({'success': False})
 
 
+# ============================================
+# CRUD COLECCIONES
+# ============================================
+
 @login_required
 @admin_required
 def agregar_coleccion(request):
+    """Agrega una nueva colección"""
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
             nueva_coleccion = Coleccion.objects.create(
                 nomb_colecc=request.POST.get('nomb_colecc'),
                 descripcion=request.POST.get('descripcion')
             )
-            return JsonResponse({'success': True, 'id_coleccion': nueva_coleccion.id_coleccion, 'nomb_colecc': nueva_coleccion.nomb_colecc})
+            return JsonResponse({
+                'success': True,
+                'id_coleccion': nueva_coleccion.id_coleccion,
+                'nomb_colecc': nueva_coleccion.nomb_colecc
+            })
         except Exception as e:
-            logger.error(f"Error agregando colección: {str(e)}")
+            logger.error(f"❌ Error agregando colección: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)})
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
 
@@ -775,7 +746,9 @@ def agregar_coleccion(request):
 @login_required
 @admin_required
 def modificar_coleccion(request, id_coleccion):
+    """Modifica una colección existente"""
     coleccion = get_object_or_404(Coleccion, id_coleccion=id_coleccion)
+    
     if request.method == 'POST':
         form = ColeccionForm(request.POST, instance=coleccion)
         if form.is_valid():
@@ -788,12 +761,14 @@ def modificar_coleccion(request, id_coleccion):
                 return JsonResponse({'success': False, 'message': 'Error', 'errors': form.errors})
     else:
         form = ColeccionForm(instance=coleccion)
+    
     return render(request, 'modificar_coleccion.html', {'form': form, 'coleccion': coleccion})
 
 
 @login_required
 @admin_required
 def eliminar_coleccion(request, id_coleccion):
+    """Elimina una colección"""
     if request.method == 'POST':
         coleccion = get_object_or_404(Coleccion, id_coleccion=id_coleccion)
         coleccion.delete()
@@ -804,6 +779,7 @@ def eliminar_coleccion(request, id_coleccion):
 @csrf_exempt
 @admin_required
 def actualizar_orden_colecciones(request):
+    """Actualiza el orden de las colecciones"""
     if request.method == 'POST':
         coleccion_ids = request.POST.getlist('coleccion_ids[]')
         for index, coleccion_id in enumerate(coleccion_ids):
@@ -812,11 +788,14 @@ def actualizar_orden_colecciones(request):
     return JsonResponse({'status': 'error'}, status=400)
 
 
-# ==================== CRUD Imágenes ======================
+# ============================================
+# CRUD IMÁGENES
+# ============================================
 
 @login_required
 @admin_required
 def listar_imagenes(request):
+    """Lista todas las imágenes"""
     imagenes = Imagen.objects.all().order_by('-id_Imagen')
     paginator = Paginator(imagenes, 10)
     page_number = request.GET.get('page')
@@ -826,9 +805,8 @@ def listar_imagenes(request):
 
 @admin_required
 def agregar_imagen(request):
+    """Agrega una nueva imagen - TODO a Google Drive"""
     categorias = Categoria.objects.all()
-    
-    # Detectar si es una petición AJAX
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
@@ -837,7 +815,6 @@ def agregar_imagen(request):
             descripcion = request.POST.get('descripcion', '')
             autorImg = request.POST.get('autorImg')
             
-            # ✅ VALIDACIONES - SIEMPRE RETORNAR JSON PARA AJAX
             if not titulo:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
@@ -856,7 +833,6 @@ def agregar_imagen(request):
                 messages.error(request, 'Debes seleccionar una imagen')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # Leer el contenido del archivo
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
@@ -866,38 +842,21 @@ def agregar_imagen(request):
                 messages.error(request, 'La imagen no puede superar los 5MB')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # Guardar nombre y contenido en bytes
             nombre_archivo = imagen_original.name
             contenido_bytes = imagen_original.read()
             imagen_original.seek(0)
             
-            # Crear la imagen
             nueva_imagen = Imagen(
                 titulo=titulo,
                 descripcion=descripcion,
                 autorImg=autorImg,
             )
             
-            # Guardar en Cloudinary temporalmente (fallback)
-            nueva_imagen.img_portada = imagen_original
-            
-            # PDF (opcional)
-            if 'pdf' in request.FILES:
-                pdf = request.FILES['pdf']
-                if pdf.size > 10 * 1024 * 1024:
-                    if is_ajax:
-                        return JsonResponse({'success': False, 'error': 'El PDF no puede superar los 10MB'}, status=400)
-                    messages.error(request, 'El PDF no puede superar los 10MB')
-                    return render(request, 'agregar_imagen.html', {'categorias': categorias})
-                nueva_imagen.pdf = pdf
-            
-            # Guardar la imagen primero
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
-            # Subir imagen a Drive EN SEGUNDO PLANO
+            # Subir imagen a Drive
             try:
-                from ..drive_utils import subir_imagen_a_drive_async
                 thread = threading.Thread(
                     target=subir_imagen_a_drive_async,
                     args=(contenido_bytes, nombre_archivo, imagen_id)
@@ -916,32 +875,30 @@ def agregar_imagen(request):
                 except:
                     pass
             
-            # ✅ RESPONDER CON JSON PARA AJAX
             if is_ajax:
                 return JsonResponse({
-                    'success': True, 
+                    'success': True,
                     'message': 'Imagen agregada correctamente',
                     'id': nueva_imagen.id_Imagen
                 })
             
-            # Para peticiones normales (no AJAX)
             messages.success(request, 'Imagen agregada correctamente')
             return redirect('lista_imagenes')
             
         except Exception as e:
-            logger.error(f"Error agregando imagen: {str(e)}", exc_info=True)
+            logger.error(f"❌ Error agregando imagen: {str(e)}", exc_info=True)
             if is_ajax:
                 return JsonResponse({'success': False, 'error': f'Error: {str(e)}'}, status=500)
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'agregar_imagen.html', {'categorias': categorias, 'error': str(e)})
     
-    # Para GET, renderizar el formulario
     return render(request, 'agregar_imagen.html', {'categorias': categorias})
-    
+
 
 @login_required
 @admin_required
 def editar_imagen(request, id_imagen):
+    """Edita una imagen existente"""
     imagen = get_object_or_404(Imagen, pk=id_imagen)
     categorias = Categoria.objects.all()
     
@@ -951,42 +908,34 @@ def editar_imagen(request, id_imagen):
             imagen.descripcion = request.POST.get('descripcion', '')
             imagen.autorImg = request.POST.get('autorImg')
             
-            # ============================================
             # Subir nueva imagen a Drive
-            # ============================================
             if 'img_portada' in request.FILES:
-                # Eliminar imagen anterior de Cloudinary
-                if imagen.img_portada:
-                    try:
-                        imagen.img_portada.delete(save=False)
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo eliminar imagen antigua: {e}")
+                # Eliminar imagen anterior de Drive
+                if imagen.google_drive_url:
+                    file_id = extract_file_id_from_url(imagen.google_drive_url)
+                    if file_id:
+                        eliminar_imagen_de_drive(file_id)
+                        logger.info(f"🗑️ Imagen anterior eliminada de Drive: {file_id}")
                 
-                # Guardar temporalmente en Cloudinary
-                imagen.img_portada = request.FILES['img_portada']
+                imagen_original = request.FILES['img_portada']
+                contenido_bytes = imagen_original.read()
+                imagen_original.seek(0)
                 
-                # Guardar imagen primero
-                imagen.save()
-                
-                # Subir a Drive en segundo plano
                 thread = threading.Thread(
                     target=subir_imagen_a_drive_async,
-                    args=(request.FILES['img_portada'], imagen.titulo, imagen.id_Imagen)
+                    args=(contenido_bytes, imagen.titulo, imagen.id_Imagen)
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
-            
-            if 'pdf' in request.FILES:
-                imagen.pdf = request.FILES['pdf']
+                messages.info(request, "✅ La nueva imagen se está subiendo a Google Drive en segundo plano.")
             
             imagen.save()
             imagen.categorias.set(request.POST.getlist('categorias'))
-            messages.success(request, "Imagen actualizada")
+            messages.success(request, "Imagen actualizada correctamente")
             return redirect('lista_imagenes')
             
         except Exception as e:
-            logger.error(f"Error editando imagen: {str(e)}")
+            logger.error(f"❌ Error editando imagen: {str(e)}")
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
     
@@ -995,40 +944,61 @@ def editar_imagen(request, id_imagen):
 
 @admin_required
 def eliminar_imagen(request, pk):
+    """Elimina una imagen y su archivo de Google Drive"""
     imagen = get_object_or_404(Imagen, pk=pk)
+    
     if request.method == 'POST':
+        # Eliminar de Google Drive
+        if imagen.google_drive_url:
+            file_id = extract_file_id_from_url(imagen.google_drive_url)
+            if file_id:
+                eliminar_imagen_de_drive(file_id)
+                logger.info(f"🗑️ Imagen eliminada de Drive: {file_id}")
+        
         imagen.delete()
-        messages.success(request, "Imagen eliminada")
+        messages.success(request, "Imagen eliminada correctamente")
         return redirect('lista_imagenes')
+    
     return redirect('lista_imagenes')
 
 
 @login_required
 def editar_marca(request, id_imagen):
+    """Aplica marca de agua a una imagen"""
     from PIL import Image as PILImage
     import io
     from django.core.files.base import ContentFile
     
     imagen = get_object_or_404(Imagen, pk=id_imagen)
+    
     if request.method == 'POST':
         try:
-            if 'img_portada' in request.FILES:
-                imagen.img_portada = request.FILES['img_portada']
-            if 'marca_agua' in request.FILES:
-                marca_agua_file = request.FILES['marca_agua']
-                marca_agua = PILImage.open(marca_agua_file)
-                img_portada = PILImage.open(imagen.img_portada)
-                transparencia = 0.5
-                marca_agua.putalpha(int(255 * transparencia))
-                img_portada.paste(marca_agua, (0, 0), marca_agua)
-                img_io = io.BytesIO()
-                img_portada.save(img_io, format='PNG')
-                img_file = ContentFile(img_io.getvalue(), 'imagen_con_marca_agua.png')
-                imagen.img_portada = img_file
-            imagen.save()
-            messages.success(request, "Marca de agua aplicada")
+            if 'marca_agua' in request.FILES and imagen.google_drive_url:
+                # TODO: Descargar imagen de Drive, aplicar marca, volver a subir
+                messages.info(request, "Funcionalidad en desarrollo - marca de agua con Google Drive")
+            else:
+                messages.warning(request, 'No hay imagen para aplicar marca de agua')
         except Exception as e:
-            logger.error(f"Error aplicando marca de agua: {str(e)}")
+            logger.error(f"❌ Error aplicando marca de agua: {str(e)}")
             messages.error(request, f'Error: {str(e)}')
         return redirect('lista_imagenes')
+    
     return render(request, 'editar_marca.html', {'imagen': imagen})
+
+
+# ============================================
+# FUNCIÓN DE PRUEBA
+# ============================================
+
+@login_required
+@admin_required
+def test_drive(request):
+    """Prueba la conexión con Google Drive"""
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+    
+    resultado = test_drive_connection()
+    return JsonResponse({
+        'success': resultado,
+        'message': 'Conexión exitosa a Google Drive' if resultado else 'Error conectando a Google Drive'
+    })
