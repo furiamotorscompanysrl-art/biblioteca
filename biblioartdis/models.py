@@ -352,9 +352,16 @@ class Libro(models.Model):
         """Devuelve la URL de autorización (Google Drive)"""
         if self.google_drive_autorizacion_url:
             if 'drive.google.com' in self.google_drive_autorizacion_url:
-                file_id = self.google_drive_autorizacion_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_autorizacion_url else None
+                file_id = None
+                
+                if '/file/d/' in self.google_drive_autorizacion_url:
+                    file_id = self.google_drive_autorizacion_url.split('/file/d/')[1].split('/')[0]
+                elif 'id=' in self.google_drive_autorizacion_url:
+                    file_id = self.google_drive_autorizacion_url.split('id=')[1].split('&')[0]
+                
                 if file_id:
                     return f'https://drive.google.com/file/d/{file_id}/preview'
+            
             return self.google_drive_autorizacion_url
         return None
 
