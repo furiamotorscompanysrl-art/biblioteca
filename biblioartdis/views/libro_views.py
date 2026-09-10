@@ -180,10 +180,11 @@ def proxy_pdf(request):
         
         django_response = StreamingHttpResponse(
             generate(),
-            content_type=content_type
+            content_type='application/pdf'
         )
-        django_response['Content-Disposition'] = 'inline'
+        django_response['Content-Disposition'] = 'inline; filename="documento.pdf"'
         django_response['Cache-Control'] = 'no-cache'
+        django_response['X-Frame-Options'] = 'SAMEORIGIN'
         
         return django_response
         
