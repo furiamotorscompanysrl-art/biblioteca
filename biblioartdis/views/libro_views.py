@@ -71,9 +71,12 @@ def listar_libros(request):
     """Lista todos los libros con paginación"""
     libros = Libro.objects.all()
     
-    if request.GET.get('ordenar') == 'fecha_asc':
+    # Obtener el parámetro de ordenamiento
+    ordenar = request.GET.get('ordenar', '')
+    
+    if ordenar == 'fecha_asc':
         libros = libros.order_by('fecha_publicacion')
-    elif request.GET.get('ordenar') == 'fecha_desc':
+    elif ordenar == 'fecha_desc':
         libros = libros.order_by('-fecha_publicacion')
     else:
         libros = libros.order_by('-id_libro')
@@ -93,7 +96,8 @@ def listar_libros(request):
     return render(request, 'listar_libros.html', {
         'libros': page_obj,
         'usuario': request.user,
-        'busqueda': busqueda
+        'busqueda': busqueda,
+        'ordenar': ordenar,  # ✅ AGREGAR ESTA LÍNEA
     })
 
 
