@@ -140,7 +140,7 @@ def agregar_libro(request):
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
-            # Subir portada a Drive
+            # Subir portada a Drive (SIN messages.info)
             if 'portada' in request.FILES:
                 portada = request.FILES['portada']
                 logger.info(f"📷 Portada detectada: {portada.name}")
@@ -150,9 +150,8 @@ def agregar_libro(request):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La portada se está subiendo a Google Drive en segundo plano.")
             
-            # Subir PDF a Drive
+            # Subir PDF a Drive (SIN messages.info)
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
@@ -170,9 +169,8 @@ def agregar_libro(request):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
             
-            # Subir autorización a Drive
+            # Subir autorización a Drive (SIN messages.info)
             if 'autorizacion' in request.FILES:
                 autorizacion = request.FILES['autorizacion']
                 logger.info(f"📄 Autorización detectada: {autorizacion.name}")
@@ -182,7 +180,6 @@ def agregar_libro(request):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La autorización se está subiendo a Google Drive en segundo plano.")
             
             # Agregar autores
             nuevo_autor_nombre = request.POST.get('nombre_autor', '').strip()
@@ -217,31 +214,22 @@ def agregar_libro(request):
             
             logger.info(f"✅ Libro '{titulo}' creado exitosamente por {request.user.username}")
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Libro agregado correctamente. Los archivos se están subiendo a Google Drive.',
-                    'libro_id': nuevo_libro.id_libro,
-                    'redirect_url': reverse('listar_libros')
-                })
-            
-            messages.success(request, f'Libro "{titulo}" agregado correctamente')
-            return redirect('listar_libros')
+            # RESPUESTA JSON SIEMPRE (sin importar el tipo de petición)
+            return JsonResponse({
+                'success': True,
+                'message': 'Libro agregado correctamente. Los archivos se están subiendo a Google Drive.',
+                'libro_id': nuevo_libro.id_libro,
+                'redirect_url': reverse('listar_libros')
+            })
             
         except Exception as e:
             logger.error(f"❌ Error agregando libro: {str(e)}", exc_info=True)
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': str(e)})
-            
-            messages.error(request, f'Error al agregar libro: {str(e)}')
-            return render(request, 'agregar_libro.html', {'autores': autores, 'categorias': categorias})
+            return JsonResponse({'success': False, 'error': str(e)})
     
     return render(request, 'agregar_libro.html', {
         'autores': autores,
         'categorias': categorias
     })
-
 
 @login_required
 @admin_required
