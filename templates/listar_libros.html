@@ -177,7 +177,7 @@
         border-radius: 8px;
         cursor: pointer;
         border: 1px solid var(--border-light);
-        transition: transform 0.2s;
+        transition: transform 0.2s, opacity 0.3s;
     }
 
     .book-cover:hover {
@@ -194,6 +194,19 @@
         justify-content: center;
         color: var(--text-secondary);
         border: 1px dashed var(--border-light);
+        font-size: 1.2rem;
+    }
+
+    .cover-loading {
+        width: 50px;
+        height: 65px;
+        background: var(--bg-light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        border: 1px solid var(--border-light);
         font-size: 1.2rem;
     }
 
@@ -496,8 +509,14 @@
                     <td>#{{ libro.id_libro }}</td>
                     <td>
                         {% if libro.google_drive_portada_url %}
-                            <img src="{{ libro.google_drive_portada_url }}" 
+                            <div class="cover-loading" data-portada-id="{{ libro.id_libro }}">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <img src="" 
                                  class="book-cover" 
+                                 style="display: none;"
+                                 data-drive-url="{{ libro.google_drive_portada_url }}"
+                                 data-portada-id="{{ libro.id_libro }}"
                                  onclick="mostrarPortada('{{ libro.google_drive_portada_url }}', '{{ libro.titulo|escapejs }}')"
                                  alt="Portada">
                         {% else %}
@@ -553,17 +572,16 @@
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             {% if libro.google_drive_url or libro.pdf_url %}
                                 {% if libro.descarga_autorizada %}
-                                    <!-- Modo DESCARGAR: enlace directo para descargar -->
                                     <a href="{% url 'ver_descargar_libro' libro.id_libro %}" 
                                        class="file-link btn-download" 
                                        target="_blank">
                                         <i class="fas fa-download"></i> Descargar PDF
                                     </a>
                                 {% else %}
-                                    <!-- Modo SOLO LECTURA: abrir en modal/visor del sistema -->
                                     <button type="button" 
                                             class="file-link btn-view" 
-                                            onclick="abrirVisorPDF('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}')">
+                                            data-drive-url="{{ libro.google_drive_url }}"
+                                            onclick="abrirVisorPDF('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url }}')">
                                         <i class="fas fa-eye"></i> Leer en línea
                                     </button>
                                 {% endif %}
@@ -672,7 +690,11 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="text-align: center; padding: 1rem;">
-                <img id="portadaImagen" class="img-fluid" style="max-height: 70vh; border-radius: 8px;">
+                <div id="portadaModalLoader" style="display: none; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--accent);"></i>
+                    <p style="color: white; margin-top: 1rem;">Cargando imagen...</p>
+                </div>
+                <img id="portadaImagen" class="img-fluid" style="max-height: 70vh; border-radius: 8px; display: none;">
             </div>
         </div>
     </div>
@@ -689,7 +711,11 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+                <div id="pdfLoader" style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; flex-direction: column; gap: 1rem;">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>Cargando PDF...</p>
+                </div>
+                <iframe id="pdfIframe" class="pdf-iframe" src="" style="display: none;"></iframe>
             </div>
             <div class="modal-footer" style="background: var(--bg-light);">
                 <small class="text-muted">
@@ -711,9 +737,68 @@
     document.addEventListener('DOMContentLoaded', function() {
         portadaModal = new bootstrap.Modal(document.getElementById('portadaModal'));
         visorPDFModal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
+        
+        // Cargar todas las portadas con proxy
+        cargarTodasLasPortadas();
     });
     
-    // Búsqueda en tiempo real
+    // ============================================
+    // CARGAR PORTADAS CON PROXY BASE64
+    // ============================================
+    async function cargarTodasLasPortadas() {
+        const imagenes = document.querySelectorAll('img[data-drive-url]');
+        
+        for (const img of imagenes) {
+            const url = img.dataset.driveUrl;
+            const portadaId = img.dataset.portadaId;
+            if (url) {
+                await cargarImagenProxy(url, img, portadaId);
+            }
+        }
+    }
+    
+    async function cargarImagenProxy(url, imgElement, portadaId) {
+        if (!url || !imgElement) return;
+        
+        const loader = document.querySelector(`.cover-loading[data-portada-id="${portadaId}"]`);
+        
+        try {
+            const proxyUrl = `/proxy/imagen/?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            
+            if (data.success && data.base64) {
+                // Precargar la imagen
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    imgElement.src = data.base64;
+                    imgElement.style.display = 'block';
+                    imgElement.style.opacity = '1';
+                    if (loader) loader.style.display = 'none';
+                };
+                nuevaImg.onerror = function() {
+                    if (loader) {
+                        loader.innerHTML = '<i class="fas fa-image"></i>';
+                    }
+                    console.error('Error al cargar imagen');
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                if (loader) {
+                    loader.innerHTML = '<i class="fas fa-image"></i>';
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando imagen:', error);
+            if (loader) {
+                loader.innerHTML = '<i class="fas fa-image"></i>';
+            }
+        }
+    }
+    
+    // ============================================
+    // BÚSQUEDA EN TIEMPO REAL
+    // ============================================
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#librosTableBody tr');
@@ -724,26 +809,89 @@
         });
     });
     
-    // Mostrar portada en modal
-    window.mostrarPortada = function(url, titulo) {
-        document.getElementById('portadaImagen').src = url;
+    // ============================================
+    // MOSTRAR PORTADA EN MODAL (CON PROXY)
+    // ============================================
+    window.mostrarPortada = async function(url, titulo) {
+        const modalImg = document.getElementById('portadaImagen');
+        const modalLoader = document.getElementById('portadaModalLoader');
+        
+        modalImg.src = '';
+        modalImg.style.display = 'none';
+        modalLoader.style.display = 'block';
+        
         portadaModal.show();
+        
+        try {
+            const proxyUrl = `/proxy/imagen/?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            
+            if (data.success && data.base64) {
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    modalImg.src = data.base64;
+                    modalImg.style.display = 'block';
+                    modalLoader.style.display = 'none';
+                };
+                nuevaImg.onerror = function() {
+                    modalLoader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger);"></i><p style="color: white;">Error al cargar imagen</p>';
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                modalLoader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger);"></i><p style="color: white;">No se pudo cargar la imagen</p>';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            modalLoader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger);"></i><p style="color: white;">Error de conexión</p>';
+        }
     };
     
-    // Abrir visor de PDF (modo solo lectura)
-    window.abrirVisorPDF = function(libroId, titulo) {
+    // ============================================
+    // ABRIR VISOR PDF (CON PROXY)
+    // ============================================
+    window.abrirVisorPDF = function(libroId, titulo, driveUrl) {
         document.getElementById('pdfTituloLibro').innerText = titulo;
-        const pdfUrl = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
-        document.getElementById('pdfIframe').src = pdfUrl;
-        visorPDFModal.show();
+        
+        const pdfIframe = document.getElementById('pdfIframe');
+        const pdfLoader = document.getElementById('pdfLoader');
+        
+        pdfIframe.style.display = 'none';
+        pdfLoader.style.display = 'flex';
+        
+        if (driveUrl) {
+            // Usar el proxy de PDF
+            const proxyPdfUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            pdfIframe.src = proxyPdfUrl;
+            
+            // Ocultar loader cuando cargue
+            pdfIframe.onload = function() {
+                pdfLoader.style.display = 'none';
+                pdfIframe.style.display = 'block';
+            };
+            
+            // Timeout por si tarda mucho
+            setTimeout(function() {
+                pdfLoader.style.display = 'none';
+                pdfIframe.style.display = 'block';
+            }, 3000);
+            
+            visorPDFModal.show();
+        } else {
+            Swal.fire('Error', 'No hay PDF disponible', 'error');
+        }
     };
     
     // Limpiar iframe al cerrar el modal
     document.getElementById('visorPDFModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('pdfIframe').src = '';
+        document.getElementById('pdfIframe').style.display = 'none';
+        document.getElementById('pdfLoader').style.display = 'flex';
     });
     
-    // Confirmar eliminación
+    // ============================================
+    // CONFIRMAR ELIMINACIÓN
+    // ============================================
     document.querySelectorAll('.eliminar-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();

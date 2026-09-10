@@ -2,9 +2,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from django.db import IntegrityError
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -16,6 +17,8 @@ import tempfile
 import os
 import threading
 import re
+import base64
+import requests
 
 from ..decorators import admin_required
 from ..models import Libro, Autor, Categoria, Revista, Coleccion, Imagen
@@ -38,19 +41,23 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================
-# FUNCIONES AUXILIARES
+# FUNCIONES AUXILIARES PARA PROXY
 # ============================================
 
-def extract_file_id_from_url(url):
-    """Extrae el ID de archivo de una URL de Google Drive"""
+def extraer_file_id_drive(url):
+    """Extrae el file_id de cualquier URL de Google Drive"""
     if not url:
         return None
     
+    url = url.strip()
+    
     patterns = [
-        r'/file/d/([^/]+)',
-        r'id=([^&]+)',
-        r'drive\.google\.com/open\?id=([^&]+)',
-        r'drive\.google\.com/uc\?id=([^&]+)'
+        r'[?&]id=([a-zA-Z0-9_-]+)',
+        r'/file/d/([a-zA-Z0-9_-]+)',
+        r'open\?id=([a-zA-Z0-9_-]+)',
+        r'/d/([a-zA-Z0-9_-]+)',
+        r'thumbnail\?id=([a-zA-Z0-9_-]+)',
+        r'lh3\.googleusercontent\.com/d/([a-zA-Z0-9_-]+)',
     ]
     
     for pattern in patterns:
@@ -58,7 +65,131 @@ def extract_file_id_from_url(url):
         if match:
             return match.group(1)
     
+    if re.match(r'^[a-zA-Z0-9_-]{10,}$', url):
+        return url
+    
     return None
+
+
+# ============================================
+# PROXY IMAGEN - Base64
+# ============================================
+
+@login_required
+@require_GET
+def proxy_imagen(request):
+    """
+    Recibe una URL de Google Drive, extrae el file_id,
+    descarga la imagen y la devuelve en Base64.
+    """
+    url = request.GET.get('url')
+    if not url:
+        return JsonResponse({'success': False, 'error': 'URL no proporcionada'}, status=400)
+    
+    file_id = extraer_file_id_drive(url)
+    if not file_id:
+        return JsonResponse({'success': False, 'error': 'No se pudo extraer el ID'}, status=400)
+    
+    # Estrategias de descarga (en orden de prioridad)
+    urls = [
+        f"https://drive.google.com/thumbnail?id={file_id}&sz=w800",
+        f"https://drive.google.com/uc?export=view&id={file_id}",
+        f"https://drive.google.com/uc?export=download&id={file_id}",
+        f"https://lh3.googleusercontent.com/d/{file_id}",
+    ]
+    
+    image_data = None
+    mime_type = 'image/jpeg'
+    
+    for download_url in urls:
+        try:
+            response = requests.get(download_url, timeout=30, allow_redirects=True)
+            
+            # Manejar redirecciones de confirmación de Google
+            if 'confirm' in response.url and 'download' in response.url:
+                confirm_match = re.search(r'confirm=([^&]+)', response.text)
+                if confirm_match:
+                    confirm_token = confirm_match.group(1)
+                    download_url_confirm = f"{response.url}&confirm={confirm_token}"
+                    response = requests.get(download_url_confirm, timeout=30, allow_redirects=True)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type', '')
+                if content_type.startswith('image/') or len(response.content) > 1000:
+                    image_data = response.content
+                    mime_type = content_type if content_type.startswith('image/') else 'image/jpeg'
+                    break
+        except Exception as e:
+            logger.warning(f"Error descargando imagen desde {download_url}: {e}")
+            continue
+    
+    if not image_data:
+        return JsonResponse({'success': False, 'error': 'No se pudo descargar la imagen'}, status=404)
+    
+    # Convertir a Base64
+    base64_data = base64.b64encode(image_data).decode('utf-8')
+    
+    return JsonResponse({
+        'success': True,
+        'base64': f'data:{mime_type};base64,{base64_data}'
+    })
+
+
+# ============================================
+# PROXY PDF - Stream
+# ============================================
+
+@login_required
+@require_GET
+def proxy_pdf(request):
+    """
+    Proxy para PDFs de Google Drive - Devuelve el PDF como stream
+    para que se pueda mostrar en un iframe.
+    """
+    url = request.GET.get('url')
+    if not url:
+        return JsonResponse({'error': 'URL requerida'}, status=400)
+    
+    file_id = extraer_file_id_drive(url)
+    if not file_id:
+        return JsonResponse({'error': 'No se pudo extraer el ID'}, status=400)
+    
+    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    try:
+        response = requests.get(download_url, stream=True, timeout=60, allow_redirects=True)
+        
+        if response.status_code != 200:
+            return JsonResponse({'error': f'Error: {response.status_code}'}, status=400)
+        
+        content_type = response.headers.get('content-type', 'application/pdf')
+        
+        # Verificar si es HTML (página de confirmación de Google)
+        if 'text/html' in content_type:
+            confirm_match = re.search(r'confirm=([^&]+)', response.text)
+            if confirm_match:
+                confirm_token = confirm_match.group(1)
+                download_url = f"{download_url}&confirm={confirm_token}"
+                response = requests.get(download_url, stream=True, timeout=60, allow_redirects=True)
+                content_type = response.headers.get('content-type', 'application/pdf')
+        
+        def generate():
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    yield chunk
+        
+        django_response = StreamingHttpResponse(
+            generate(),
+            content_type=content_type
+        )
+        django_response['Content-Disposition'] = 'inline'
+        django_response['Cache-Control'] = 'no-cache'
+        
+        return django_response
+        
+    except Exception as e:
+        logger.error(f"Error en proxy_pdf: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 # ============================================
@@ -71,7 +202,6 @@ def listar_libros(request):
     """Lista todos los libros con paginación"""
     libros = Libro.objects.all()
     
-    # Obtener el parámetro de ordenamiento
     ordenar = request.GET.get('ordenar', '')
     
     if ordenar == 'fecha_asc':
@@ -97,7 +227,7 @@ def listar_libros(request):
         'libros': page_obj,
         'usuario': request.user,
         'busqueda': busqueda,
-        'ordenar': ordenar,  # ✅ AGREGAR ESTA LÍNEA
+        'ordenar': ordenar,
     })
 
 
@@ -140,7 +270,7 @@ def agregar_libro(request):
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
-            # Subir portada a Drive (SIN messages.info)
+            # Subir portada a Drive
             if 'portada' in request.FILES:
                 portada = request.FILES['portada']
                 logger.info(f"📷 Portada detectada: {portada.name}")
@@ -151,7 +281,7 @@ def agregar_libro(request):
                 thread.daemon = True
                 thread.start()
             
-            # Subir PDF a Drive (SIN messages.info)
+            # Subir PDF a Drive
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
@@ -170,7 +300,7 @@ def agregar_libro(request):
                 thread.daemon = True
                 thread.start()
             
-            # Subir autorización a Drive (SIN messages.info)
+            # Subir autorización a Drive
             if 'autorizacion' in request.FILES:
                 autorizacion = request.FILES['autorizacion']
                 logger.info(f"📄 Autorización detectada: {autorizacion.name}")
@@ -214,7 +344,6 @@ def agregar_libro(request):
             
             logger.info(f"✅ Libro '{titulo}' creado exitosamente por {request.user.username}")
             
-            # RESPUESTA JSON SIEMPRE (sin importar el tipo de petición)
             return JsonResponse({
                 'success': True,
                 'message': 'Libro agregado correctamente. Los archivos se están subiendo a Google Drive.',
@@ -230,6 +359,7 @@ def agregar_libro(request):
         'autores': autores,
         'categorias': categorias
     })
+
 
 @login_required
 @admin_required
@@ -264,7 +394,6 @@ def editar_libro(request, libro_id):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La nueva portada se está subiendo a Google Drive en segundo plano.")
                 libro.google_drive_portada_url = ''
             
             # Actualizar PDF
@@ -294,7 +423,6 @@ def editar_libro(request, libro_id):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ El nuevo PDF se está subiendo a Google Drive en segundo plano.")
                 libro.google_drive_url = ''
             
             # Actualizar autorización
@@ -311,7 +439,6 @@ def editar_libro(request, libro_id):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La nueva autorización se está subiendo a Google Drive en segundo plano.")
                 libro.google_drive_autorizacion_url = ''
             
             # Actualizar autores
@@ -326,7 +453,6 @@ def editar_libro(request, libro_id):
             libro.save()
             
             logger.info(f"✅ Libro '{libro.titulo}' actualizado por {request.user.username}")
-            messages.success(request, f'Libro "{libro.titulo}" actualizado correctamente')
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -335,6 +461,7 @@ def editar_libro(request, libro_id):
                     'redirect_url': reverse('listar_libros')
                 })
             
+            messages.success(request, f'Libro "{libro.titulo}" actualizado correctamente')
             return redirect('listar_libros')
             
         except Exception as e:
@@ -520,7 +647,6 @@ def agregar_revista(request):
                 google_drive_img_url=''
             )
             
-            # Manejar imagen de portada
             if 'img_portada' in request.FILES:
                 imagen_original = request.FILES['img_portada']
                 tamaño_mb = imagen_original.size / (1024 * 1024)
@@ -530,7 +656,6 @@ def agregar_revista(request):
                 
                 logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.2f} MB)")
             
-            # Manejar PDF
             pdf_para_subir = None
             if 'pdf' in request.FILES:
                 pdf_original = request.FILES['pdf']
@@ -542,11 +667,9 @@ def agregar_revista(request):
                 logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 pdf_para_subir = pdf_original
             
-            # Guardar la revista
             revista.save()
             revista_id = revista.id_revista
             
-            # Subir imagen a Drive
             if 'img_portada' in request.FILES:
                 imagen_original = request.FILES['img_portada']
                 nombre_imagen = f"{coleccion.nomb_colecc}_{nro_revista or 'portada'}"
@@ -556,9 +679,7 @@ def agregar_revista(request):
                 )
                 thread_img.daemon = True
                 thread_img.start()
-                messages.info(request, "✅ La imagen se está subiendo a Google Drive en segundo plano.")
             
-            # Subir PDF a Drive
             if pdf_para_subir:
                 nombre_pdf = f"{coleccion.nomb_colecc}_{nro_revista or 'revista'}"
                 thread_pdf = threading.Thread(
@@ -567,7 +688,6 @@ def agregar_revista(request):
                 )
                 thread_pdf.daemon = True
                 thread_pdf.start()
-                messages.info(request, "✅ El PDF se está subiendo a Google Drive en segundo plano.")
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -604,12 +724,9 @@ def modificar_revista(request, id_revista):
         
         if form.is_valid():
             try:
-                # Guardar la revista
                 revista = form.save()
                 
-                # Si hay nueva imagen, subir a Drive
                 if 'img_portada' in request.FILES:
-                    # Eliminar imagen anterior
                     if revista.google_drive_img_url:
                         file_id = extract_file_id_from_url(revista.google_drive_img_url)
                         if file_id:
@@ -623,13 +740,10 @@ def modificar_revista(request, id_revista):
                     )
                     thread_img.daemon = True
                     thread_img.start()
-                    messages.info(request, "✅ La nueva imagen se está subiendo a Google Drive en segundo plano.")
                     revista.google_drive_img_url = ''
                     revista.save()
                 
-                # Si hay nuevo PDF, subir a Drive
                 if 'pdf' in request.FILES:
-                    # Eliminar PDF anterior
                     if revista.google_drive_url:
                         file_id = extract_file_id_from_url(revista.google_drive_url)
                         if file_id:
@@ -643,7 +757,6 @@ def modificar_revista(request, id_revista):
                     )
                     thread_pdf.daemon = True
                     thread_pdf.start()
-                    messages.info(request, "✅ El nuevo PDF se está subiendo a Google Drive en segundo plano.")
                     revista.google_drive_url = ''
                     revista.save()
                 
@@ -688,13 +801,11 @@ def eliminar_revista(request, id_revista):
     if request.method == 'POST':
         revista = get_object_or_404(Revista, id_revista=id_revista)
         
-        # Eliminar PDF de Google Drive
         if revista.google_drive_url:
             file_id = extract_file_id_from_url(revista.google_drive_url)
             if file_id:
                 eliminar_pdf_de_drive(file_id)
         
-        # Eliminar imagen de Google Drive
         if revista.google_drive_img_url:
             file_id = extract_file_id_from_url(revista.google_drive_img_url)
             if file_id:
@@ -847,7 +958,6 @@ def agregar_imagen(request):
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
-            # Subir imagen a Drive
             try:
                 thread = threading.Thread(
                     target=subir_imagen_a_drive_async,
@@ -859,7 +969,6 @@ def agregar_imagen(request):
             except Exception as e:
                 logger.error(f"⚠️ Error iniciando subida a Drive: {e}")
             
-            # Agregar categorías
             for cat_id in request.POST.getlist('categorias'):
                 try:
                     categoria = Categoria.objects.get(pk=cat_id)
@@ -900,9 +1009,7 @@ def editar_imagen(request, id_imagen):
             imagen.descripcion = request.POST.get('descripcion', '')
             imagen.autorImg = request.POST.get('autorImg')
             
-            # Subir nueva imagen a Drive
             if 'img_portada' in request.FILES:
-                # Eliminar imagen anterior de Drive
                 if imagen.google_drive_url:
                     file_id = extract_file_id_from_url(imagen.google_drive_url)
                     if file_id:
@@ -919,7 +1026,6 @@ def editar_imagen(request, id_imagen):
                 )
                 thread.daemon = True
                 thread.start()
-                messages.info(request, "✅ La nueva imagen se está subiendo a Google Drive en segundo plano.")
             
             imagen.save()
             imagen.categorias.set(request.POST.getlist('categorias'))
@@ -940,7 +1046,6 @@ def eliminar_imagen(request, pk):
     imagen = get_object_or_404(Imagen, pk=pk)
     
     if request.method == 'POST':
-        # Eliminar de Google Drive
         if imagen.google_drive_url:
             file_id = extract_file_id_from_url(imagen.google_drive_url)
             if file_id:
@@ -966,7 +1071,6 @@ def editar_marca(request, id_imagen):
     if request.method == 'POST':
         try:
             if 'marca_agua' in request.FILES and imagen.google_drive_url:
-                # TODO: Descargar imagen de Drive, aplicar marca, volver a subir
                 messages.info(request, "Funcionalidad en desarrollo - marca de agua con Google Drive")
             else:
                 messages.warning(request, 'No hay imagen para aplicar marca de agua')

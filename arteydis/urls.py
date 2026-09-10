@@ -1,4 +1,4 @@
-# urls.py
+# arteydis/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -15,9 +15,18 @@ from biblioartdis.views.usuario_views import (
     buscar_libros, chatbot_view, obtener_novedades, chat_con_gemini
 )
 
+# Importar las vistas proxy
+from biblioartdis.views.libro_views import proxy_imagen, proxy_pdf
+
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
+    
+    # ============================================
+    # PROXY PARA GOOGLE DRIVE (IMÁGENES Y PDFs)
+    # ============================================
+    path('proxy/imagen/', proxy_imagen, name='proxy_imagen'),
+    path('proxy/pdf/', proxy_pdf, name='proxy_pdf'),
     
     # Autenticación (usando views desde auth_views)
     path('', views.home, name='home'),
@@ -25,11 +34,11 @@ urlpatterns = [
     path('accounts/logout/', views.logout_view, name='logout'),
     
     # Páginas principales
-    path('inicio/', inicio, name='inicio'),  # Usamos la vista importada
+    path('inicio/', inicio, name='inicio'),
     path('principal/', views.principal, name='principal'),
     
     # ============================================
-    # REGISTRO CON APROBACIÓN MANUAL (desde auth_views)
+    # REGISTRO CON APROBACIÓN MANUAL
     # ============================================
     path('registrar/', views.registrar_usuario, name='registrar_usuario'),
     path('solicitudes-pendientes/', views.listar_solicitudes_pendientes, name='solicitudes_pendientes'),
@@ -37,7 +46,7 @@ urlpatterns = [
     path('rechazar-usuario/<int:usuario_id>/', views.rechazar_usuario, name='rechazar_usuario'),
     
     # ============================================
-    # GESTIÓN DE SOLICITUDES (NUEVO DASHBOARD)
+    # GESTIÓN DE SOLICITUDES
     # ============================================
     path('solicitudes/', views.gestionar_solicitudes, name='gestionar_solicitudes'),
     path('aprobar-solicitud/<int:usuario_id>/', views.aprobar_solicitud, name='aprobar_solicitud'),
@@ -45,29 +54,28 @@ urlpatterns = [
     path('ver-documentos/<int:usuario_id>/', views.ver_documentos_solicitud, name='ver_documentos_solicitud'),
     
     # ============================================
-    # SUBIDA A DRIVE VÍA AJAX (desde auth_views)
+    # SUBIDA A DRIVE VÍA AJAX
     # ============================================
     path('upload-to-drive/', views.upload_to_drive_ajax, name='upload_to_drive_ajax'),
     
     # ============================================
-    # RESTABLECER CONTRASEÑA (ADMIN) - desde auth_views
+    # RESTABLECER CONTRASEÑA (ADMIN)
     # ============================================
     path('restablecer-password-admin/', views.restablecer_password_admin, name='restablecer_password_admin'),
     path('restablecer-password-api/', views.restablecer_password_api, name='restablecer_password_api'),
     
     # ============================================
-    # PERFIL Y USUARIOS (¡USANDO LAS VISTAS CORRECTAS!)
+    # PERFIL Y USUARIOS
     # ============================================
-    path('perfil/', perfil, name='perfil'),  # ✅ Usa la vista que procesa POST
-    path('cambiar-password-ajax/', cambiar_password_ajax, name='cambiar_password_ajax'),  # ✅ Para AJAX
+    path('perfil/', perfil, name='perfil'),
+    path('cambiar-password-ajax/', cambiar_password_ajax, name='cambiar_password_ajax'),
     
     path('agregar_usuario/', views.agregar_usuario, name='agregar_usuario'),
     path('modificar_usuario/<int:usuario_id>/', views.modificar_usuario, name='modificar_usuario'),
     path('eliminar_usuario/<int:usuario_id>/', views.eliminar_usuario, name='eliminar_usuario'),
     path('lista_usuarios/', views.lista_usuarios, name='lista_usuarios'),
     
-    # ⚠️ SOLO UNA RUTA PARA RESTABLECER PASSWORD (sin duplicados)
-    path('restablecer-password/', views.restablecer_password_admin, name='restablecer_password'),
+    path('restablecer-password/', views.restablecer_password, name='restablecer_password'),
     
     # ============================================
     # GESTIÓN DE LIBROS
