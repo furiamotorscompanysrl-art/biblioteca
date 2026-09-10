@@ -143,8 +143,9 @@ def proxy_imagen(request):
 @require_GET
 def proxy_pdf(request):
     """
-    Proxy para PDFs de Google Drive - Devuelve el PDF como stream
-    para que se pueda mostrar en un iframe.
+    Proxy para PDFs de Google Drive.
+    - Si ?base64=true: devuelve el PDF como Base64 (para PDF.js)
+    - Si no: devuelve el PDF como stream (para descargar)
     """
     url = request.GET.get('url')
     if not url:
@@ -154,25 +155,36 @@ def proxy_pdf(request):
     if not file_id:
         return JsonResponse({'error': 'No se pudo extraer el ID'}, status=400)
     
+    es_base64 = request.GET.get('base64') == 'true'
+    
     download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
     
     try:
-        response = requests.get(download_url, stream=True, timeout=60, allow_redirects=True)
+        response = requests.get(download_url, stream=not es_base64, timeout=60, allow_redirects=True)
         
         if response.status_code != 200:
             return JsonResponse({'error': f'Error: {response.status_code}'}, status=400)
         
         content_type = response.headers.get('content-type', 'application/pdf')
         
-        # Verificar si es HTML (página de confirmación de Google)
+        # Manejar confirmación de Google
         if 'text/html' in content_type:
             confirm_match = re.search(r'confirm=([^&]+)', response.text)
             if confirm_match:
                 confirm_token = confirm_match.group(1)
                 download_url = f"{download_url}&confirm={confirm_token}"
-                response = requests.get(download_url, stream=True, timeout=60, allow_redirects=True)
+                response = requests.get(download_url, stream=not es_base64, timeout=60, allow_redirects=True)
                 content_type = response.headers.get('content-type', 'application/pdf')
         
+        # MODO BASE64 (para PDF.js - seguro)
+        if es_base64:
+            pdf_base64 = base64.b64encode(response.content).decode('utf-8')
+            return JsonResponse({
+                'success': True,
+                'base64': f'data:application/pdf;base64,{pdf_base64}'
+            })
+        
+        # MODO STREAM (para descarga)
         def generate():
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
@@ -184,7 +196,6 @@ def proxy_pdf(request):
         )
         django_response['Content-Disposition'] = 'inline; filename="documento.pdf"'
         django_response['Cache-Control'] = 'no-cache'
-        django_response['X-Frame-Options'] = 'SAMEORIGIN'
         
         return django_response
         

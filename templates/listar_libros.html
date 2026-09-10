@@ -377,13 +377,8 @@
     .pdf-modal .modal-body {
         padding: 0;
         height: calc(90vh - 60px);
-    }
-    
-    .pdf-iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 0 0 16px 16px;
+        overflow: auto;
+        background: #333;
     }
 
     .pagination-wrapper {
@@ -428,6 +423,65 @@
         background: var(--accent);
         border-color: var(--accent);
         color: white;
+    }
+
+    /* ============================================ */
+    /* ESTILOS PARA EL VISOR PDF.JS                 */
+    /* ============================================ */
+    .pdf-controls-bar {
+        position: sticky;
+        top: 0;
+        background: var(--primary-dark);
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        z-index: 10;
+        border-bottom: 1px solid var(--accent);
+        flex-wrap: wrap;
+    }
+
+    .pdf-controls-bar button {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .pdf-controls-bar button:hover:not(:disabled) {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .pdf-controls-bar button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .pdf-controls-bar span {
+        color: white;
+        font-size: 0.85rem;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    #pdfCanvasContainer {
+        display: flex;
+        justify-content: center;
+        padding: 1.5rem;
+        min-height: 100%;
+    }
+
+    #pdfCanvas {
+        max-width: 100%;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        background: white;
+        border-radius: 4px;
     }
 
     @media (max-width: 768px) {
@@ -700,7 +754,7 @@
     </div>
 </div>
 
-<!-- Modal para visor de PDF (solo lectura) -->
+<!-- Modal para visor de PDF (PDF.js - SIN DESCARGA) -->
 <div id="visorPDFModal" class="modal fade pdf-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
@@ -711,15 +765,39 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="pdfLoader" style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; flex-direction: column; gap: 1rem;">
-                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                    <p>Cargando PDF...</p>
+                <!-- Barra de controles -->
+                <div class="pdf-controls-bar" id="pdfControls" style="display: none;">
+                    <button type="button" onclick="pdfPrevPage()" id="pdfPrevBtn" title="Página anterior">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span>
+                        Pág. <span id="pdfCurrentPage">1</span> / <span id="pdfTotalPages">?</span>
+                    </span>
+                    <button type="button" onclick="pdfNextPage()" id="pdfNextBtn" title="Página siguiente">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <span style="margin-left: 0.5rem;">|</span>
+                    <button type="button" onclick="pdfZoomOut()" title="Alejar">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span id="pdfZoomLevel" style="min-width: 50px;">100%</span>
+                    <button type="button" onclick="pdfZoomIn()" title="Acercar">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
                 </div>
-                <iframe id="pdfIframe" class="pdf-iframe" src="" style="display: none;"></iframe>
+                
+                <!-- Contenedor del canvas -->
+                <div id="pdfCanvasContainer">
+                    <div id="pdfLoading" style="text-align: center; padding: 3rem; color: white;">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF...</p>
+                    </div>
+                    <canvas id="pdfCanvas" style="display: none;"></canvas>
+                </div>
             </div>
             <div class="modal-footer" style="background: var(--bg-light);">
                 <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> Modo solo lectura - Para descargar contacta al bibliotecario
+                    <i class="fas fa-lock"></i> <strong>Modo solo lectura protegido</strong> - Prohibida su descarga por derechos de autor
                 </small>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Cerrar
@@ -729,25 +807,46 @@
     </div>
 </div>
 
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+    // Configurar worker de PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
     let portadaModal;
     let visorPDFModal;
-    
+
+    // Variables para PDF.js
+    let pdfDoc = null;
+    let pdfCurrentPageNum = 1;
+    let pdfScale = 1.5;
+    let pdfRendering = false;
+
     document.addEventListener('DOMContentLoaded', function() {
         portadaModal = new bootstrap.Modal(document.getElementById('portadaModal'));
         visorPDFModal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
-        
+
         // Cargar todas las portadas con proxy
         cargarTodasLasPortadas();
+
+        // Bloquear clic derecho en el canvas del PDF
+        const canvas = document.getElementById('pdfCanvas');
+        if (canvas) {
+            canvas.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+        }
     });
-    
+
     // ============================================
     // CARGAR PORTADAS CON PROXY BASE64
     // ============================================
     async function cargarTodasLasPortadas() {
         const imagenes = document.querySelectorAll('img[data-drive-url]');
-        
+
         for (const img of imagenes) {
             const url = img.dataset.driveUrl;
             const portadaId = img.dataset.portadaId;
@@ -756,19 +855,18 @@
             }
         }
     }
-    
+
     async function cargarImagenProxy(url, imgElement, portadaId) {
         if (!url || !imgElement) return;
-        
+
         const loader = document.querySelector(`.cover-loading[data-portada-id="${portadaId}"]`);
-        
+
         try {
             const proxyUrl = `/proxy/imagen/?url=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             const data = await response.json();
-            
+
             if (data.success && data.base64) {
-                // Precargar la imagen
                 const nuevaImg = new Image();
                 nuevaImg.onload = function() {
                     imgElement.src = data.base64;
@@ -780,7 +878,6 @@
                     if (loader) {
                         loader.innerHTML = '<i class="fas fa-image"></i>';
                     }
-                    console.error('Error al cargar imagen');
                 };
                 nuevaImg.src = data.base64;
             } else {
@@ -795,38 +892,38 @@
             }
         }
     }
-    
+
     // ============================================
     // BÚSQUEDA EN TIEMPO REAL
     // ============================================
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#librosTableBody tr');
-        
+
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(input) ? '' : 'none';
         });
     });
-    
+
     // ============================================
-    // MOSTRAR PORTADA EN MODAL (CON PROXY)
+    // MOSTRAR PORTADA EN MODAL
     // ============================================
     window.mostrarPortada = async function(url, titulo) {
         const modalImg = document.getElementById('portadaImagen');
         const modalLoader = document.getElementById('portadaModalLoader');
-        
+
         modalImg.src = '';
         modalImg.style.display = 'none';
         modalLoader.style.display = 'block';
-        
+
         portadaModal.show();
-        
+
         try {
             const proxyUrl = `/proxy/imagen/?url=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             const data = await response.json();
-            
+
             if (data.success && data.base64) {
                 const nuevaImg = new Image();
                 nuevaImg.onload = function() {
@@ -846,56 +943,176 @@
             modalLoader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger);"></i><p style="color: white;">Error de conexión</p>';
         }
     };
-    
+
     // ============================================
-    // ABRIR VISOR PDF (CON PROXY)
+    // ABRIR VISOR PDF CON PDF.JS (SIN DESCARGA)
     // ============================================
-    window.abrirVisorPDF = function(libroId, titulo, driveUrl) {
+    window.abrirVisorPDF = async function(libroId, titulo, driveUrl) {
         document.getElementById('pdfTituloLibro').innerText = titulo;
-        
-        const pdfIframe = document.getElementById('pdfIframe');
-        const pdfLoader = document.getElementById('pdfLoader');
-        
-        pdfIframe.style.display = 'none';
-        pdfLoader.style.display = 'flex';
-        
-        if (driveUrl) {
-            // Usar el proxy de PDF
-            const proxyPdfUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
-            pdfIframe.src = proxyPdfUrl;
-            
-            // Ocultar loader cuando cargue
-            pdfIframe.onload = function() {
-                pdfLoader.style.display = 'none';
-                pdfIframe.style.display = 'block';
-            };
-            
-            // Timeout por si tarda mucho
-            setTimeout(function() {
-                pdfLoader.style.display = 'none';
-                pdfIframe.style.display = 'block';
-            }, 3000);
-            
-            visorPDFModal.show();
-        } else {
-            Swal.fire('Error', 'No hay PDF disponible', 'error');
+
+        // Reset
+        pdfDoc = null;
+        pdfCurrentPageNum = 1;
+        pdfScale = 1.5;
+
+        const canvas = document.getElementById('pdfCanvas');
+        const loading = document.getElementById('pdfLoading');
+        const controls = document.getElementById('pdfControls');
+
+        canvas.style.display = 'none';
+        controls.style.display = 'none';
+        loading.style.display = 'block';
+        loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF...</p>';
+
+        visorPDFModal.show();
+
+        if (!driveUrl) {
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>No hay PDF disponible</p>';
+            return;
+        }
+
+        try {
+            // Obtener PDF como Base64 desde el proxy
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}&base64=true`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+
+            if (!data.success || !data.base64) {
+                loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
+                return;
+            }
+
+            // Convertir Base64 a Uint8Array
+            const pdfData = atob(data.base64.split(',')[1]);
+            const uint8Array = new Uint8Array(pdfData.length);
+            for (let i = 0; i < pdfData.length; i++) {
+                uint8Array[i] = pdfData.charCodeAt(i);
+            }
+
+            // Cargar con PDF.js
+            const loadingTask = pdfjsLib.getDocument({data: uint8Array});
+            pdfDoc = await loadingTask.promise;
+
+            document.getElementById('pdfTotalPages').innerText = pdfDoc.numPages;
+
+            loading.style.display = 'none';
+            controls.style.display = 'flex';
+            canvas.style.display = 'block';
+
+            // Renderizar primera página
+            await renderPdfPage(pdfCurrentPageNum);
+
+            // Actualizar estado de botones
+            updatePdfButtons();
+
+        } catch (error) {
+            console.error('Error:', error);
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
         }
     };
-    
-    // Limpiar iframe al cerrar el modal
+
+    async function renderPdfPage(numPage) {
+        if (!pdfDoc) return;
+        if (pdfRendering) return;
+
+        pdfRendering = true;
+
+        try {
+            const page = await pdfDoc.getPage(numPage);
+            const viewport = page.getViewport({scale: pdfScale});
+
+            const canvas = document.getElementById('pdfCanvas');
+            const context = canvas.getContext('2d');
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+
+            document.getElementById('pdfCurrentPage').innerText = numPage;
+            document.getElementById('pdfZoomLevel').innerText = Math.round(pdfScale * 100 / 1.5) + '%';
+
+            updatePdfButtons();
+            pdfRendering = false;
+        } catch (error) {
+            console.error('Error renderizando página:', error);
+            pdfRendering = false;
+        }
+    }
+
+    function updatePdfButtons() {
+        const prevBtn = document.getElementById('pdfPrevBtn');
+        const nextBtn = document.getElementById('pdfNextBtn');
+
+        if (pdfDoc) {
+            prevBtn.disabled = pdfCurrentPageNum <= 1;
+            nextBtn.disabled = pdfCurrentPageNum >= pdfDoc.numPages;
+        }
+    }
+
+    function pdfPrevPage() {
+        if (pdfDoc && pdfCurrentPageNum > 1) {
+            pdfCurrentPageNum--;
+            renderPdfPage(pdfCurrentPageNum);
+        }
+    }
+
+    function pdfNextPage() {
+        if (pdfDoc && pdfCurrentPageNum < pdfDoc.numPages) {
+            pdfCurrentPageNum++;
+            renderPdfPage(pdfCurrentPageNum);
+        }
+    }
+
+    function pdfZoomIn() {
+        if (pdfScale < 3) {
+            pdfScale += 0.25;
+            renderPdfPage(pdfCurrentPageNum);
+        }
+    }
+
+    function pdfZoomOut() {
+        if (pdfScale > 0.5) {
+            pdfScale -= 0.25;
+            renderPdfPage(pdfCurrentPageNum);
+        }
+    }
+
+    // Limpiar al cerrar el modal
     document.getElementById('visorPDFModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('pdfIframe').src = '';
-        document.getElementById('pdfIframe').style.display = 'none';
-        document.getElementById('pdfLoader').style.display = 'flex';
+        pdfDoc = null;
+        pdfCurrentPageNum = 1;
+        pdfScale = 1.5;
+
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
+        canvas.style.display = 'none';
+
+        document.getElementById('pdfControls').style.display = 'none';
+        document.getElementById('pdfLoading').style.display = 'block';
     });
-    
+
+    // Atajos de teclado para navegar
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('visorPDFModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') pdfPrevPage();
+            if (e.key === 'ArrowRight') pdfNextPage();
+        }
+    });
+
     // ============================================
     // CONFIRMAR ELIMINACIÓN
     // ============================================
     document.querySelectorAll('.eliminar-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             Swal.fire({
                 title: '¿Eliminar libro?',
                 text: "Esta acción no se puede deshacer.",
