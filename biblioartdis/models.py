@@ -325,12 +325,26 @@ class Libro(models.Model):
         return None
     
     def get_portada_display_url(self):
-        """Devuelve la URL de la portada (Google Drive)"""
+        """
+        Devuelve la URL de la portada (Google Drive).
+        Usa lh3.googleusercontent.com que SÍ funciona en <img>.
+        """
         if self.google_drive_portada_url:
             if 'drive.google.com' in self.google_drive_portada_url:
-                file_id = self.google_drive_portada_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_portada_url else None
+                # Extraer file_id de cualquier formato de URL
+                file_id = None
+                
+                if '/file/d/' in self.google_drive_portada_url:
+                    file_id = self.google_drive_portada_url.split('/file/d/')[1].split('/')[0]
+                elif 'id=' in self.google_drive_portada_url:
+                    file_id = self.google_drive_portada_url.split('id=')[1].split('&')[0]
+                elif 'lh3.googleusercontent.com/d/' in self.google_drive_portada_url:
+                    file_id = self.google_drive_portada_url.split('lh3.googleusercontent.com/d/')[1].split('/')[0]
+                
                 if file_id:
-                    return f'https://drive.google.com/uc?id={file_id}'
+                    # ✅ FORMATO QUE SÍ FUNCIONA EN <img>
+                    return f'https://lh3.googleusercontent.com/d/{file_id}'
+            
             return self.google_drive_portada_url
         return None
     
@@ -461,17 +475,29 @@ class Revista(models.Model):
     descripcion = models.TextField(blank=True, null=True)
 
     def get_pdf_display_url(self):
-        """Devuelve la URL del PDF (prioriza Drive)"""
+        """
+        Devuelve la URL del PDF (prioriza Google Drive).
+        Usa /preview para que funcione en iframe.
+        """
         if self.google_drive_url:
             if 'drive.google.com' in self.google_drive_url:
-                file_id = self.google_drive_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_url else None
+                # Extraer file_id
+                file_id = None
+                
+                if '/file/d/' in self.google_drive_url:
+                    file_id = self.google_drive_url.split('/file/d/')[1].split('/')[0]
+                elif 'id=' in self.google_drive_url:
+                    file_id = self.google_drive_url.split('id=')[1].split('&')[0]
+                
                 if file_id:
+                    # ✅ FORMATO PARA IFRAME
                     return f'https://drive.google.com/file/d/{file_id}/preview'
+            
             return self.google_drive_url
-        if self.url:
-            return self.url
-        if self.pdf:
-            return self.pdf.url
+        
+        if self.pdf_url:
+            return self.pdf_url
+        
         return None
 
     def get_img_display_url(self):

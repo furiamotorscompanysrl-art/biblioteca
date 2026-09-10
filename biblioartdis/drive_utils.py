@@ -176,7 +176,10 @@ def extract_file_id_from_url(url):
 # ============================================
 
 def subir_pdf_a_drive(archivo_pdf, nombre_archivo=None, folder_path='Material_Biblioteca/Libros/PDFs'):
-    """Sube un PDF a Google Drive usando OAuth"""
+    """
+    Sube un PDF a Google Drive (versión síncrona).
+    Hace el PDF público para que se pueda ver en iframe.
+    """
     try:
         service = get_drive_service()
         if not service:
@@ -236,6 +239,21 @@ def subir_pdf_a_drive(archivo_pdf, nombre_archivo=None, folder_path='Material_Bi
         ).execute()
         
         file_id = file.get('id')
+        
+        # ✅ HACER PÚBLICO EL PDF
+        try:
+            permission = {
+                'type': 'anyone',
+                'role': 'reader'
+            }
+            service.permissions().create(
+                fileId=file_id,
+                body=permission
+            ).execute()
+            logger.info(f"Permiso público otorgado a PDF: {file_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo hacer público el PDF: {e}")
+        
         preview_url = f"https://drive.google.com/file/d/{file_id}/preview"
         
         logger.info(f"PDF subido a Google Drive: {preview_url}")
@@ -254,7 +272,10 @@ def subir_pdf_a_drive(archivo_pdf, nombre_archivo=None, folder_path='Material_Bi
 # ============================================
 
 def subir_pdf_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path='Material_Biblioteca/Libros/PDFs'):
-    """Sube un PDF a Google Drive desde bytes (sin archivo fisico)"""
+    """
+    Sube un PDF a Google Drive desde bytes (sin archivo físico).
+    Hace el PDF público para que se pueda ver en iframe.
+    """
     try:
         service = get_drive_service()
         if not service:
@@ -300,6 +321,21 @@ def subir_pdf_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path='M
         ).execute()
         
         file_id = file.get('id')
+        
+        # ✅ HACER PÚBLICO EL PDF
+        try:
+            permission = {
+                'type': 'anyone',
+                'role': 'reader'
+            }
+            service.permissions().create(
+                fileId=file_id,
+                body=permission
+            ).execute()
+            logger.info(f"Permiso público otorgado a PDF: {file_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo hacer público el PDF: {e}")
+        
         preview_url = f"https://drive.google.com/file/d/{file_id}/preview"
         
         logger.info(f"PDF subido: {preview_url}")
@@ -312,13 +348,16 @@ def subir_pdf_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path='M
         logger.error(f"Error subiendo PDF: {str(e)}")
         return None
 
-
 # ============================================
 # SUBIDA DE IMAGEN DESDE BYTES
 # ============================================
 
 def subir_imagen_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path='Material_Biblioteca/Libros/Portadas'):
-    """Sube una imagen a Google Drive desde bytes (sin archivo fisico)"""
+    """
+    Sube una imagen a Google Drive desde bytes (sin archivo físico).
+    Hace la imagen pública para que se pueda mostrar en <img>.
+    Usa lh3.googleusercontent.com para mostrar imágenes.
+    """
     try:
         service = get_drive_service()
         if not service:
@@ -376,7 +415,23 @@ def subir_imagen_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path
         ).execute()
         
         file_id = file.get('id')
-        image_url = f"https://drive.google.com/uc?id={file_id}"
+        
+        # ✅ HACER PÚBLICA LA IMAGEN (permiso: cualquiera con el enlace puede ver)
+        try:
+            permission = {
+                'type': 'anyone',
+                'role': 'reader'
+            }
+            service.permissions().create(
+                fileId=file_id,
+                body=permission
+            ).execute()
+            logger.info(f"Permiso público otorgado a imagen: {file_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo hacer pública la imagen: {e}")
+        
+        # ✅ FORMATO QUE SÍ FUNCIONA EN <img>
+        image_url = f"https://lh3.googleusercontent.com/d/{file_id}"
         
         logger.info(f"Imagen subida: {image_url}")
         return image_url
@@ -391,7 +446,10 @@ def subir_imagen_a_drive_from_bytes(contenido_bytes, nombre_archivo, folder_path
 # ============================================
 
 def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Material_Biblioteca/Libros/Portadas'):
-    """Sube una imagen a Google Drive"""
+    """
+    Sube una imagen a Google Drive (versión síncrona).
+    Hace la imagen pública para que se pueda mostrar en <img>.
+    """
     try:
         service = get_drive_service()
         if not service:
@@ -463,7 +521,23 @@ def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Mater
         ).execute()
         
         file_id = file.get('id')
-        image_url = f"https://drive.google.com/uc?id={file_id}"
+        
+        # ✅ HACER PÚBLICA LA IMAGEN
+        try:
+            permission = {
+                'type': 'anyone',
+                'role': 'reader'
+            }
+            service.permissions().create(
+                fileId=file_id,
+                body=permission
+            ).execute()
+            logger.info(f"Permiso público otorgado a imagen: {file_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo hacer pública la imagen: {e}")
+        
+        # ✅ FORMATO QUE SÍ FUNCIONA EN <img>
+        image_url = f"https://lh3.googleusercontent.com/d/{file_id}"
         
         logger.info(f"Imagen subida a Google Drive: {image_url}")
         return image_url
@@ -471,7 +545,6 @@ def subir_imagen_a_drive(archivo_imagen, nombre_archivo=None, folder_path='Mater
     except Exception as e:
         logger.error(f"Error subiendo imagen a Drive: {e}")
         return None
-
 
 # ============================================
 # FUNCIONES ASÍNCRONAS (LEEN ANTES DE CREAR HILO)
