@@ -299,7 +299,7 @@ def agregar_libro(request):
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 
-                if tamaño_mb > 50:
+                if tamaño_mb > 1000:
                     return JsonResponse({
                         'success': False,
                         'error': 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.'
@@ -414,7 +414,7 @@ def editar_libro(request, libro_id):
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 
-                if tamaño_mb > 50:
+                if tamaño_mb > 1000:
                     messages.error(request, 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.')
                     return render(request, 'editar_libro.html', {
                         'libro': libro,
