@@ -663,7 +663,7 @@ def agregar_revista(request):
                 imagen_original = request.FILES['img_portada']
                 tamaño_mb = imagen_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 5:
+                if tamaño_mb > 500:
                     raise ValueError('La imagen no puede superar los 5MB')
                 
                 logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.2f} MB)")
@@ -673,7 +673,7 @@ def agregar_revista(request):
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 10:
+                if tamaño_mb > 500:
                     raise ValueError('El PDF no puede superar los 10MB')
                 
                 logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
@@ -951,7 +951,7 @@ def agregar_imagen(request):
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
-            if tamaño_mb > 5:
+            if tamaño_mb > 50:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': 'La imagen no puede superar los 5MB'}, status=400)
                 messages.error(request, 'La imagen no puede superar los 5MB')
