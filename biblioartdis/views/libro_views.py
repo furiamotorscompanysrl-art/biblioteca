@@ -160,24 +160,51 @@ def proxy_pdf(request):
     download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
     
     try:
-        response = requests.get(download_url, stream=not es_base64, timeout=60, allow_redirects=True)
+        # ✅ Timeout aumentado para archivos grandes
+        response = requests.get(
+            download_url, 
+            stream=not es_base64, 
+            timeout=300,  # 5 minutos
+            allow_redirects=True
+        )
         
         if response.status_code != 200:
             return JsonResponse({'error': f'Error: {response.status_code}'}, status=400)
         
         content_type = response.headers.get('content-type', 'application/pdf')
         
-        # Manejar confirmación de Google
+        # Manejar confirmación de Google (para archivos grandes)
         if 'text/html' in content_type:
-            confirm_match = re.search(r'confirm=([^&]+)', response.text)
+            # Buscar el token de confirmación en el HTML
+            confirm_match = re.search(r'confirm=([^&"]+)', response.text)
+            if not confirm_match:
+                # Buscar en el formulario
+                confirm_match = re.search(r'name="confirm"\s+value="([^"]+)"', response.text)
+            
             if confirm_match:
                 confirm_token = confirm_match.group(1)
                 download_url = f"{download_url}&confirm={confirm_token}"
-                response = requests.get(download_url, stream=not es_base64, timeout=60, allow_redirects=True)
+                response = requests.get(
+                    download_url, 
+                    stream=not es_base64, 
+                    timeout=300, 
+                    allow_redirects=True
+                )
                 content_type = response.headers.get('content-type', 'application/pdf')
         
         # MODO BASE64 (para PDF.js - seguro)
         if es_base64:
+            # ✅ Advertir si el archivo es muy grande para Base64
+            content_length = int(response.headers.get('content-length', 0))
+            if content_length > 50 * 1024 * 1024:  # 50MB
+                logger.warning(f"PDF muy grande para Base64: {content_length / 1024 / 1024:.1f}MB")
+                # Para archivos > 50MB, devolver error y usar stream
+                return JsonResponse({
+                    'success': False,
+                    'error': 'PDF muy grande para visor. Use la opción de descarga.',
+                    'too_large': True
+                })
+            
             pdf_base64 = base64.b64encode(response.content).decode('utf-8')
             return JsonResponse({
                 'success': True,
@@ -199,6 +226,9 @@ def proxy_pdf(request):
         
         return django_response
         
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout al descargar PDF: {file_id}")
+        return JsonResponse({'error': 'El archivo es muy grande. Intente más tarde.'}, status=504)
     except Exception as e:
         logger.error(f"Error en proxy_pdf: {e}")
         return JsonResponse({'error': str(e)}, status=500)
@@ -299,10 +329,11 @@ def agregar_libro(request):
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 
-                if tamaño_mb > 1000:
+                # ✅ LÍMITE AUMENTADO A 2GB (Google Drive permite hasta 5TB)
+                if tamaño_mb > 2048:
                     return JsonResponse({
                         'success': False,
-                        'error': 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.'
+                        'error': f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.'
                     })
                 
                 thread = threading.Thread(
@@ -414,8 +445,9 @@ def editar_libro(request, libro_id):
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 
-                if tamaño_mb > 1000:
-                    messages.error(request, 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.')
+                # ✅ LÍMITE AUMENTADO A 2GB
+                if tamaño_mb > 2048:
+                    messages.error(request, f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.')
                     return render(request, 'editar_libro.html', {
                         'libro': libro,
                         'autores': autores,
@@ -496,7 +528,6 @@ def editar_libro(request, libro_id):
         'categorias': categorias,
         'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
     })
-
 
 @login_required
 @admin_required
@@ -663,8 +694,9 @@ def agregar_revista(request):
                 imagen_original = request.FILES['img_portada']
                 tamaño_mb = imagen_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 500:
-                    raise ValueError('La imagen no puede superar los 5MB')
+                # ✅ LÍMITE AUMENTADO A 100MB para imágenes de revista
+                if tamaño_mb > 100:
+                    raise ValueError(f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)')
                 
                 logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.2f} MB)")
             
@@ -673,8 +705,9 @@ def agregar_revista(request):
                 pdf_original = request.FILES['pdf']
                 tamaño_mb = pdf_original.size / (1024 * 1024)
                 
-                if tamaño_mb > 500:
-                    raise ValueError('El PDF no puede superar los 10MB')
+                # ✅ LÍMITE AUMENTADO A 2GB para PDFs de revista
+                if tamaño_mb > 2048:
+                    raise ValueError(f'El PDF supera los 2GB ({tamaño_mb:.0f}MB)')
                 
                 logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
                 pdf_para_subir = pdf_original
@@ -721,9 +754,8 @@ def agregar_revista(request):
     colecciones = Coleccion.objects.all().order_by('nomb_colecc')
     return render(request, 'agregar_revista.html', {
         'colecciones': colecciones,
-        'max_upload_size_mb': {'imagen': 5, 'pdf': 10}
+        'max_upload_size_mb': {'imagen': 100, 'pdf': 2048}
     })
-
 
 @login_required
 @admin_required
@@ -951,10 +983,11 @@ def agregar_imagen(request):
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
-            if tamaño_mb > 50:
+            # ✅ LÍMITE AUMENTADO A 100MB para imágenes
+            if tamaño_mb > 100:
                 if is_ajax:
-                    return JsonResponse({'success': False, 'error': 'La imagen no puede superar los 5MB'}, status=400)
-                messages.error(request, 'La imagen no puede superar los 5MB')
+                    return JsonResponse({'success': False, 'error': f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)'}, status=400)
+                messages.error(request, f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
             nombre_archivo = imagen_original.name

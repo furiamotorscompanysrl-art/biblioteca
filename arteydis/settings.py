@@ -1,3 +1,4 @@
+# settings.py
 from pathlib import Path
 import os
 from django.contrib.messages import constants as messages
@@ -7,20 +8,28 @@ import cloudinary.api
 import sys
 import json
 
-# Build paths
+# ============================================
+# BUILD PATHS
+# ============================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ============================================
 # SECRET KEY
+# ============================================
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7xx+3%9o4ni5#7s$0)3lyjb8g4albmz533@^+3w)1hm$v$06^)')
 
 # Silenciar warnings
 import warnings
 warnings.filterwarnings("ignore", module="admin_interface.templatetags")
 
-# DEBUG - Temporalmente True para ver errores
+# ============================================
+# DEBUG
+# ============================================
 DEBUG = True
 
-# ALLOWED_HOSTS
+# ============================================
+# ALLOWED HOSTS
+# ============================================
 ALLOWED_HOSTS = [
     'biblioteca-production-b2fa.up.railway.app',
     '.up.railway.app',
@@ -30,7 +39,9 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
 ]
 
-# Application definition
+# ============================================
+# APPLICATION DEFINITION
+# ============================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -91,7 +102,9 @@ TEMPLATES = [
     },
 ]
 
+# ============================================
 # LOGGING
+# ============================================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -195,7 +208,9 @@ except Exception as e:
 print(f"📌 HOST: {DATABASES['default']['HOST']}")
 print(f"📌 USER: {DATABASES['default']['USER']}")
 
-# Password validation
+# ============================================
+# PASSWORD VALIDATION
+# ============================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 9}},
@@ -203,10 +218,16 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# ============================================
+# SESIONES
+# ============================================
 SESSION_EXPIRE_SECONDS = 3600
 SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 SESSION_TIMEOUT_REDIRECT = '/'
 
+# ============================================
+# INTERNACIONALIZACIÓN
+# ============================================
 LANGUAGE_CODE = 'es'
 TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
@@ -223,13 +244,17 @@ MESSAGE_TAGS = {
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+# ============================================
 # STATIC FILES
+# ============================================
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# ============================================
 # CLOUDINARY
+# ============================================
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dnnl3rije'),
     api_key=os.environ.get('CLOUDINARY_API_KEY', '372388277625767'),
@@ -263,7 +288,6 @@ else:
     print("⚠️ GOOGLE_DRIVE_CREDENTIALS_JSON no encontrado")
 
 # ID de la carpeta principal de Google Drive
-# NOTA: Quita el "?hl=es-419" del ID si está presente
 GOOGLE_DRIVE_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_FOLDER_ID', '')
 
 # Estructura de carpetas para Google Drive
@@ -286,7 +310,9 @@ GOOGLE_DRIVE_FOLDERS = {
     'BACKUP': 'Backup'
 }
 
+# ============================================
 # EMAIL
+# ============================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
@@ -297,7 +323,9 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = f'Biblioteca ARTyDIS <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Biblioteca ARTyDIS <noreply@example.com>'
 EMAIL_TIMEOUT = 30
 
+# ============================================
 # SEGURIDAD
+# ============================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -321,10 +349,40 @@ IS_MANAGEMENT_COMMAND = 'manage.py' in sys.argv[0] if sys.argv else False
 
 EMAIL_USE_LOCALTIME = True
 
+# ============================================
+# LÍMITES DE SUBIDA (ARCHIVOS GRANDES)
+# ============================================
+
+# Campos y archivos máximos
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 DATA_UPLOAD_MAX_NUMBER_FILES = 100
-DATA_UPLOAD_MAX_FILE_SIZE = 1024 * 1024 * 500
 
+# ✅ Tamaño máximo de archivo: 2GB (2 * 1024 * 1024 * 1024 bytes)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648  # 2GB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2147483648  # 2GB
+DATA_UPLOAD_MAX_FILE_SIZE = 2147483648    # 2GB (límite adicional)
+
+# Directorio temporal para archivos grandes
+FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
+
+# Crear directorio si no existe
+if not os.path.exists(FILE_UPLOAD_TEMP_DIR):
+    os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+
+# Upload handlers (permitir archivos grandes)
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+]
+
+# Configurar carpeta de temp_uploads en .gitignore
+TEMP_UPLOADS_DIR = FILE_UPLOAD_TEMP_DIR
+
+# ============================================
+# CONFIGURACIÓN DE LOGS
+# ============================================
 print("🚀 Settings cargados correctamente")
 print(f"📁 BASE_DIR: {BASE_DIR}")
 print(f"📁 Ruta de templates: {BASE_DIR / 'biblioartdis' / 'templates'}")
+print(f"📁 Carpeta temporal: {FILE_UPLOAD_TEMP_DIR}")
+print(f"📤 Límite de subida: {DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024 / 1024:.1f} GB")
