@@ -144,8 +144,8 @@ def proxy_imagen(request):
 def proxy_pdf(request):
     """
     Proxy para PDFs de Google Drive.
-    - Si ?base64=true: devuelve el PDF como Base64 (para PDF.js)
-    - Si no: devuelve el PDF como stream (para descargar)
+    - Si ?base64=true: devuelve el PDF como Base64 (solo para PDFs < 20MB)
+    - Si no: devuelve el PDF como stream (recomendado para PDF.js)
     """
     url = request.GET.get('url')
     if not url:
@@ -160,11 +160,10 @@ def proxy_pdf(request):
     download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
     
     try:
-        # ✅ Timeout aumentado para archivos grandes
         response = requests.get(
             download_url, 
-            stream=not es_base64, 
-            timeout=300,  # 5 minutos
+            stream=True,  # ✅ SIEMPRE stream para no cargar todo en memoria
+            timeout=300,
             allow_redirects=True
         )
         
@@ -173,12 +172,10 @@ def proxy_pdf(request):
         
         content_type = response.headers.get('content-type', 'application/pdf')
         
-        # Manejar confirmación de Google (para archivos grandes)
+        # Manejar confirmación de Google
         if 'text/html' in content_type:
-            # Buscar el token de confirmación en el HTML
             confirm_match = re.search(r'confirm=([^&"]+)', response.text)
             if not confirm_match:
-                # Buscar en el formulario
                 confirm_match = re.search(r'name="confirm"\s+value="([^"]+)"', response.text)
             
             if confirm_match:
@@ -186,23 +183,24 @@ def proxy_pdf(request):
                 download_url = f"{download_url}&confirm={confirm_token}"
                 response = requests.get(
                     download_url, 
-                    stream=not es_base64, 
+                    stream=True, 
                     timeout=300, 
                     allow_redirects=True
                 )
                 content_type = response.headers.get('content-type', 'application/pdf')
         
-        # MODO BASE64 (para PDF.js - seguro)
+        # ✅ MODO BASE64 SOLO para archivos pequeños
         if es_base64:
-            # ✅ Advertir si el archivo es muy grande para Base64
             content_length = int(response.headers.get('content-length', 0))
-            if content_length > 50 * 1024 * 1024:  # 50MB
+            
+            # ✅ LÍMITE REDUCIDO A 20MB para Base64
+            if content_length > 20 * 1024 * 1024:  # 20MB
                 logger.warning(f"PDF muy grande para Base64: {content_length / 1024 / 1024:.1f}MB")
-                # Para archivos > 50MB, devolver error y usar stream
                 return JsonResponse({
                     'success': False,
-                    'error': 'PDF muy grande para visor. Use la opción de descarga.',
-                    'too_large': True
+                    'error': 'PDF muy grande para visor Base64. Use el modo stream.',
+                    'too_large': True,
+                    'size_mb': content_length / 1024 / 1024
                 })
             
             pdf_base64 = base64.b64encode(response.content).decode('utf-8')
@@ -211,9 +209,9 @@ def proxy_pdf(request):
                 'base64': f'data:application/pdf;base64,{pdf_base64}'
             })
         
-        # MODO STREAM (para descarga)
+        # ✅ MODO STREAM (RECOMENDADO)
         def generate():
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_content(chunk_size=65536):  # 64KB chunks
                 if chunk:
                     yield chunk
         
@@ -223,6 +221,9 @@ def proxy_pdf(request):
         )
         django_response['Content-Disposition'] = 'inline; filename="documento.pdf"'
         django_response['Cache-Control'] = 'no-cache'
+        # ✅ Permitir CORS para PDF.js
+        django_response['Access-Control-Allow-Origin'] = '*'
+        django_response['Accept-Ranges'] = 'bytes'
         
         return django_response
         

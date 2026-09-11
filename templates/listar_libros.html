@@ -945,7 +945,7 @@
     };
 
     // ============================================
-    // ABRIR VISOR PDF CON PDF.JS (SIN DESCARGA)
+    // ABRIR VISOR PDF CON PDF.JS (STREAMING - RÁPIDO)
     // ============================================
     window.abrirVisorPDF = async function(libroId, titulo, driveUrl) {
         document.getElementById('pdfTituloLibro').innerText = titulo;
@@ -972,25 +972,32 @@
         }
 
         try {
-            // Obtener PDF como Base64 desde el proxy
-            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}&base64=true`;
-            const response = await fetch(proxyUrl);
-            const data = await response.json();
-
-            if (!data.success || !data.base64) {
-                loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
-                return;
-            }
-
-            // Convertir Base64 a Uint8Array
-            const pdfData = atob(data.base64.split(',')[1]);
-            const uint8Array = new Uint8Array(pdfData.length);
-            for (let i = 0; i < pdfData.length; i++) {
-                uint8Array[i] = pdfData.charCodeAt(i);
-            }
-
-            // Cargar con PDF.js
-            const loadingTask = pdfjsLib.getDocument({data: uint8Array});
+            // ✅ USAR LA URL DEL PROXY DIRECTAMENTE (streaming)
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            
+            // ✅ Cargar con PDF.js usando la URL (streaming por chunks)
+            const loadingTask = pdfjsLib.getDocument({
+                url: proxyUrl,
+                withCredentials: true,
+                rangeChunkSize: 65536,  // ✅ 64KB chunks para carga progresiva
+                disableAutoFetch: false,
+                disableStream: false  // ✅ Permitir streaming
+            });
+            
+            // ✅ Mostrar progreso
+            loadingTask.onProgress = function(progress) {
+                if (progress.total > 0) {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    loading.innerHTML = `
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF... ${percent}%</p>
+                        <div style="width: 300px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 0.5rem;">
+                            <div style="width: ${percent}%; height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s;"></div>
+                        </div>
+                    `;
+                }
+            };
+            
             pdfDoc = await loadingTask.promise;
 
             document.getElementById('pdfTotalPages').innerText = pdfDoc.numPages;
@@ -1007,33 +1014,87 @@
 
         } catch (error) {
             console.error('Error:', error);
+            
+            // ✅ Si falla, intentar con Base64 como fallback (solo para PDFs pequeños)
+            try {
+                loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p>Intentando método alternativo...</p>';
+                
+                const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}&base64=true`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (data.success && data.base64) {
+                    const pdfData = atob(data.base64.split(',')[1]);
+                    const uint8Array = new Uint8Array(pdfData.length);
+                    for (let i = 0; i < pdfData.length; i++) {
+                        uint8Array[i] = pdfData.charCodeAt(i);
+                    }
+                    
+                    const loadingTask = pdfjsLib.getDocument({data: uint8Array});
+                    pdfDoc = await loadingTask.promise;
+                    
+                    document.getElementById('pdfTotalPages').innerText = pdfDoc.numPages;
+                    loading.style.display = 'none';
+                    controls.style.display = 'flex';
+                    canvas.style.display = 'block';
+                    
+                    await renderPdfPage(pdfCurrentPageNum);
+                    updatePdfButtons();
+                    return;
+                }
+                
+                if (data.too_large) {
+                    loading.innerHTML = `
+                        <i class="fas fa-file-pdf fa-3x" style="color: #EF4444;"></i>
+                        <p style="margin-top: 1rem; color: white;">PDF muy grande (${data.size_mb?.toFixed(0) || '?'} MB)</p>
+                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">Este PDF es muy grande para el visor. Contacta al bibliotecario.</p>
+                    `;
+                    return;
+                }
+            } catch (fallbackError) {
+                console.error('Error en fallback:', fallbackError);
+            }
+            
             loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
         }
     };
 
+    // ============================================
+    // RENDERIZADO BAJO DEMANDA
+    // ============================================
     async function renderPdfPage(numPage) {
         if (!pdfDoc) return;
         if (pdfRendering) return;
 
         pdfRendering = true;
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
 
         try {
             const page = await pdfDoc.getPage(numPage);
-            const viewport = page.getViewport({scale: pdfScale});
+            
+            // ✅ Reducir escala para páginas grandes (más rápido)
+            let scale = pdfScale;
+            const viewport = page.getViewport({scale: 1});
+            
+            // Si la página es muy grande, reducir escala
+            const maxWidth = 1200;
+            if (viewport.width * scale > maxWidth) {
+                scale = maxWidth / viewport.width;
+            }
+            
+            const scaledViewport = page.getViewport({scale: scale});
 
-            const canvas = document.getElementById('pdfCanvas');
-            const context = canvas.getContext('2d');
-
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
 
             await page.render({
                 canvasContext: context,
-                viewport: viewport
+                viewport: scaledViewport
             }).promise;
 
             document.getElementById('pdfCurrentPage').innerText = numPage;
-            document.getElementById('pdfZoomLevel').innerText = Math.round(pdfScale * 100 / 1.5) + '%';
+            document.getElementById('pdfZoomLevel').innerText = Math.round(scale * 100 / 1.5) + '%';
 
             updatePdfButtons();
             pdfRendering = false;
