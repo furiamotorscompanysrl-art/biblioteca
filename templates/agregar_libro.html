@@ -397,7 +397,7 @@
             <!-- Alerta informativa -->
             <div class="alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>Google Drive:</strong> Todos los archivos (PDFs, portadas y autorizaciones) se subirán automáticamente a Google Drive.
+                <strong>Google Drive:</strong> Todos los archivos (PDFs, portadas y autorizaciones) se subirán automáticamente a Google Drive. <strong>Sin límite de tamaño.</strong>
             </div>
 
             <form method="post" enctype="multipart/form-data" id="libroForm">
@@ -552,7 +552,7 @@
                             <div class="file-upload-area" onclick="document.getElementById('portada').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h5>Subir portada</h5>
-                                <p>Formatos: JPG, PNG. Máx 5MB</p>
+                                <p>Formatos: JPG, PNG. Máx 100MB</p>
                                 <input type="file" id="portada" name="portada" accept="image/*" style="display: none;" onchange="previewPortada(this)">
                             </div>
                             <div class="file-preview" id="portadaPreviewContainer" style="display: none;">
@@ -572,7 +572,7 @@
                             <div class="file-upload-area" onclick="document.getElementById('pdf').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h5>Subir PDF</h5>
-                                <p>Formatos: PDF. Máx 50MB (se sube a Google Drive)</p>
+                                <p>Formatos: PDF. Sin límite (hasta 2GB)</p>
                                 <input type="file" id="pdf" name="pdf" accept="application/pdf" style="display: none;" onchange="previewPDF(this)">
                             </div>
                             <div class="compression-bar" id="compressionBar">
@@ -615,7 +615,7 @@
                             <div class="file-upload-area" onclick="document.getElementById('autorizacion').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h5>Subir autorización</h5>
-                                <p>Formato: PDF. Máx 5MB (se sube a Google Drive)</p>
+                                <p>Formato: PDF. Máx 100MB (se sube a Google Drive)</p>
                                 <input type="file" id="autorizacion" name="autorizacion" accept="application/pdf" style="display: none;">
                             </div>
                             <small class="text-muted">El archivo de autorización se subirá a Google Drive automáticamente</small>
@@ -833,17 +833,19 @@
         if (googleDriveUrl) {
             console.log("Usando Google Drive URL, omitiendo subida de PDF");
         } 
-        // Verificar si hay PDF y si es grande (> 5 MB)
+        // Verificar si hay PDF y si es grande
         else if (pdfInput.files.length > 0) {
             const file = pdfInput.files[0];
             const fileSizeMB = file.size / (1024 * 1024);
             
-            if (fileSizeMB > 50) {
-                Swal.fire('Error', 'El PDF supera los 50MB. Por favor, comprime el archivo o usa Google Drive URL.', 'error');
+            // ✅ LÍMITE AUMENTADO A 2GB
+            if (fileSizeMB > 2048) {
+                Swal.fire('Error', `El PDF supera los 2GB (${fileSizeMB.toFixed(0)}MB). Contacta al administrador.`, 'error');
                 return;
             }
             
-            if (fileSizeMB > 5) {
+            // ✅ Comprimir solo si es entre 5MB y 100MB (para no saturar el navegador)
+            if (fileSizeMB > 5 && fileSizeMB < 100) {
                 compressionBar.style.display = 'block';
                 compressionProgress.style.width = '30%';
                 submitBtn.disabled = true;
@@ -862,6 +864,9 @@
                 
                 const newSizeMB = pdfToUpload.size / (1024 * 1024);
                 console.log(`PDF comprimido: ${fileSizeMB.toFixed(1)}MB → ${newSizeMB.toFixed(1)}MB`);
+            } else if (fileSizeMB >= 100) {
+                // Para archivos muy grandes (>100MB), subir sin comprimir
+                console.log(`PDF grande (${fileSizeMB.toFixed(1)}MB), subiendo sin comprimir`);
             }
         }
         
