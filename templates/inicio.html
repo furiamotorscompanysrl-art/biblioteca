@@ -3,9 +3,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA INICIO                 */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -159,6 +156,9 @@
         height: 260px;
         overflow: hidden;
         background: var(--bg-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .book-image img {
@@ -170,6 +170,27 @@
 
     .book-card:hover .book-image img {
         transform: scale(1.05);
+    }
+
+    .book-image .cover-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-size: 2rem;
+        background: var(--bg-light);
+    }
+
+    .book-image .cover-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        font-size: 3rem;
     }
 
     .book-ribbon {
@@ -299,15 +320,6 @@
         background: var(--accent-hover);
     }
 
-    .btn-link-external {
-        background: var(--info);
-        color: white;
-    }
-
-    .btn-link-external:hover {
-        background: #2563EB;
-    }
-
     .pagination-custom {
         display: flex;
         justify-content: center;
@@ -363,13 +375,64 @@
     .pdf-modal .modal-body {
         padding: 0;
         height: calc(90vh - 60px);
+        overflow: auto;
+        background: #333;
     }
-    
-    .pdf-iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 0 0 16px 16px;
+
+    .pdf-controls-bar {
+        position: sticky;
+        top: 0;
+        background: var(--primary-dark);
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        z-index: 10;
+        border-bottom: 1px solid var(--accent);
+        flex-wrap: wrap;
+    }
+
+    .pdf-controls-bar button {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .pdf-controls-bar button:hover:not(:disabled) {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .pdf-controls-bar button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .pdf-controls-bar span {
+        color: white;
+        font-size: 0.85rem;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    #pdfCanvasContainer {
+        display: flex;
+        justify-content: center;
+        padding: 1.5rem;
+        min-height: 100%;
+    }
+
+    #pdfCanvas {
+        max-width: 100%;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        background: white;
+        border-radius: 4px;
     }
 
     @media (max-width: 768px) {
@@ -456,11 +519,18 @@
         {% for libro in libros %}
         <div class="book-card">
             <div class="book-image">
-                {% if libro.img_portada %}
-                    <img src="{{ libro.img_portada.url }}" alt="{{ libro.titulo }}">
+                {% if libro.google_drive_portada_url %}
+                    <div class="cover-loading" data-portada-id="{{ libro.id_libro }}">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <img src="" 
+                         data-drive-url="{{ libro.google_drive_portada_url }}"
+                         data-portada-id="{{ libro.id_libro }}"
+                         style="display: none;"
+                         alt="{{ libro.titulo }}">
                 {% else %}
-                    <div class="d-flex align-items-center justify-content-center h-100">
-                        <i class="fas fa-book fa-3x text-muted"></i>
+                    <div class="cover-placeholder">
+                        <i class="fas fa-book"></i>
                     </div>
                 {% endif %}
                 <div class="book-overlay">
@@ -499,7 +569,7 @@
                         <i class="fas fa-eye"></i> {{ libro.visitalibro_set.count }} lecturas
                     </span>
                     <div class="book-actions">
-                        {% if libro.google_drive_url or libro.pdf or libro.pdf_url %}
+                        {% if libro.google_drive_url or libro.pdf_url %}
                             {% if libro.descarga_autorizada %}
                                 <button class="btn-book btn-pdf" 
                                         onclick="abrirLibro('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', true)">
@@ -507,7 +577,7 @@
                                 </button>
                             {% else %}
                                 <button class="btn-book btn-pdf" 
-                                        onclick="abrirLibro('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', false)">
+                                        onclick="abrirVisorPDF('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url }}')">
                                     <i class="fas fa-book-open"></i> Leer en línea
                                 </button>
                             {% endif %}
@@ -557,7 +627,7 @@
     {% endif %}
 </div>
 
-<!-- Modal para visor de PDF (solo lectura) -->
+<!-- Modal para visor de PDF (PDF.js) -->
 <div class="modal fade pdf-modal" id="visorPDFModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
@@ -568,122 +638,203 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="pdfLoadingSpinner" class="text-center p-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2 text-white">Cargando documento...</p>
+                <div class="pdf-controls-bar" id="pdfControls" style="display: none;">
+                    <button type="button" onclick="pdfPrevPage()" id="pdfPrevBtn"><i class="fas fa-chevron-left"></i></button>
+                    <span>Pág. <span id="pdfCurrentPage">1</span> / <span id="pdfTotalPages">?</span></span>
+                    <button type="button" onclick="pdfNextPage()" id="pdfNextBtn"><i class="fas fa-chevron-right"></i></button>
+                    <span style="margin-left: 0.5rem;">|</span>
+                    <button type="button" onclick="pdfZoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <span id="pdfZoomLevel">100%</span>
+                    <button type="button" onclick="pdfZoomIn()"><i class="fas fa-search-plus"></i></button>
                 </div>
-                <iframe id="pdfIframe" class="pdf-iframe" src="" style="display: none;" allow="fullscreen"></iframe>
+                <div id="pdfCanvasContainer">
+                    <div id="pdfLoading" style="text-align: center; padding: 3rem; color: white;">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF...</p>
+                    </div>
+                    <canvas id="pdfCanvas" style="display: none;"></canvas>
+                </div>
             </div>
             <div class="modal-footer" style="background: var(--bg-light);">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> Modo solo lectura
-                </small>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cerrar
-                </button>
+                <small class="text-muted"><i class="fas fa-lock"></i> Modo solo lectura protegido</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// ============================================
-// FUNCIONES PARA ABRIR LIBROS
-// ============================================
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-function abrirLibro(libroId, titulo, permitirDescarga) {
-    // Registrar la visita
-    fetch('{% url "registrar_visita_libro" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: `libro_id=${libroId}`
-    }).then(() => {
-        if (permitirDescarga) {
-            // Si tiene permiso de descarga, abrir en nueva pestaña
-            window.open("{% url 'ver_descargar_libro' 0 %}".replace('0', libroId), '_blank');
-        } else {
-            // Modo solo lectura: mostrar en modal en la misma página
-            const modal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
-            const iframe = document.getElementById('pdfIframe');
-            const spinner = document.getElementById('pdfLoadingSpinner');
-            
-            document.getElementById('pdfTituloLibro').innerText = titulo;
-            
-            // Resetear vista
-            iframe.style.display = 'none';
-            spinner.style.display = 'block';
-            
-            // Cargar PDF en iframe con embed=true
-            const url = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
-            iframe.src = url;
-            
-            iframe.onload = () => {
-                spinner.style.display = 'none';
-                iframe.style.display = 'block';
+    let visorPDFModal;
+    let pdfDoc = null;
+    let pdfCurrentPageNum = 1;
+    let pdfScale = 1.5;
+    let pdfRendering = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        visorPDFModal = new bootstrap.Modal(document.getElementById('visorPDFModal'));
+        cargarTodasLasPortadas();
+    });
+
+    // Cargar portadas con proxy
+    async function cargarTodasLasPortadas() {
+        const imagenes = document.querySelectorAll('img[data-drive-url]');
+        for (const img of imagenes) {
+            await cargarImagenProxy(img.dataset.driveUrl, img, img.dataset.portadaId);
+        }
+    }
+
+    async function cargarImagenProxy(url, imgElement, portadaId) {
+        if (!url || !imgElement) return;
+        const loader = document.querySelector(`.cover-loading[data-portada-id="${portadaId}"]`);
+        try {
+            const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if (data.success && data.base64) {
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    imgElement.src = data.base64;
+                    imgElement.style.display = 'block';
+                    if (loader) loader.style.display = 'none';
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+            }
+        } catch (error) {
+            console.error('Error cargando imagen:', error);
+            if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+        }
+    }
+
+    // Abrir libro
+    function abrirLibro(libroId, titulo, permitirDescarga) {
+        fetch('{% url "registrar_visita_libro" %}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: `libro_id=${libroId}`
+        }).then(() => {
+            if (permitirDescarga) {
+                window.open("{% url 'ver_descargar_libro' 0 %}".replace('0', libroId), '_blank');
+            }
+        });
+    }
+
+    // Visor PDF.js
+    window.abrirVisorPDF = async function(libroId, titulo, driveUrl) {
+        document.getElementById('pdfTituloLibro').innerText = titulo;
+        pdfDoc = null; pdfCurrentPageNum = 1; pdfScale = 1.5;
+        const canvas = document.getElementById('pdfCanvas');
+        const loading = document.getElementById('pdfLoading');
+        const controls = document.getElementById('pdfControls');
+        canvas.style.display = 'none'; controls.style.display = 'none';
+        loading.style.display = 'block';
+        loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF...</p>';
+        visorPDFModal.show();
+        if (!driveUrl) {
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>No hay PDF disponible</p>';
+            return;
+        }
+        try {
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            const loadingTask = pdfjsLib.getDocument({url: proxyUrl, withCredentials: true, rangeChunkSize: 65536, disableStream: false});
+            loadingTask.onProgress = function(progress) {
+                if (progress.total > 0) {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    loading.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF... ${percent}%</p>`;
+                }
             };
-            
-            modal.show();
+            pdfDoc = await loadingTask.promise;
+            document.getElementById('pdfTotalPages').innerText = pdfDoc.numPages;
+            loading.style.display = 'none'; controls.style.display = 'flex'; canvas.style.display = 'block';
+            await renderPdfPage(pdfCurrentPageNum);
+            updatePdfButtons();
+        } catch (error) {
+            console.error('Error:', error);
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
         }
-    }).catch(error => console.error('Error registrando visita:', error));
-}
+    };
 
-// ============================================
-// MANEJO DE FILTROS CON JAVASCRIPT
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const urlParams = new URLSearchParams(window.location.search);
-    const filtroActual = urlParams.get('filtro') || '';
-    const busquedaActual = urlParams.get('q') || '';
-    const categoriaActual = urlParams.get('categoria') || '';
-    
-    if (searchInput) {
-        searchInput.value = busquedaActual;
-    }
-    
-    document.querySelectorAll('.filter-btn[data-filtro]').forEach(btn => {
-        const filtro = btn.getAttribute('data-filtro');
-        if (filtro === filtroActual) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
+    async function renderPdfPage(numPage) {
+        if (!pdfDoc || pdfRendering) return;
+        pdfRendering = true;
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        try {
+            const page = await pdfDoc.getPage(numPage);
+            let scale = pdfScale;
+            const viewport = page.getViewport({scale: 1});
+            const maxWidth = 1200;
+            if (viewport.width * scale > maxWidth) scale = maxWidth / viewport.width;
+            const scaledViewport = page.getViewport({scale: scale});
+            canvas.height = scaledViewport.height; canvas.width = scaledViewport.width;
+            await page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            document.getElementById('pdfCurrentPage').innerText = numPage;
+            document.getElementById('pdfZoomLevel').innerText = Math.round(scale * 100 / 1.5) + '%';
+            updatePdfButtons(); pdfRendering = false;
+        } catch (error) {
+            console.error('Error renderizando página:', error);
+            pdfRendering = false;
         }
-        
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const nuevoFiltro = this.getAttribute('data-filtro');
-            let params = new URLSearchParams();
-            if (busquedaActual) params.set('q', busquedaActual);
-            if (categoriaActual) params.set('categoria', categoriaActual);
-            if (nuevoFiltro) params.set('filtro', nuevoFiltro);
-            window.location.href = '?' + params.toString();
-        });
-    });
-    
-    const limpiarBtn = document.getElementById('limpiarFiltros');
-    if (limpiarBtn) {
-        limpiarBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = window.location.pathname;
-        });
     }
-    
-    // Limpiar iframe al cerrar el modal
-    document.getElementById('visorPDFModal')?.addEventListener('hidden.bs.modal', function() {
-        const iframe = document.getElementById('pdfIframe');
-        if (iframe) {
-            iframe.src = '';
-            iframe.style.display = 'none';
+
+    function updatePdfButtons() {
+        if (pdfDoc) {
+            document.getElementById('pdfPrevBtn').disabled = pdfCurrentPageNum <= 1;
+            document.getElementById('pdfNextBtn').disabled = pdfCurrentPageNum >= pdfDoc.numPages;
         }
-        const spinner = document.getElementById('pdfLoadingSpinner');
-        if (spinner) spinner.style.display = 'block';
+    }
+    function pdfPrevPage() { if (pdfDoc && pdfCurrentPageNum > 1) { pdfCurrentPageNum--; renderPdfPage(pdfCurrentPageNum); } }
+    function pdfNextPage() { if (pdfDoc && pdfCurrentPageNum < pdfDoc.numPages) { pdfCurrentPageNum++; renderPdfPage(pdfCurrentPageNum); } }
+    function pdfZoomIn() { if (pdfScale < 3) { pdfScale += 0.25; renderPdfPage(pdfCurrentPageNum); } }
+    function pdfZoomOut() { if (pdfScale > 0.5) { pdfScale -= 0.25; renderPdfPage(pdfCurrentPageNum); } }
+
+    document.getElementById('visorPDFModal').addEventListener('hidden.bs.modal', function () {
+        pdfDoc = null; pdfCurrentPageNum = 1; pdfScale = 1.5;
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
+        document.getElementById('pdfControls').style.display = 'none';
+        document.getElementById('pdfLoading').style.display = 'block';
     });
-});
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('visorPDFModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') pdfPrevPage();
+            if (e.key === 'ArrowRight') pdfNextPage();
+        }
+    });
+
+    // Filtros
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filtroActual = urlParams.get('filtro') || '';
+        const busquedaActual = urlParams.get('q') || '';
+        const categoriaActual = urlParams.get('categoria') || '';
+        if (document.getElementById('searchInput')) document.getElementById('searchInput').value = busquedaActual;
+        document.querySelectorAll('.filter-btn[data-filtro]').forEach(btn => {
+            const filtro = btn.getAttribute('data-filtro');
+            if (filtro === filtroActual) btn.classList.add('active'); else btn.classList.remove('active');
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                let params = new URLSearchParams();
+                if (busquedaActual) params.set('q', busquedaActual);
+                if (categoriaActual) params.set('categoria', categoriaActual);
+                if (this.getAttribute('data-filtro')) params.set('filtro', this.getAttribute('data-filtro'));
+                window.location.href = '?' + params.toString();
+            });
+        });
+        const limpiarBtn = document.getElementById('limpiarFiltros');
+        if (limpiarBtn) {
+            limpiarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = window.location.pathname;
+            });
+        }
+    });
 </script>
 {% endblock %}
