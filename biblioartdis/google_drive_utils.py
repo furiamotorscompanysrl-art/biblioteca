@@ -2,7 +2,9 @@
 import os
 import logging
 import json
+from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from django.conf import settings
@@ -10,84 +12,91 @@ import io
 
 logger = logging.getLogger(__name__)
 
-# Alcances necesarios para Google Drive
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 
 class GoogleDriveService:
     """
-    Servicio para interactuar con Google Drive usando Cuenta de Servicio
-    ✅ NUNCA EXPIRA - Ideal para producción en Railway
-    ✅ No requiere interacción manual
-    ✅ Seguro y fácil de configurar
+    Servicio para interactuar con Google Drive.
+    ✅ PRIORIZA OAuth (usuario real) porque las cuentas de servicio ya no tienen cuota.
+    ✅ Fallback a Cuenta de Servicio si OAuth no está disponible (solo lectura).
     """
     
     def __init__(self):
         self.service = None
+        self.credentials = None
+        self.tipo_auth = None
         self._authenticate()
     
     def _authenticate(self):
         """
-        Autenticar con Google Drive usando Cuenta de Servicio
-        Las credenciales se obtienen de GOOGLE_APPLICATION_CREDENTIALS_JSON
+        Autentica con Google Drive.
+        1º OAuth (usuario real) - TIENE CUOTA
+        2º Cuenta de Servicio - NO TIENE CUOTA (solo lectura)
         """
+        # ============================================
+        # PRIMERO: OAuth con usuario real
+        # ============================================
         try:
-            # Obtener credenciales desde variable de entorno
+            creds_json = os.environ.get('GOOGLE_DRIVE_OAUTH_CREDENTIALS')
+            token_json = os.environ.get('GOOGLE_DRIVE_TOKEN')
+            
+            if creds_json and token_json:
+                token_data = json.loads(token_json)
+                
+                self.credentials = Credentials(
+                    token=token_data.get('token'),
+                    refresh_token=token_data.get('refresh_token'),
+                    token_uri=token_data.get('token_uri', 'https://oauth2.googleapis.com/token'),
+                    client_id=token_data.get('client_id'),
+                    client_secret=token_data.get('client_secret'),
+                    scopes=token_data.get('scopes', SCOPES)
+                )
+                
+                if self.credentials.expired and self.credentials.refresh_token:
+                    logger.info("🔄 Refrescando token OAuth...")
+                    self.credentials.refresh(Request())
+                    logger.info("✅ Token OAuth refrescado")
+                
+                self.service = build('drive', 'v3', credentials=self.credentials)
+                self.tipo_auth = 'oauth'
+                logger.info("✅ Autenticación con OAuth (usuario real) exitosa - TIENE CUOTA")
+                return
+        except Exception as e:
+            logger.warning(f"⚠️ Error con OAuth: {e}")
+        
+        # ============================================
+        # SEGUNDO: Cuenta de Servicio (fallback)
+        # ============================================
+        try:
             creds_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
             
-            if not creds_json:
-                logger.error("❌ GOOGLE_APPLICATION_CREDENTIALS_JSON no encontrada")
-                logger.error("⚠️ Debes configurar esta variable en Railway con el JSON de la cuenta de servicio")
-                raise Exception("Faltan credenciales de cuenta de servicio")
-            
-            # Cargar credenciales desde JSON
-            try:
+            if creds_json:
                 creds_dict = json.loads(creds_json)
-            except json.JSONDecodeError as e:
-                logger.error(f"❌ Error parseando GOOGLE_APPLICATION_CREDENTIALS_JSON: {e}")
-                raise Exception("Credenciales JSON inválidas")
-            
-            # Validar que tenga los campos necesarios
-            required_fields = ['type', 'project_id', 'private_key', 'client_email']
-            for field in required_fields:
-                if field not in creds_dict:
-                    logger.error(f"❌ Falta campo '{field}' en las credenciales")
-                    raise Exception(f"Credenciales incompletas: falta {field}")
-            
-            # Crear credenciales de cuenta de servicio
-            credentials = service_account.Credentials.from_service_account_info(
-                creds_dict,
-                scopes=SCOPES
-            )
-            
-            # Construir servicio de Google Drive
-            self.service = build('drive', 'v3', credentials=credentials)
-            
-            logger.info("✅ Autenticación con Cuenta de Servicio exitosa")
-            logger.info(f"📧 Cuenta de servicio: {creds_dict.get('client_email')}")
-            logger.info("🔒 Token NUNCA expira - Perfecto para producción")
-            
+                
+                credentials = service_account.Credentials.from_service_account_info(
+                    creds_dict,
+                    scopes=SCOPES
+                )
+                
+                self.service = build('drive', 'v3', credentials=credentials)
+                self.tipo_auth = 'service_account'
+                logger.warning("⚠️ Autenticación con Cuenta de Servicio - NO TIENE CUOTA")
+                logger.warning(f"📧 Cuenta: {creds_dict.get('client_email')}")
+                return
         except Exception as e:
-            logger.error(f"❌ Error autenticando con Cuenta de Servicio: {e}")
-            raise
+            logger.warning(f"⚠️ Error con Cuenta de Servicio: {e}")
+        
+        logger.error("❌ No se encontraron credenciales válidas de Drive")
+        raise Exception("Sin credenciales de Google Drive")
     
     def get_or_create_folder(self, folder_path, parent_folder_id=None):
-        """
-        Obtener o crear una carpeta por ruta (ej: Material_Biblioteca/Libros/PDFs)
-        
-        Args:
-            folder_path: Ruta de la carpeta (ej: 'Material_Biblioteca/Libros/PDFs')
-            parent_folder_id: ID de la carpeta padre (opcional)
-        
-        Returns:
-            ID de la carpeta o None si falla
-        """
+        """Obtener o crear una carpeta por ruta"""
         try:
             parts = folder_path.split('/')
             current_parent = parent_folder_id
             
             for part in parts:
-                # Buscar carpeta existente
                 query = f"name='{part}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
                 if current_parent:
                     query += f" and '{current_parent}' in parents"
@@ -95,17 +104,17 @@ class GoogleDriveService:
                 results = self.service.files().list(
                     q=query,
                     spaces='drive',
-                    fields='files(id, name)'
+                    fields='files(id, name)',
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
                 ).execute()
                 
                 files = results.get('files', [])
                 
                 if files:
-                    # Carpeta existe
                     current_parent = files[0].get('id')
                     logger.info(f"📁 Carpeta encontrada: {part} (ID: {current_parent})")
                 else:
-                    # Crear carpeta
                     file_metadata = {
                         'name': part,
                         'mimeType': 'application/vnd.google-apps.folder'
@@ -115,7 +124,8 @@ class GoogleDriveService:
                     
                     folder = self.service.files().create(
                         body=file_metadata,
-                        fields='id'
+                        fields='id',
+                        supportsAllDrives=True
                     ).execute()
                     
                     current_parent = folder.get('id')
@@ -128,20 +138,8 @@ class GoogleDriveService:
             return None
     
     def upload_file(self, file_path, file_name, folder_id, mime_type=None):
-        """
-        Subir un archivo a Google Drive
-        
-        Args:
-            file_path: Ruta del archivo local
-            file_name: Nombre del archivo en Drive
-            folder_id: ID de la carpeta donde subir
-            mime_type: Tipo MIME (opcional, se detecta automáticamente)
-        
-        Returns:
-            Dict con file_id, web_link, download_link o None si falla
-        """
+        """Subir archivo a Google Drive"""
         try:
-            # Determinar MIME type si no se proporciona
             if not mime_type:
                 ext = os.path.splitext(file_name)[1].lower()
                 mime_types = {
@@ -160,26 +158,24 @@ class GoogleDriveService:
                 }
                 mime_type = mime_types.get(ext, 'application/octet-stream')
             
-            # Preparar metadatos del archivo
             file_metadata = {
                 'name': file_name,
                 'parents': [folder_id]
             }
             
-            # Crear media upload
             media = MediaFileUpload(
                 file_path,
                 mimetype=mime_type,
                 resumable=True,
-                chunksize=1024 * 1024  # 1MB chunks
+                chunksize=1024 * 1024
             )
             
-            # Subir archivo
             logger.info(f"📤 Subiendo archivo: {file_name} ({mime_type})")
             file = self.service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields='id, webViewLink, size'
+                fields='id, webViewLink, size',
+                supportsAllDrives=True
             ).execute()
             
             file_id = file.get('id')
@@ -199,21 +195,16 @@ class GoogleDriveService:
             return None
     
     def delete_file(self, file_id):
-        """
-        Eliminar un archivo de Google Drive
-        
-        Args:
-            file_id: ID del archivo a eliminar
-        
-        Returns:
-            True si se eliminó correctamente, False si falla
-        """
+        """Eliminar archivo de Google Drive"""
         try:
             if not file_id:
                 logger.warning("⚠️ No se proporcionó file_id para eliminar")
                 return False
             
-            self.service.files().delete(fileId=file_id).execute()
+            self.service.files().delete(
+                fileId=file_id,
+                supportsAllDrives=True
+            ).execute()
             logger.info(f"✅ Archivo eliminado: {file_id}")
             return True
             
@@ -222,19 +213,12 @@ class GoogleDriveService:
             return False
     
     def get_file_metadata(self, file_id):
-        """
-        Obtener metadatos de un archivo
-        
-        Args:
-            file_id: ID del archivo
-        
-        Returns:
-            Dict con metadatos o None si falla
-        """
+        """Obtener metadatos de un archivo"""
         try:
             file = self.service.files().get(
                 fileId=file_id,
-                fields='id, name, mimeType, size, webViewLink, createdTime, modifiedTime'
+                fields='id, name, mimeType, size, webViewLink, createdTime, modifiedTime',
+                supportsAllDrives=True
             ).execute()
             
             return {
@@ -252,23 +236,16 @@ class GoogleDriveService:
             return None
     
     def list_files_in_folder(self, folder_id, max_results=100):
-        """
-        Listar archivos en una carpeta
-        
-        Args:
-            folder_id: ID de la carpeta
-            max_results: Número máximo de resultados
-        
-        Returns:
-            Lista de archivos
-        """
+        """Listar archivos en una carpeta"""
         try:
             query = f"'{folder_id}' in parents and trashed=false"
             
             results = self.service.files().list(
                 q=query,
                 pageSize=max_results,
-                fields='files(id, name, mimeType, size, webViewLink, createdTime)'
+                fields='files(id, name, mimeType, size, webViewLink, createdTime)',
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
             ).execute()
             
             files = results.get('files', [])
@@ -281,17 +258,8 @@ class GoogleDriveService:
             return []
     
     def create_initial_structure(self, main_folder_name='Biblioteca_Artes_Diseno'):
-        """
-        Crear toda la estructura de carpetas para la biblioteca
-        
-        Args:
-            main_folder_name: Nombre de la carpeta principal
-        
-        Returns:
-            Dict con los IDs de las carpetas creadas
-        """
+        """Crear toda la estructura de carpetas para la biblioteca"""
         try:
-            # Crear carpeta principal
             main_folder = self.get_or_create_folder(main_folder_name)
             
             if not main_folder:
@@ -300,7 +268,6 @@ class GoogleDriveService:
             
             logger.info(f"📁 Carpeta principal: {main_folder_name} (ID: {main_folder})")
             
-            # Estructura de carpetas
             folders = {
                 'Documentos_Usuarios': [
                     'Carnets_Frente',
@@ -328,7 +295,6 @@ class GoogleDriveService:
                 
                 for subfolder in subfolders:
                     if '/' in subfolder:
-                        # Carpetas anidadas
                         parts = subfolder.split('/')
                         parent_id = main_id
                         for part in parts:
@@ -345,16 +311,11 @@ class GoogleDriveService:
 
 
 # ============================================
-# FUNCIONES DE ALTO NIVEL PARA USAR EN LA APP
+# FUNCIONES DE ALTO NIVEL
 # ============================================
 
 def get_drive_service():
-    """
-    Obtener la instancia del servicio de Google Drive
-    
-    Returns:
-        GoogleDriveService o None si falla
-    """
+    """Obtener la instancia del servicio de Google Drive"""
     try:
         return GoogleDriveService()
     except Exception as e:
@@ -363,15 +324,9 @@ def get_drive_service():
 
 
 def test_connection():
-    """
-    Probar la conexión con Google Drive
-    
-    Returns:
-        True si la conexión es exitosa, False si falla
-    """
+    """Probar la conexión con Google Drive"""
     try:
         service = GoogleDriveService()
-        # Intentar listar archivos para probar
         results = service.service.files().list(pageSize=1).execute()
         logger.info("✅ Conexión a Google Drive exitosa")
         return True
@@ -380,7 +335,7 @@ def test_connection():
         return False
 
 
-# Instancia global del servicio (se crea al importar)
+# Instancia global del servicio
 try:
     drive_service = GoogleDriveService()
     logger.info("✅ Google Drive Service inicializado correctamente")
