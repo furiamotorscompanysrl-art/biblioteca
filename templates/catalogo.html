@@ -259,7 +259,8 @@
 
         <div class="gallery-container">
             {% for revista in coleccion.revista_set.all %}
-            <div class="gallery-card" data-bs-toggle="modal" data-bs-target="#revistaModal{{ revista.id_revista }}">
+            <!-- CARD (solo esta abre el modal) -->
+            <div class="gallery-card" onclick="abrirModalRevistaCatalogo('{{ revista.id_revista }}')">
                 <div class="card-image">
                     {% if revista.google_drive_img_url %}
                         <div class="cover-loading-catalogo" data-revista-catalogo-id="{{ revista.id_revista }}">
@@ -288,7 +289,7 @@
                 </div>
             </div>
 
-            <!-- Modal Moderno -->
+            <!-- MODAL (contiene el botón "Leer en línea") -->
             <div class="modal fade modal-modern" id="revistaModal{{ revista.id_revista }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
@@ -412,26 +413,6 @@
         // Cargar portadas de las cards
         cargarPortadasCatalogo();
 
-        // Cargar portadas de modales al abrirlos
-        document.querySelectorAll('[id^="revistaModal"]').forEach(modal => {
-            modal.addEventListener('shown.bs.modal', function() {
-                const img = this.querySelector('img[data-drive-url]');
-                const loader = this.querySelector('[id^="modalPortadaLoader"]');
-                if (img && img.dataset.driveUrl && !img.src) {
-                    fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.success && data.base64) {
-                                img.src = data.base64;
-                                img.style.display = 'block';
-                                if (loader) loader.style.display = 'none';
-                            }
-                        })
-                        .catch(e => console.error(e));
-                }
-            });
-        });
-
         // Smooth scroll
         document.querySelector('.hero-btn')?.addEventListener('click', function(e) {
             e.preventDefault();
@@ -443,6 +424,47 @@
         if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
     });
 
+    // ============================================
+    // ABRIR MODAL DE REVISTA Y CARGAR PORTADA
+    // ============================================
+    window.abrirModalRevistaCatalogo = function(revistaId) {
+        const modalEl = document.getElementById('revistaModal' + revistaId);
+        if (!modalEl) return;
+
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        // Cargar portada cuando el modal esté listo
+        modalEl.addEventListener('shown.bs.modal', function() {
+            const img = modalEl.querySelector('img[data-drive-url]');
+            const loader = modalEl.querySelector('[id^="modalPortadaLoader"]');
+            if (img && img.dataset.driveUrl && !img.src) {
+                fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.base64) {
+                            const nuevaImg = new Image();
+                            nuevaImg.onload = function() {
+                                img.src = data.base64;
+                                img.style.display = 'block';
+                                if (loader) loader.style.display = 'none';
+                            };
+                            nuevaImg.src = data.base64;
+                        } else {
+                            if (loader) loader.innerHTML = '<i class="fas fa-image fa-4x" style="color: var(--text-secondary);"></i>';
+                        }
+                    })
+                    .catch(e => {
+                        console.error(e);
+                        if (loader) loader.innerHTML = '<i class="fas fa-image fa-4x" style="color: var(--text-secondary);"></i>';
+                    });
+            }
+        }, { once: true });
+    };
+
+    // ============================================
+    // CARGAR PORTADAS DE LAS CARDS
+    // ============================================
     async function cargarPortadasCatalogo() {
         const imagenes = document.querySelectorAll('img[data-drive-url][data-revista-catalogo-id]');
         for (const img of imagenes) {
@@ -468,8 +490,17 @@
         }
     }
 
-    // Visor PDF del catálogo
+    // ============================================
+    // VISOR PDF CON PDF.JS
+    // ============================================
     window.abrirVisorPDFCatalogo = async function(revistaId, titulo, driveUrl) {
+        // Cerrar el modal de la revista antes de abrir el visor
+        const modalRevista = document.getElementById('revistaModal' + revistaId);
+        if (modalRevista) {
+            const instance = bootstrap.Modal.getInstance(modalRevista);
+            if (instance) instance.hide();
+        }
+
         document.getElementById('pdfCatalogoTitulo').innerText = titulo;
         pdfCatalogoDoc = null;
         pdfCatalogoCurrentPageNum = 1;

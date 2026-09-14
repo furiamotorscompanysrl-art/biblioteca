@@ -3,9 +3,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA NIVEL                  */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -34,19 +31,13 @@
     .hero-level::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23F59E0B' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
         background-size: cover;
         opacity: 0.3;
     }
 
-    .hero-level h1 {
-        position: relative;
-        z-index: 2;
-    }
+    .hero-level h1 { position: relative; z-index: 2; }
 
     .level-badge {
         display: inline-block;
@@ -101,6 +92,10 @@
         padding: 1.5rem;
         text-align: center;
         cursor: pointer;
+        min-height: 260px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .book-cover {
@@ -109,12 +104,39 @@
         object-fit: cover;
         border-radius: 12px;
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, opacity 0.3s;
     }
 
-    .book-cover:hover {
-        transform: scale(1.05);
+    .book-cover:hover { transform: scale(1.05); }
+
+    .cover-loading {
+        width: 160px;
+        height: 220px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-size: 2rem;
     }
+
+    .no-pdf-cover {
+        width: 160px;
+        height: 220px;
+        background: var(--bg-light);
+        border: 2px dashed var(--border-light);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--text-secondary);
+    }
+
+    .no-pdf-cover i { font-size: 2rem; }
 
     .pdf-overlay {
         position: absolute;
@@ -134,33 +156,9 @@
         transition: opacity 0.3s ease;
     }
 
-    .book-cover-section:hover .pdf-overlay {
-        opacity: 1;
-    }
+    .book-cover-section:hover .pdf-overlay { opacity: 1; }
 
-    .no-pdf-cover {
-        width: 160px;
-        height: 220px;
-        background: var(--bg-light);
-        border: 2px dashed var(--border-light);
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        color: var(--text-secondary);
-        margin: 0 auto;
-    }
-
-    .no-pdf-cover i {
-        font-size: 2rem;
-    }
-
-    .book-info {
-        padding: 1.2rem;
-        flex: 1;
-    }
+    .book-info { padding: 1.2rem; flex: 1; }
 
     .book-title {
         font-size: 1rem;
@@ -176,10 +174,7 @@
         margin-bottom: 0.3rem;
     }
 
-    .book-meta i {
-        color: var(--accent);
-        width: 20px;
-    }
+    .book-meta i { color: var(--accent); width: 20px; }
 
     .book-description {
         font-size: 0.75rem;
@@ -202,42 +197,8 @@
         font-weight: 500;
     }
 
-    .badge-edition {
-        background: #E0F2FE;
-        color: #0284C7;
-    }
-
-    .badge-drive {
-        background: #E8F5E9;
-        color: #2E7D32;
-    }
-
-    .download-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0.4rem 1rem;
-        background: var(--success);
-        color: white;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        margin-top: 0.5rem;
-    }
-
-    .download-link:hover {
-        background: #0D9488;
-        transform: translateY(-2px);
-        color: white;
-    }
-
-    .no-download {
-        font-size: 0.7rem;
-        color: var(--danger);
-        margin-top: 0.5rem;
-    }
+    .badge-edition { background: #E0F2FE; color: #0284C7; }
+    .badge-drive { background: #E8F5E9; color: #2E7D32; }
 
     .read-link {
         display: inline-flex;
@@ -275,86 +236,46 @@
     }
 
     /* Modal PDF */
-    .modal-pdf .modal-content {
-        background: #1a1a2e;
-        border-radius: 20px;
-        overflow: hidden;
-    }
+    .pdf-modal .modal-dialog { max-width: 95%; margin: 1rem auto; }
+    .pdf-modal .modal-content { background: #1a1a2e; border-radius: 16px; height: 90vh; }
+    .pdf-modal .modal-body { padding: 0; height: calc(90vh - 60px); overflow: auto; background: #333; }
 
-    .modal-pdf .modal-header {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-        border-bottom: 2px solid var(--accent);
-    }
-
-    .modal-pdf .modal-title {
-        color: white;
-    }
-
-    .modal-pdf .btn-close {
-        filter: brightness(0) invert(1);
-    }
-
-    .pdf-container {
-        background: #1a1a2e;
-        min-height: 70vh;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .pdf-controls {
+    .pdf-controls-bar {
         position: sticky;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.8);
-        padding: 0.8rem;
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        z-index: 10;
-    }
-
-    .pdf-controls button {
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: white;
-        padding: 0.4rem 1rem;
-        border-radius: 30px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .pdf-controls button:hover {
-        background: var(--accent);
-    }
-
-    .pdf-controls span {
-        color: white;
-        font-size: 0.85rem;
+        top: 0;
+        background: var(--primary-dark);
+        padding: 0.5rem 1rem;
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        z-index: 10;
+        border-bottom: 1px solid var(--accent);
+        flex-wrap: wrap;
     }
 
-    #pdfCanvas {
-        display: block;
-        margin: 1rem auto;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
+    .pdf-controls-bar button {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
     }
+
+    .pdf-controls-bar button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+    .pdf-controls-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pdf-controls-bar span { color: white; font-size: 0.85rem; min-width: 60px; text-align: center; }
+
+    #pdfCanvasContainer { display: flex; justify-content: center; padding: 1.5rem; min-height: 100%; }
+    #pdfCanvas { max-width: 100%; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); background: white; border-radius: 4px; }
 
     @media (max-width: 768px) {
-        .books-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        .level-title {
-            font-size: 1.8rem;
-        }
-        .book-cover-section {
-            padding: 1rem;
-        }
+        .books-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .level-title { font-size: 1.8rem; }
+        .book-cover-section { padding: 1rem; }
     }
 </style>
 
@@ -376,10 +297,17 @@
             {% for libro in libros %}
             <div class="book-card">
                 <div class="book-cover-section" 
-                     onclick="abrirLibro({{ libro.id_libro }}, '{{ libro.titulo|escapejs }}', {{ libro.descarga_autorizada|lower }})">
-                    <!-- ✅ CORREGIDO: Mostrar portada si existe cualquier tipo de archivo -->
-                    {% if libro.img_portada %}
-                        <img class="book-cover" src="{{ libro.img_portada.url }}" alt="{{ libro.titulo }}">
+                     onclick="abrirVisorPDFNivel('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url|default:'' }}')">
+                    {% if libro.google_drive_portada_url %}
+                        <div class="cover-loading" data-portada-id="{{ libro.id_libro }}">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <img src="" 
+                             class="book-cover" 
+                             style="display: none;"
+                             data-drive-url="{{ libro.google_drive_portada_url }}"
+                             data-portada-id="{{ libro.id_libro }}"
+                             alt="{{ libro.titulo }}">
                     {% else %}
                         <div class="no-pdf-cover">
                             <i class="fas fa-book"></i>
@@ -426,13 +354,21 @@
                         </div>
                     {% endif %}
                     
-                    {% if libro.descarga_autorizada %}
-                        <button class="read-link" onclick="event.stopPropagation(); abrirLibro({{ libro.id_libro }}, '{{ libro.titulo|escapejs }}', true)">
-                            <i class="fas fa-download"></i> Descargar PDF
-                        </button>
+                    {% if libro.google_drive_url %}
+                        {% if libro.descarga_autorizada %}
+                            <button class="read-link" 
+                                    onclick="event.stopPropagation(); abrirVisorPDFNivel('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url }}')">
+                                <i class="fas fa-book-open"></i> Leer en línea
+                            </button>
+                        {% else %}
+                            <button class="read-link" 
+                                    onclick="event.stopPropagation(); abrirVisorPDFNivel('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url }}')">
+                                <i class="fas fa-book-open"></i> Leer en línea
+                            </button>
+                        {% endif %}
                     {% else %}
-                        <button class="read-link" onclick="event.stopPropagation(); abrirLibro({{ libro.id_libro }}, '{{ libro.titulo|escapejs }}', false)">
-                            <i class="fas fa-book-open"></i> Leer en línea
+                        <button class="read-link" disabled style="background: #ccc; cursor: not-allowed;">
+                            <i class="fas fa-clock"></i> Subiendo...
                         </button>
                     {% endif %}
                 </div>
@@ -448,53 +384,93 @@
     {% endif %}
 </div>
 
-<!-- Modal PDF -->
-<div class="modal fade modal-pdf" id="pdfModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+<!-- Modal visor PDF -->
+<div class="modal fade pdf-modal" id="visorPDFNivelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-file-pdf text-danger"></i> <span id="modalPdfTitle">Visor de PDF</span>
+            <div class="modal-header" style="background: var(--primary-dark); border-bottom: 1px solid var(--accent);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-book-open"></i> <span id="pdfNivelTitulo"></span>
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0">
-                <div id="pdfContainer" class="pdf-container">
-                    <canvas id="pdfCanvas"></canvas>
+            <div class="modal-body">
+                <div class="pdf-controls-bar" id="pdfNivelControls" style="display: none;">
+                    <button type="button" onclick="pdfNivelPrev()" id="pdfNivelPrevBtn"><i class="fas fa-chevron-left"></i></button>
+                    <span>Pág. <span id="pdfNivelCurrentPage">1</span> / <span id="pdfNivelTotalPages">?</span></span>
+                    <button type="button" onclick="pdfNivelNext()" id="pdfNivelNextBtn"><i class="fas fa-chevron-right"></i></button>
+                    <span style="margin-left: 0.5rem;">|</span>
+                    <button type="button" onclick="pdfNivelZoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <span id="pdfNivelZoomLevel">100%</span>
+                    <button type="button" onclick="pdfNivelZoomIn()"><i class="fas fa-search-plus"></i></button>
                 </div>
-                <div class="pdf-controls">
-                    <button id="prevPage">
-                        <i class="fas fa-chevron-left"></i> Anterior
-                    </button>
-                    <span>
-                        Página <span id="currentPage">1</span> de <span id="pageCount">1</span>
-                    </span>
-                    <button id="nextPage">
-                        Siguiente <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <button id="zoomOut">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                    <button id="zoomIn">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
+                <div id="pdfNivelCanvasContainer">
+                    <div id="pdfNivelLoading" style="text-align: center; padding: 3rem; color: white;">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF...</p>
+                    </div>
+                    <canvas id="pdfNivelCanvas" style="display: none;"></canvas>
                 </div>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-light);">
+                <small class="text-muted"><i class="fas fa-lock"></i> Modo solo lectura - Prohibida su descarga</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    let pdfDoc = null;
-    let pageNum = 1;
-    let scale = 1.2;
-    let canvas = null;
-    let ctx = null;
-    let currentLibroId = null;
+    let pdfNivelDoc = null;
+    let pdfNivelCurrentPageNum = 1;
+    let pdfNivelScale = 1.5;
+    let pdfNivelRendering = false;
+    let visorPDFNivelModal;
 
+    document.addEventListener('DOMContentLoaded', function() {
+        visorPDFNivelModal = new bootstrap.Modal(document.getElementById('visorPDFNivelModal'));
+        cargarTodasLasPortadasNivel();
+
+        const canvas = document.getElementById('pdfNivelCanvas');
+        if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
+    });
+
+    // Cargar portadas con proxy
+    async function cargarTodasLasPortadasNivel() {
+        const imagenes = document.querySelectorAll('img[data-drive-url][data-portada-id]');
+        for (const img of imagenes) {
+            await cargarImagenProxyNivel(img.dataset.driveUrl, img, img.dataset.portadaId);
+        }
+    }
+
+    async function cargarImagenProxyNivel(url, imgElement, portadaId) {
+        if (!url || !imgElement) return;
+        const loader = document.querySelector(`.cover-loading[data-portada-id="${portadaId}"]`);
+        try {
+            const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if (data.success && data.base64) {
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    imgElement.src = data.base64;
+                    imgElement.style.display = 'block';
+                    if (loader) loader.style.display = 'none';
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+            }
+        } catch (error) {
+            console.error('Error cargando imagen:', error);
+            if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+        }
+    }
+
+    // Registrar visita
     function registrarVisita(libroId) {
         fetch("{% url 'registrar_visita_libro' %}", {
             method: 'POST',
@@ -506,99 +482,109 @@
         }).catch(error => console.error('Error:', error));
     }
 
-    function abrirLibro(libroId, titulo, permitirDescarga) {
+    // Visor PDF con PDF.js
+    window.abrirVisorPDFNivel = async function(libroId, titulo, driveUrl) {
         registrarVisita(libroId);
-        
-        if (permitirDescarga) {
-            window.open("{% url 'ver_descargar_libro' 0 %}".replace('0', libroId), '_blank');
+        document.getElementById('pdfNivelTitulo').innerText = titulo;
+        pdfNivelDoc = null;
+        pdfNivelCurrentPageNum = 1;
+        pdfNivelScale = 1.5;
+
+        const canvas = document.getElementById('pdfNivelCanvas');
+        const loading = document.getElementById('pdfNivelLoading');
+        const controls = document.getElementById('pdfNivelControls');
+
+        canvas.style.display = 'none';
+        controls.style.display = 'none';
+        loading.style.display = 'block';
+        loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF...</p>';
+
+        visorPDFNivelModal.show();
+
+        if (!driveUrl) {
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>No hay PDF disponible</p>';
             return;
         }
-        
-        document.getElementById('modalPdfTitle').innerText = titulo;
-        
-        canvas = document.getElementById('pdfCanvas');
-        ctx = canvas.getContext('2d');
-        
-        const url = "{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true';
-        
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Error al cargar');
-                return response.blob();
-            })
-            .then(blob => {
-                const blobUrl = URL.createObjectURL(blob);
-                return pdfjsLib.getDocument(blobUrl).promise;
-            })
-            .then(function(pdf) {
-                pdfDoc = pdf;
-                document.getElementById('pageCount').textContent = pdf.numPages;
-                pageNum = 1;
-                renderPage(pageNum);
-                
-                const modal = new bootstrap.Modal(document.getElementById('pdfModal'));
-                modal.show();
-            })
-            .catch(function(error) {
-                console.error('Error al cargar PDF:', error);
-                alert('No se pudo cargar el PDF. El libro puede estar en Google Drive y requiere acceso externo.');
-                
-                // Redirigir a la vista normal
-                window.open("{% url 'ver_descargar_libro' 0 %}".replace('0', libroId) + '?embed=true', '_blank');
+
+        try {
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            const loadingTask = pdfjsLib.getDocument({
+                url: proxyUrl,
+                withCredentials: true,
+                rangeChunkSize: 65536,
+                disableStream: false
             });
-    }
-
-    function renderPage(num) {
-        if (!pdfDoc) return;
-        
-        pdfDoc.getPage(num).then(function(page) {
-            const viewport = page.getViewport({ scale: scale });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
+            loadingTask.onProgress = function(progress) {
+                if (progress.total > 0) {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    loading.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando... ${percent}%</p>`;
+                }
             };
-            
-            page.render(renderContext);
-            document.getElementById('currentPage').textContent = num;
-        });
+            pdfNivelDoc = await loadingTask.promise;
+            document.getElementById('pdfNivelTotalPages').innerText = pdfNivelDoc.numPages;
+            loading.style.display = 'none';
+            controls.style.display = 'flex';
+            canvas.style.display = 'block';
+            await renderPdfNivelPage(pdfNivelCurrentPageNum);
+            updatePdfNivelButtons();
+        } catch (error) {
+            console.error('Error:', error);
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
+        }
+    };
+
+    async function renderPdfNivelPage(numPage) {
+        if (!pdfNivelDoc || pdfNivelRendering) return;
+        pdfNivelRendering = true;
+        const canvas = document.getElementById('pdfNivelCanvas');
+        const context = canvas.getContext('2d');
+        try {
+            const page = await pdfNivelDoc.getPage(numPage);
+            let scale = pdfNivelScale;
+            const viewport = page.getViewport({scale: 1});
+            const maxWidth = 1200;
+            if (viewport.width * scale > maxWidth) scale = maxWidth / viewport.width;
+            const scaledViewport = page.getViewport({scale: scale});
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+            await page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            document.getElementById('pdfNivelCurrentPage').innerText = numPage;
+            document.getElementById('pdfNivelZoomLevel').innerText = Math.round(scale * 100 / 1.5) + '%';
+            updatePdfNivelButtons();
+            pdfNivelRendering = false;
+        } catch (error) {
+            console.error('Error renderizando:', error);
+            pdfNivelRendering = false;
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('prevPage')?.addEventListener('click', () => {
-            if (pageNum > 1) {
-                pageNum--;
-                renderPage(pageNum);
-            }
-        });
-        
-        document.getElementById('nextPage')?.addEventListener('click', () => {
-            if (pdfDoc && pageNum < pdfDoc.numPages) {
-                pageNum++;
-                renderPage(pageNum);
-            }
-        });
-        
-        document.getElementById('zoomIn')?.addEventListener('click', () => {
-            scale += 0.2;
-            renderPage(pageNum);
-        });
-        
-        document.getElementById('zoomOut')?.addEventListener('click', () => {
-            if (scale > 0.4) {
-                scale -= 0.2;
-                renderPage(pageNum);
-            }
-        });
-        
-        document.getElementById('pdfModal')?.addEventListener('hidden.bs.modal', function() {
-            pdfDoc = null;
-            pageNum = 1;
-            scale = 1.2;
-            currentLibroId = null;
-        });
+    function updatePdfNivelButtons() {
+        if (pdfNivelDoc) {
+            document.getElementById('pdfNivelPrevBtn').disabled = pdfNivelCurrentPageNum <= 1;
+            document.getElementById('pdfNivelNextBtn').disabled = pdfNivelCurrentPageNum >= pdfNivelDoc.numPages;
+        }
+    }
+    function pdfNivelPrev() { if (pdfNivelDoc && pdfNivelCurrentPageNum > 1) { pdfNivelCurrentPageNum--; renderPdfNivelPage(pdfNivelCurrentPageNum); } }
+    function pdfNivelNext() { if (pdfNivelDoc && pdfNivelCurrentPageNum < pdfNivelDoc.numPages) { pdfNivelCurrentPageNum++; renderPdfNivelPage(pdfNivelCurrentPageNum); } }
+    function pdfNivelZoomIn() { if (pdfNivelScale < 3) { pdfNivelScale += 0.25; renderPdfNivelPage(pdfNivelCurrentPageNum); } }
+    function pdfNivelZoomOut() { if (pdfNivelScale > 0.5) { pdfNivelScale -= 0.25; renderPdfNivelPage(pdfNivelCurrentPageNum); } }
+
+    document.getElementById('visorPDFNivelModal').addEventListener('hidden.bs.modal', function () {
+        pdfNivelDoc = null;
+        pdfNivelCurrentPageNum = 1;
+        pdfNivelScale = 1.5;
+        const canvas = document.getElementById('pdfNivelCanvas');
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
+        document.getElementById('pdfNivelControls').style.display = 'none';
+        document.getElementById('pdfNivelLoading').style.display = 'block';
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('visorPDFNivelModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') pdfNivelPrev();
+            if (e.key === 'ArrowRight') pdfNivelNext();
+        }
     });
 </script>
 {% endblock %}
