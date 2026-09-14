@@ -3,9 +3,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA COLECCIONES Y REVISTAS */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -22,11 +19,8 @@
         --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    .collections-container {
-        padding: 1.5rem;
-    }
+    .collections-container { padding: 1.5rem; }
 
-    /* Header */
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -36,23 +30,9 @@
         margin-bottom: 1.5rem;
     }
 
-    .page-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .page-title i {
-        font-size: 1.8rem;
-        color: var(--accent);
-    }
-
-    .page-title h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0;
-    }
+    .page-title { display: flex; align-items: center; gap: 12px; }
+    .page-title i { font-size: 1.8rem; color: var(--accent); }
+    .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0; }
 
     .btn-add {
         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -67,14 +47,8 @@
         gap: 8px;
         text-decoration: none;
     }
+    .btn-add:hover { background: var(--accent); transform: translateY(-2px); color: white; }
 
-    .btn-add:hover {
-        background: var(--accent);
-        transform: translateY(-2px);
-        color: white;
-    }
-
-    /* Sección */
     .section-card {
         background: white;
         border-radius: 20px;
@@ -98,25 +72,13 @@
         align-items: center;
         gap: 10px;
     }
+    .section-header h2 i { color: var(--accent); }
 
-    .section-header h2 i {
-        color: var(--accent);
-    }
+    .section-body { padding: 1.5rem; }
 
-    .section-body {
-        padding: 1.5rem;
-    }
+    .table-wrapper { overflow-x: auto; }
 
-    /* Tablas */
-    .table-wrapper {
-        overflow-x: auto;
-    }
-
-    .modern-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-    }
+    .modern-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     .modern-table th {
         background: var(--bg-light);
@@ -134,15 +96,9 @@
         vertical-align: middle;
     }
 
-    .modern-table tbody tr {
-        transition: all 0.2s ease;
-    }
+    .modern-table tbody tr { transition: all 0.2s ease; }
+    .modern-table tbody tr:hover { background-color: var(--bg-light); }
 
-    .modern-table tbody tr:hover {
-        background-color: var(--bg-light);
-    }
-
-    /* Badges */
     .badge-desc {
         display: inline-block;
         max-width: 250px;
@@ -156,7 +112,6 @@
         color: var(--text-secondary);
     }
 
-    /* Portada */
     .revista-cover {
         width: 50px;
         height: 60px;
@@ -166,10 +121,7 @@
         border: 1px solid var(--border-light);
         transition: transform 0.2s;
     }
-
-    .revista-cover:hover {
-        transform: scale(1.05);
-    }
+    .revista-cover:hover { transform: scale(1.05); }
 
     .cover-placeholder {
         width: 50px;
@@ -183,12 +135,20 @@
         border: 1px dashed var(--border-light);
     }
 
-    /* Botones de acción */
-    .action-buttons {
+    .cover-loading {
+        width: 50px;
+        height: 60px;
+        background: var(--bg-light);
+        border-radius: 8px;
         display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        border: 1px solid var(--border-light);
+        font-size: 1.2rem;
     }
+
+    .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .btn-action {
         padding: 0.4rem 0.8rem;
@@ -204,27 +164,12 @@
         cursor: pointer;
     }
 
-    .btn-edit {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--info);
-    }
+    .btn-edit { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+    .btn-edit:hover { background: var(--info); color: white; }
 
-    .btn-edit:hover {
-        background: var(--info);
-        color: white;
-    }
+    .btn-delete { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .btn-delete:hover { background: var(--danger); color: white; }
 
-    .btn-delete {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-    }
-
-    .btn-delete:hover {
-        background: var(--danger);
-        color: white;
-    }
-
-    /* Links de archivos */
     .file-link {
         display: inline-flex;
         align-items: center;
@@ -236,72 +181,69 @@
         font-size: 0.75rem;
         color: var(--text-primary);
         transition: all 0.2s;
-    }
-
-    .file-link:hover {
-        background: var(--info);
-        color: white;
-    }
-
-    .file-link i {
-        font-size: 0.8rem;
-    }
-
-    /* Sortable handle */
-    .sort-handle {
-        cursor: grab;
-        color: var(--text-secondary);
-        margin-right: 10px;
-    }
-
-    .sort-handle:active {
-        cursor: grabbing;
-    }
-
-    /* Modal */
-    .modal-custom .modal-content {
-        border-radius: 20px;
         border: none;
-        overflow: hidden;
+        cursor: pointer;
     }
+    .file-link:hover { background: var(--info); color: white; }
+    .file-link i { font-size: 0.8rem; }
 
+    .sort-handle { cursor: grab; color: var(--text-secondary); margin-right: 10px; }
+    .sort-handle:active { cursor: grabbing; }
+
+    .modal-custom .modal-content { border-radius: 20px; border: none; overflow: hidden; }
     .modal-custom .modal-header {
         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
         color: white;
         border-bottom: 2px solid var(--accent);
     }
+    .modal-custom .modal-header .btn-close { filter: brightness(0) invert(1); }
+    .modal-custom .modal-title { display: flex; align-items: center; gap: 10px; }
 
-    .modal-custom .modal-header .btn-close {
-        filter: brightness(0) invert(1);
-    }
+    /* Visor PDF */
+    .pdf-modal .modal-dialog { max-width: 95%; margin: 1rem auto; }
+    .pdf-modal .modal-content { background: #1a1a2e; border-radius: 16px; height: 90vh; }
+    .pdf-modal .modal-body { padding: 0; height: calc(90vh - 60px); overflow: auto; background: #333; }
 
-    .modal-custom .modal-title {
+    .pdf-controls-bar {
+        position: sticky;
+        top: 0;
+        background: var(--primary-dark);
+        padding: 0.5rem 1rem;
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: center;
+        gap: 0.75rem;
+        z-index: 10;
+        border-bottom: 1px solid var(--accent);
+        flex-wrap: wrap;
     }
+    .pdf-controls-bar button {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+    .pdf-controls-bar button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+    .pdf-controls-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pdf-controls-bar span { color: white; font-size: 0.85rem; min-width: 60px; text-align: center; }
 
-    /* Responsive */
+    #pdfRevistaCanvasContainer { display: flex; justify-content: center; padding: 1.5rem; min-height: 100%; }
+    #pdfRevistaCanvas { max-width: 100%; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); background: white; border-radius: 4px; }
+
     @media (max-width: 768px) {
-        .collections-container {
-            padding: 1rem;
-        }
-        .action-buttons {
-            flex-direction: column;
-        }
-        .btn-action {
-            justify-content: center;
-        }
-        .badge-desc {
-            max-width: 150px;
-        }
+        .collections-container { padding: 1rem; }
+        .action-buttons { flex-direction: column; }
+        .btn-action { justify-content: center; }
+        .badge-desc { max-width: 150px; }
     }
 </style>
 
 <div class="collections-container">
-    <!-- ============================================ -->
-    <!-- SECCIÓN DE COLECCIONES                       -->
-    <!-- ============================================ -->
+    <!-- SECCIÓN DE COLECCIONES -->
     <div class="section-card">
         <div class="section-header">
             <h2>
@@ -331,23 +273,18 @@
                     <tbody id="colecciones-container">
                         {% for coleccion in colecciones %}
                         <tr data-id="{{ coleccion.id_coleccion }}">
-                            <td class="sort-handle">
-                                <i class="fas fa-grip-vertical"></i>
-                            </td>
+                            <td class="sort-handle"><i class="fas fa-grip-vertical"></i></td>
                             <td>#{{ coleccion.id_coleccion }}</td>
                             <td>
                                 <strong>{{ coleccion.nomb_colecc }}</strong>
                                 {% if coleccion.descripcion %}
                                     <br>
-                                    <span class="badge-desc">
-                                        <i class="fas fa-align-left"></i> {{ coleccion.descripcion|truncatechars:60 }}
-                                    </span>
+                                    <span class="badge-desc"><i class="fas fa-align-left"></i> {{ coleccion.descripcion|truncatechars:60 }}</span>
                                 {% endif %}
                              </td>
                             <td style="text-align: center;">
                                 <div class="action-buttons">
-                                    <a href="{% url 'modificar_coleccion' coleccion.id_coleccion %}" 
-                                       class="btn-action btn-edit">
+                                    <a href="{% url 'modificar_coleccion' coleccion.id_coleccion %}" class="btn-action btn-edit">
                                         <i class="fas fa-edit"></i> Editar
                                     </a>
                                     <button class="btn-action btn-delete" 
@@ -376,15 +313,10 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- SECCIÓN DE REVISTAS                          -->
-    <!-- ============================================ -->
+    <!-- SECCIÓN DE REVISTAS -->
     <div class="section-card">
         <div class="section-header">
-            <h2>
-                <i class="fas fa-newspaper"></i>
-                Revistas
-            </h2>
+            <h2><i class="fas fa-newspaper"></i> Revistas</h2>
         </div>
         <div class="section-body">
             <div class="d-flex justify-content-end mb-3">
@@ -410,26 +342,30 @@
                         <tr>
                             <td>#{{ revista.id_revista }}</td>
                             <td>
-                                {% if revista.img_portada %}
-                                    <img src="{{ revista.img_portada.url }}" 
+                                {% if revista.google_drive_img_url %}
+                                    <div class="cover-loading" data-revista-id="{{ revista.id_revista }}">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                    <img src="" 
                                          class="revista-cover" 
-                                         onclick="mostrarPortada('{{ revista.img_portada.url }}', '{{ revista.nro_revista }}')"
+                                         style="display: none;"
+                                         data-drive-url="{{ revista.google_drive_img_url }}"
+                                         data-revista-id="{{ revista.id_revista }}"
+                                         onclick="mostrarPortadaRevista('{{ revista.google_drive_img_url }}', '{{ revista.nro_revista }}')"
                                          alt="Portada">
                                 {% else %}
-                                    <div class="cover-placeholder">
-                                        <i class="fas fa-image"></i>
-                                    </div>
+                                    <div class="cover-placeholder"><i class="fas fa-image"></i></div>
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge-category" style="background: #E0F2FE; color: #0284C7;">
+                                <span style="background: #E0F2FE; color: #0284C7; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;">
                                     <i class="fas fa-hashtag"></i> {{ revista.nro_revista|default:"Sin número" }}
                                 </span>
                             </td>
                             <td>{{ revista.coleccion.nomb_colecc }}</td>
                             <td>
                                 {% if revista.descripcion %}
-                                    <span class="badge-desc" data-bs-toggle="tooltip" title="{{ revista.descripcion }}">
+                                    <span class="badge-desc" title="{{ revista.descripcion }}">
                                         <i class="fas fa-align-left"></i> {{ revista.descripcion|truncatechars:50 }}
                                     </span>
                                 {% else %}
@@ -438,17 +374,19 @@
                             </td>
                             <td>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    {% if revista.pdf %}
-                                        <a href="{{ revista.pdf.url }}" target="_blank" class="file-link">
-                                            <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
-                                        </a>
+                                    {% if revista.google_drive_url %}
+                                        <button type="button" 
+                                                class="file-link"
+                                                onclick="abrirVisorPDFRevista('{{ revista.id_revista }}', 'Revista #{{ revista.nro_revista|escapejs }}', '{{ revista.google_drive_url }}')">
+                                            <i class="fas fa-eye" style="color: #3B82F6;"></i> Leer en línea
+                                        </button>
                                     {% endif %}
                                     {% if revista.url %}
                                         <a href="{{ revista.url }}" target="_blank" class="file-link">
                                             <i class="fas fa-external-link-alt" style="color: var(--info);"></i> Enlace externo
                                         </a>
                                     {% endif %}
-                                    {% if not revista.pdf and not revista.url %}
+                                    {% if not revista.google_drive_url and not revista.url %}
                                         <span class="file-link" style="background: none; color: var(--text-secondary);">
                                             <i class="fas fa-ban"></i> No disponible
                                         </span>
@@ -457,8 +395,7 @@
                             </td>
                             <td style="text-align: center;">
                                 <div class="action-buttons">
-                                    <a href="{% url 'modificar_revista' revista.id_revista %}" 
-                                       class="btn-action btn-edit">
+                                    <a href="{% url 'modificar_revista' revista.id_revista %}" class="btn-action btn-edit">
                                         <i class="fas fa-edit"></i> Editar
                                     </a>
                                     <button class="btn-action btn-delete" 
@@ -493,26 +430,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-layer-group"></i>
-                    Nueva Colección
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title"><i class="fas fa-layer-group"></i> Nueva Colección</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="padding: 1.5rem;">
                 <form id="coleccionForm">
                     {% csrf_token %}
                     <div class="form-group mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-tag"></i> Nombre de la Colección
-                        </label>
+                        <label class="form-label"><i class="fas fa-tag"></i> Nombre de la Colección</label>
                         <input type="text" class="form-control" id="nomb_colecc" name="nomb_colecc" 
                                placeholder="Ej: Arte Contemporáneo" required>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-align-left"></i> Descripción
-                        </label>
+                        <label class="form-label"><i class="fas fa-align-left"></i> Descripción</label>
                         <textarea class="form-control" id="descripcion" name="descripcion" 
                                   rows="3" placeholder="Descripción opcional..."></textarea>
                     </div>
@@ -530,19 +460,218 @@
     </div>
 </div>
 
+<!-- Modal para visor de PDF de revista -->
+<div class="modal fade pdf-modal" id="visorPDFRevistaModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-dark); border-bottom: 1px solid var(--accent);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-book-open"></i> <span id="pdfRevistaTitulo"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="pdf-controls-bar" id="pdfRevistaControls" style="display: none;">
+                    <button type="button" onclick="pdfRevistaPrev()" id="pdfRevistaPrevBtn"><i class="fas fa-chevron-left"></i></button>
+                    <span>Pág. <span id="pdfRevistaCurrentPage">1</span> / <span id="pdfRevistaTotalPages">?</span></span>
+                    <button type="button" onclick="pdfRevistaNext()" id="pdfRevistaNextBtn"><i class="fas fa-chevron-right"></i></button>
+                    <span style="margin-left: 0.5rem;">|</span>
+                    <button type="button" onclick="pdfRevistaZoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <span id="pdfRevistaZoomLevel">100%</span>
+                    <button type="button" onclick="pdfRevistaZoomIn()"><i class="fas fa-search-plus"></i></button>
+                </div>
+                <div id="pdfRevistaCanvasContainer">
+                    <div id="pdfRevistaLoading" style="text-align: center; padding: 3rem; color: white;">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF...</p>
+                    </div>
+                    <canvas id="pdfRevistaCanvas" style="display: none;"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-light);">
+                <small class="text-muted"><i class="fas fa-lock"></i> Modo solo lectura - Prohibida su descarga</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // ============================================
-    // SORTABLE - REORDENAR COLECCIONES
-    // ============================================
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfRevistaDoc = null;
+    let pdfRevistaCurrentPageNum = 1;
+    let pdfRevistaScale = 1.5;
+    let pdfRevistaRendering = false;
+    let visorPDFRevistaModal;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        visorPDFRevistaModal = new bootstrap.Modal(document.getElementById('visorPDFRevistaModal'));
+        cargarTodasLasPortadasRevista();
+
+        const canvas = document.getElementById('pdfRevistaCanvas');
+        if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
+    });
+
+    // Cargar portadas de revistas con proxy
+    async function cargarTodasLasPortadasRevista() {
+        const imagenes = document.querySelectorAll('img[data-drive-url][data-revista-id]');
+        for (const img of imagenes) {
+            await cargarImagenProxyRevista(img.dataset.driveUrl, img, img.dataset.revistaId);
+        }
+    }
+
+    async function cargarImagenProxyRevista(url, imgElement, revistaId) {
+        if (!url || !imgElement) return;
+        const loader = document.querySelector(`.cover-loading[data-revista-id="${revistaId}"]`);
+        try {
+            const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if (data.success && data.base64) {
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    imgElement.src = data.base64;
+                    imgElement.style.display = 'block';
+                    if (loader) loader.style.display = 'none';
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+            }
+        } catch (error) {
+            console.error('Error cargando imagen:', error);
+            if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+        }
+    }
+
+    // Mostrar portada en modal
+    window.mostrarPortadaRevista = async function(url, titulo) {
+        try {
+            const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if (data.success && data.base64) {
+                Swal.fire({
+                    title: `Portada - Revista ${titulo}`,
+                    imageUrl: data.base64,
+                    imageWidth: 400,
+                    imageHeight: 'auto',
+                    showCloseButton: true,
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#F59E0B'
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error', 'No se pudo cargar la imagen', 'error');
+        }
+    };
+
+    // Visor PDF de revista
+    window.abrirVisorPDFRevista = async function(revistaId, titulo, driveUrl) {
+        document.getElementById('pdfRevistaTitulo').innerText = titulo;
+        pdfRevistaDoc = null;
+        pdfRevistaCurrentPageNum = 1;
+        pdfRevistaScale = 1.5;
+
+        const canvas = document.getElementById('pdfRevistaCanvas');
+        const loading = document.getElementById('pdfRevistaLoading');
+        const controls = document.getElementById('pdfRevistaControls');
+
+        canvas.style.display = 'none';
+        controls.style.display = 'none';
+        loading.style.display = 'block';
+        loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF...</p>';
+
+        visorPDFRevistaModal.show();
+
+        if (!driveUrl) {
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>No hay PDF disponible</p>';
+            return;
+        }
+
+        try {
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            const loadingTask = pdfjsLib.getDocument({
+                url: proxyUrl,
+                withCredentials: true,
+                rangeChunkSize: 65536,
+                disableStream: false
+            });
+            loadingTask.onProgress = function(progress) {
+                if (progress.total > 0) {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    loading.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando... ${percent}%</p>`;
+                }
+            };
+            pdfRevistaDoc = await loadingTask.promise;
+            document.getElementById('pdfRevistaTotalPages').innerText = pdfRevistaDoc.numPages;
+            loading.style.display = 'none';
+            controls.style.display = 'flex';
+            canvas.style.display = 'block';
+            await renderPdfRevistaPage(pdfRevistaCurrentPageNum);
+            updatePdfRevistaButtons();
+        } catch (error) {
+            console.error('Error:', error);
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
+        }
+    };
+
+    async function renderPdfRevistaPage(numPage) {
+        if (!pdfRevistaDoc || pdfRevistaRendering) return;
+        pdfRevistaRendering = true;
+        const canvas = document.getElementById('pdfRevistaCanvas');
+        const context = canvas.getContext('2d');
+        try {
+            const page = await pdfRevistaDoc.getPage(numPage);
+            let scale = pdfRevistaScale;
+            const viewport = page.getViewport({scale: 1});
+            const maxWidth = 1200;
+            if (viewport.width * scale > maxWidth) scale = maxWidth / viewport.width;
+            const scaledViewport = page.getViewport({scale: scale});
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+            await page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            document.getElementById('pdfRevistaCurrentPage').innerText = numPage;
+            document.getElementById('pdfRevistaZoomLevel').innerText = Math.round(scale * 100 / 1.5) + '%';
+            updatePdfRevistaButtons();
+            pdfRevistaRendering = false;
+        } catch (error) {
+            console.error('Error renderizando:', error);
+            pdfRevistaRendering = false;
+        }
+    }
+
+    function updatePdfRevistaButtons() {
+        if (pdfRevistaDoc) {
+            document.getElementById('pdfRevistaPrevBtn').disabled = pdfRevistaCurrentPageNum <= 1;
+            document.getElementById('pdfRevistaNextBtn').disabled = pdfRevistaCurrentPageNum >= pdfRevistaDoc.numPages;
+        }
+    }
+    function pdfRevistaPrev() { if (pdfRevistaDoc && pdfRevistaCurrentPageNum > 1) { pdfRevistaCurrentPageNum--; renderPdfRevistaPage(pdfRevistaCurrentPageNum); } }
+    function pdfRevistaNext() { if (pdfRevistaDoc && pdfRevistaCurrentPageNum < pdfRevistaDoc.numPages) { pdfRevistaCurrentPageNum++; renderPdfRevistaPage(pdfRevistaCurrentPageNum); } }
+    function pdfRevistaZoomIn() { if (pdfRevistaScale < 3) { pdfRevistaScale += 0.25; renderPdfRevistaPage(pdfRevistaCurrentPageNum); } }
+    function pdfRevistaZoomOut() { if (pdfRevistaScale > 0.5) { pdfRevistaScale -= 0.25; renderPdfRevistaPage(pdfRevistaCurrentPageNum); } }
+
+    document.getElementById('visorPDFRevistaModal').addEventListener('hidden.bs.modal', function () {
+        pdfRevistaDoc = null;
+        pdfRevistaCurrentPageNum = 1;
+        pdfRevistaScale = 1.5;
+        const canvas = document.getElementById('pdfRevistaCanvas');
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
+        document.getElementById('pdfRevistaControls').style.display = 'none';
+        document.getElementById('pdfRevistaLoading').style.display = 'block';
+    });
+
+    // Sortable
     $(function() {
         $('#colecciones-container').sortable({
             handle: '.sort-handle',
-            update: function(event, ui) {
-                actualizarOrdenColecciones();
-            }
+            update: function(event, ui) { actualizarOrdenColecciones(); }
         });
     });
 
@@ -551,50 +680,22 @@
         $('#colecciones-container tr').each(function() {
             coleccionIds.push($(this).data('id'));
         });
-
         $.ajax({
             url: "{% url 'actualizar_orden_colecciones' %}",
             method: "POST",
-            data: {
-                coleccion_ids: coleccionIds,
-                csrfmiddlewaretoken: "{{ csrf_token }}"
-            },
+            data: { coleccion_ids: coleccionIds, csrfmiddlewaretoken: "{{ csrf_token }}" },
             success: function(response) {
                 if (response.status === 'success') {
-                    Swal.fire({
-                        title: 'Orden actualizado',
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    Swal.fire({ title: 'Orden actualizado', icon: 'success', timer: 1500, showConfirmButton: false });
                 }
             }
         });
     }
 
-    // ============================================
-    // MOSTRAR PORTADA EN MODAL
-    // ============================================
-    function mostrarPortada(url, titulo) {
-        Swal.fire({
-            title: `Portada - Revista ${titulo}`,
-            imageUrl: url,
-            imageWidth: 400,
-            imageHeight: 'auto',
-            imageAlt: 'Portada de la revista',
-            showCloseButton: true,
-            confirmButtonText: 'Cerrar',
-            confirmButtonColor: '#F59E0B'
-        });
-    }
-
-    // ============================================
-    // ELIMINAR COLECCIÓN
-    // ============================================
+    // Eliminar colección
     function eliminarColeccion(element) {
         const id = element.dataset.id;
         const nombre = element.dataset.nombre;
-        
         Swal.fire({
             title: '¿Eliminar colección?',
             html: `¿Deseas eliminar la colección <strong>${nombre}</strong>?<br>Esta acción no se puede deshacer.`,
@@ -608,39 +709,26 @@
             if (result.isConfirmed) {
                 fetch(`{% url 'eliminar_coleccion' 0 %}`.replace('0', id), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            title: '¡Eliminada!',
-                            text: 'La colección ha sido eliminada correctamente.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
+                        Swal.fire({ title: '¡Eliminada!', icon: 'success', timer: 1500, showConfirmButton: false })
+                            .then(() => location.reload());
                     } else {
                         Swal.fire('Error', 'No se pudo eliminar la colección.', 'error');
                     }
                 })
-                .catch(() => {
-                    Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
-                });
+                .catch(() => Swal.fire('Error', 'Hubo un problema al eliminar.', 'error'));
             }
         });
     }
 
-    // ============================================
-    // ELIMINAR REVISTA
-    // ============================================
+    // Eliminar revista
     function eliminarRevista(element) {
         const id = element.dataset.id;
         const numero = element.dataset.numero;
-        
         Swal.fire({
             title: '¿Eliminar revista?',
             html: `¿Deseas eliminar la revista número <strong>${numero || 'sin número'}</strong>?`,
@@ -654,80 +742,54 @@
             if (result.isConfirmed) {
                 fetch(`{% url 'eliminar_revista' 0 %}`.replace('0', id), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire({
-                            title: '¡Eliminada!',
-                            text: 'La revista ha sido eliminada correctamente.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
+                        Swal.fire({ title: '¡Eliminada!', icon: 'success', timer: 1500, showConfirmButton: false })
+                            .then(() => location.reload());
                     } else {
                         Swal.fire('Error', 'No se pudo eliminar la revista.', 'error');
                     }
                 })
-                .catch(() => {
-                    Swal.fire('Error', 'Hubo un problema al eliminar.', 'error');
-                });
+                .catch(() => Swal.fire('Error', 'Hubo un problema al eliminar.', 'error'));
             }
         });
     }
 
-    // ============================================
-    // MODAL NUEVA COLECCIÓN
-    // ============================================
+    // Modal nueva colección
     document.querySelectorAll('#btnNuevaColeccion, #btnNuevaColeccionEmpty').forEach(btn => {
-        if (btn) {
-            btn.addEventListener('click', () => {
-                const modal = new bootstrap.Modal(document.getElementById('coleccionModal'));
-                modal.show();
-            });
-        }
+        if (btn) btn.addEventListener('click', () => {
+            new bootstrap.Modal(document.getElementById('coleccionModal')).show();
+        });
     });
 
     function guardarColeccion() {
         const formData = new FormData(document.getElementById('coleccionForm'));
-        
         fetch("{% url 'agregar_coleccion' %}", {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    title: '¡Creada!',
-                    text: 'Colección creada correctamente',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => location.reload());
+                Swal.fire({ title: '¡Creada!', text: 'Colección creada correctamente', icon: 'success', timer: 1500, showConfirmButton: false })
+                    .then(() => location.reload());
             } else {
                 Swal.fire('Error', data.message || 'Error al crear la colección', 'error');
             }
         })
-        .catch(() => {
-            Swal.fire('Error', 'Hubo un problema al crear la colección', 'error');
-        });
+        .catch(() => Swal.fire('Error', 'Hubo un problema al crear la colección', 'error'));
     }
 
-    // Inicializar tooltips
-    document.addEventListener('DOMContentLoaded', function() {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+    // Atajos de teclado para PDF
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('visorPDFRevistaModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') pdfRevistaPrev();
+            if (e.key === 'ArrowRight') pdfRevistaNext();
+        }
     });
 </script>
 {% endblock %}
