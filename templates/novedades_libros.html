@@ -4,9 +4,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA NOVEDADES DE LIBROS    */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -23,18 +20,8 @@
         --hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    /* Layout principal */
-    .novedades-container {
-        display: flex;
-        gap: 1.5rem;
-        padding: 1.5rem;
-        max-width: 1600px;
-        margin: 0 auto;
-    }
+    .novedades-container { display: flex; gap: 1.5rem; padding: 1.5rem; max-width: 1600px; margin: 0 auto; }
 
-    /* ============================================ */
-    /* SIDEBAR DE FILTROS                           */
-    /* ============================================ */
     .filters-sidebar {
         width: 300px;
         flex-shrink: 0;
@@ -64,10 +51,7 @@
         align-items: center;
         gap: 8px;
     }
-
-    .filters-header h3 i {
-        color: var(--accent);
-    }
+    .filters-header h3 i { color: var(--accent); }
 
     .clear-filters {
         background: rgba(255, 255, 255, 0.2);
@@ -79,21 +63,10 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+    .clear-filters:hover { background: var(--accent); }
 
-    .clear-filters:hover {
-        background: var(--accent);
-    }
-
-    /* Buscador */
-    .search-box {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .search-input-wrapper {
-        position: relative;
-    }
-
+    .search-box { padding: 1rem; border-bottom: 1px solid var(--border-light); }
+    .search-input-wrapper { position: relative; }
     .search-input-wrapper i {
         position: absolute;
         left: 1rem;
@@ -101,7 +74,6 @@
         transform: translateY(-50%);
         color: var(--text-secondary);
     }
-
     .search-input {
         width: 100%;
         padding: 0.7rem 1rem 0.7rem 2.5rem;
@@ -110,22 +82,14 @@
         font-size: 0.85rem;
         transition: all 0.2s ease;
     }
-
     .search-input:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
     }
 
-    /* Secciones de filtros */
-    .filter-section {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .filter-section:last-child {
-        border-bottom: none;
-    }
+    .filter-section { padding: 1rem; border-bottom: 1px solid var(--border-light); }
+    .filter-section:last-child { border-bottom: none; }
 
     .filter-title {
         display: flex;
@@ -137,20 +101,9 @@
         color: var(--text-primary);
         margin-bottom: 0.8rem;
     }
-
-    .filter-title i {
-        color: var(--accent);
-        transition: transform 0.2s ease;
-    }
-
-    .filter-title.collapsed i {
-        transform: rotate(-90deg);
-    }
-
-    .filter-items {
-        max-height: 300px;
-        overflow-y: auto;
-    }
+    .filter-title i { color: var(--accent); transition: transform 0.2s ease; }
+    .filter-title.collapsed i { transform: rotate(-90deg); }
+    .filter-items { max-height: 300px; overflow-y: auto; }
 
     .filter-item {
         display: flex;
@@ -163,17 +116,8 @@
         transition: all 0.2s ease;
         border-radius: 8px;
     }
-
-    .filter-item:hover {
-        color: var(--accent);
-        background: rgba(245, 158, 11, 0.05);
-        padding-left: 0.5rem;
-    }
-
-    .filter-item.active {
-        color: var(--accent);
-        font-weight: 500;
-    }
+    .filter-item:hover { color: var(--accent); background: rgba(245, 158, 11, 0.05); padding-left: 0.5rem; }
+    .filter-item.active { color: var(--accent); font-weight: 500; }
 
     .filter-count {
         background: var(--bg-light);
@@ -183,9 +127,6 @@
         color: var(--text-secondary);
     }
 
-    /* ============================================ */
-    /* CONTENIDO PRINCIPAL                          */
-    /* ============================================ */
     .main-content {
         flex: 1;
         background: white;
@@ -194,13 +135,11 @@
         overflow: hidden;
     }
 
-    /* Header */
     .content-header {
         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
         padding: 1.5rem;
         text-align: center;
     }
-
     .content-header h1 {
         color: white;
         font-size: 1.5rem;
@@ -211,28 +150,11 @@
         justify-content: center;
         gap: 10px;
     }
+    .content-header h1 i { color: var(--accent); }
+    .content-header p { color: rgba(255, 255, 255, 0.8); font-size: 0.85rem; margin-top: 0.5rem; }
 
-    .content-header h1 i {
-        color: var(--accent);
-    }
-
-    .content-header p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
-    }
-
-    /* Pestañas */
-    .tabs-container {
-        padding: 1rem 1.5rem 0;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .nav-tabs-custom {
-        display: flex;
-        gap: 0.5rem;
-        border: none;
-    }
+    .tabs-container { padding: 1rem 1.5rem 0; border-bottom: 1px solid var(--border-light); }
+    .nav-tabs-custom { display: flex; gap: 0.5rem; border: none; }
 
     .tab-btn {
         padding: 0.6rem 1.2rem;
@@ -245,22 +167,10 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+    .tab-btn i { margin-right: 6px; }
+    .tab-btn.active { background: var(--accent); color: white; }
+    .tab-btn:hover:not(.active) { background: var(--bg-light); color: var(--accent); }
 
-    .tab-btn i {
-        margin-right: 6px;
-    }
-
-    .tab-btn.active {
-        background: var(--accent);
-        color: white;
-    }
-
-    .tab-btn:hover:not(.active) {
-        background: var(--bg-light);
-        color: var(--accent);
-    }
-
-    /* Grid de libros */
     .books-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -268,7 +178,6 @@
         padding: 1.5rem;
     }
 
-    /* Tarjeta de libro */
     .book-card {
         background: white;
         border-radius: 16px;
@@ -277,11 +186,7 @@
         transition: all 0.3s ease;
         border: 1px solid var(--border-light);
     }
-
-    .book-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--hover-shadow);
-    }
+    .book-card:hover { transform: translateY(-5px); box-shadow: var(--hover-shadow); }
 
     .book-image {
         position: relative;
@@ -289,17 +194,40 @@
         overflow: hidden;
         background: var(--bg-light);
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .book-image img {
         width: 100%;
         height: 100%;
         object-fit: contain;
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, opacity 0.3s;
+    }
+    .book-card:hover .book-image img { transform: scale(1.05); }
+
+    .cover-loading-novedades {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-size: 2rem;
+        background: var(--bg-light);
+        z-index: 1;
     }
 
-    .book-card:hover .book-image img {
-        transform: scale(1.05);
+    .cover-placeholder-novedades {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        font-size: 3rem;
+        background: var(--bg-light);
     }
 
     .auth-badge {
@@ -319,30 +247,17 @@
 
     .image-overlay {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        bottom: 0; left: 0; right: 0;
         background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
         padding: 0.8rem;
         opacity: 0;
         transition: opacity 0.3s ease;
+        z-index: 2;
     }
+    .book-image:hover .image-overlay { opacity: 1; }
+    .image-overlay span { color: white; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
 
-    .book-image:hover .image-overlay {
-        opacity: 1;
-    }
-
-    .image-overlay span {
-        color: white;
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .book-info {
-        padding: 1rem;
-    }
+    .book-info { padding: 1rem; }
 
     .book-title {
         font-size: 0.9rem;
@@ -352,16 +267,8 @@
         line-height: 1.4;
     }
 
-    .book-meta {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.3rem;
-    }
-
-    .book-meta i {
-        color: var(--accent);
-        width: 18px;
-    }
+    .book-meta { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+    .book-meta i { color: var(--accent); width: 18px; }
 
     .btn-view {
         width: 100%;
@@ -376,10 +283,7 @@
         transition: all 0.2s ease;
         margin-top: 0.5rem;
     }
-
-    .btn-view:hover {
-        background: var(--accent-hover);
-    }
+    .btn-view:hover { background: var(--accent-hover); }
 
     /* Galería de imágenes */
     .gallery-grid {
@@ -397,85 +301,69 @@
         box-shadow: var(--card-shadow);
         transition: all 0.3s ease;
     }
+    .art-card:hover { transform: translateY(-5px); box-shadow: var(--hover-shadow); }
 
-    .art-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--hover-shadow);
-    }
-
-    .art-image {
-        height: 200px;
-        overflow: hidden;
-    }
-
+    .art-image { height: 200px; overflow: hidden; position: relative; }
     .art-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.3s ease;
     }
+    .art-card:hover .art-image img { transform: scale(1.05); }
 
-    .art-card:hover .art-image img {
-        transform: scale(1.05);
-    }
+    .art-info { padding: 0.8rem; text-align: center; }
+    .art-info h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .art-info p { font-size: 0.7rem; color: var(--accent); }
 
-    .art-info {
-        padding: 0.8rem;
-        text-align: center;
-    }
-
-    .art-info h4 {
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 0.2rem;
-    }
-
-    .art-info p {
-        font-size: 0.7rem;
-        color: var(--accent);
-    }
-
-    /* Modal de imágenes */
-    .modal-modern .modal-content {
-        border-radius: 20px;
-        overflow: hidden;
-    }
-
+    .modal-modern .modal-content { border-radius: 20px; overflow: hidden; }
     .modal-modern .modal-header {
         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
         border-bottom: 2px solid var(--accent);
     }
+    .modal-modern .modal-title { color: white; }
 
-    .modal-modern .modal-title {
+    /* Modal PDF */
+    .pdf-modal .modal-dialog { max-width: 95%; margin: 1rem auto; }
+    .pdf-modal .modal-content { background: #1a1a2e; border-radius: 16px; height: 90vh; }
+    .pdf-modal .modal-body { padding: 0; height: calc(90vh - 60px); overflow: auto; background: #333; }
+
+    .pdf-controls-bar {
+        position: sticky; top: 0;
+        background: var(--primary-dark);
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        z-index: 10;
+        border-bottom: 1px solid var(--accent);
+        flex-wrap: wrap;
+    }
+    .pdf-controls-bar button {
+        background: rgba(255, 255, 255, 0.1);
         color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
     }
+    .pdf-controls-bar button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+    .pdf-controls-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pdf-controls-bar span { color: white; font-size: 0.85rem; min-width: 60px; text-align: center; }
+    #pdfNovedadesCanvasContainer { display: flex; justify-content: center; padding: 1.5rem; min-height: 100%; }
+    #pdfNovedadesCanvas { max-width: 100%; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); background: white; border-radius: 4px; }
 
-    /* Responsive */
     @media (max-width: 992px) {
-        .novedades-container {
-            flex-direction: column;
-            padding: 1rem;
-        }
-        .filters-sidebar {
-            width: 100%;
-            position: static;
-            margin-bottom: 1rem;
-        }
+        .novedades-container { flex-direction: column; padding: 1rem; }
+        .filters-sidebar { width: 100%; position: static; margin-bottom: 1rem; }
     }
-
     @media (max-width: 768px) {
-        .books-grid, .gallery-grid {
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1rem;
-            padding: 1rem;
-        }
-        .tabs-container {
-            padding: 0.5rem 1rem;
-        }
-        .tab-btn {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.75rem;
-        }
+        .books-grid, .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; padding: 1rem; }
+        .tabs-container { padding: 0.5rem 1rem; }
+        .tab-btn { padding: 0.4rem 0.8rem; font-size: 0.75rem; }
     }
 </style>
 
@@ -489,7 +377,6 @@
             </button>
         </div>
 
-        <!-- Buscador -->
         <div class="search-box">
             <div class="search-input-wrapper">
                 <i class="fas fa-search"></i>
@@ -497,7 +384,6 @@
             </div>
         </div>
 
-        <!-- Categorías -->
         <div class="filter-section">
             <div class="filter-title" data-target="categorias">
                 <span><i class="fas fa-tags"></i> Categorías</span>
@@ -517,7 +403,6 @@
             </div>
         </div>
 
-        <!-- Tipos -->
         <div class="filter-section">
             <div class="filter-title" data-target="tipos">
                 <span><i class="fas fa-book-open"></i> Tipos</span>
@@ -537,7 +422,6 @@
             </div>
         </div>
 
-        <!-- Autores -->
         <div class="filter-section">
             <div class="filter-title" data-target="autores">
                 <span><i class="fas fa-users"></i> Autores</span>
@@ -557,7 +441,6 @@
             </div>
         </div>
 
-        <!-- Estado de descarga -->
         <div class="filter-section">
             <div class="filter-title" data-target="descarga">
                 <span><i class="fas fa-download"></i> Descarga</span>
@@ -583,10 +466,7 @@
     <!-- Contenido principal -->
     <main class="main-content">
         <div class="content-header">
-            <h1>
-                <i class="fas fa-book-open"></i>
-                Biblioteca Digital
-            </h1>
+            <h1><i class="fas fa-book-open"></i> Biblioteca Digital</h1>
             <p>Explora nuestra colección de recursos digitales para arte y diseño</p>
         </div>
 
@@ -608,16 +488,25 @@
             <div class="books-grid" id="bookList">
                 {% for libro in libros %}
                 <div class="book-card">
-                    <div class="book-image" onclick="verPdf('{% if libro.pdf %}{{ libro.pdf.url }}{% endif %}', '{{ libro.id_libro }}', {{ libro.descarga_autorizada|lower }})">
-                        {% if libro.archivo_autorizacion %}
+                    <div class="book-image" onclick="abrirVisorPDFNovedades('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url|default:'' }}')">
+                        {% if libro.google_drive_portada_url %}
+                            <div class="cover-loading-novedades" data-portada-novedades-id="{{ libro.id_libro }}">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <img src="" 
+                                 data-drive-url="{{ libro.google_drive_portada_url }}"
+                                 data-portada-novedades-id="{{ libro.id_libro }}"
+                                 style="display: none;"
+                                 alt="{{ libro.titulo }}">
+                        {% else %}
+                            <div class="cover-placeholder-novedades">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        {% endif %}
+                        {% if libro.google_drive_autorizacion_url %}
                             <div class="auth-badge">
                                 <i class="fas fa-check-circle"></i> Autorizado
                             </div>
-                        {% endif %}
-                        {% if libro.img_portada %}
-                            <img src="{{ libro.img_portada.url }}" alt="{{ libro.titulo }}">
-                        {% else %}
-                            <img src="{% static 'images/default-book.png' %}" alt="Sin portada">
                         {% endif %}
                         <div class="image-overlay">
                             <span><i class="fas fa-eye"></i> Ver detalles</span>
@@ -638,9 +527,15 @@
                             <i class="fas fa-tag"></i> {{ libro.edicion }}
                         </div>
                         {% endif %}
-                        <button class="btn-view" onclick="verPdf('{% if libro.pdf %}{{ libro.pdf.url }}{% endif %}', '{{ libro.id_libro }}', {{ libro.descarga_autorizada|lower }})">
-                            <i class="fas fa-file-pdf"></i> Ver PDF
-                        </button>
+                        {% if libro.google_drive_url %}
+                            <button class="btn-view" onclick="event.stopPropagation(); abrirVisorPDFNovedades('{{ libro.id_libro }}', '{{ libro.titulo|escapejs }}', '{{ libro.google_drive_url }}')">
+                                <i class="fas fa-book-open"></i> Leer en línea
+                            </button>
+                        {% else %}
+                            <button class="btn-view" disabled style="background: #ccc; cursor: not-allowed;">
+                                <i class="fas fa-clock"></i> Subiendo...
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
                 {% empty %}
@@ -656,9 +551,22 @@
         <div id="tab-imagenes" class="tab-content" style="display: none;">
             <div class="gallery-grid">
                 {% for imagen in imagenes %}
-                <div class="art-card" data-bs-toggle="modal" data-bs-target="#imagenModal{{ imagen.id_Imagen }}">
+                <div class="art-card" onclick="abrirModalImagenNovedades('{{ imagen.id_Imagen }}')">
                     <div class="art-image">
-                        <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}">
+                        {% if imagen.google_drive_url %}
+                            <div class="cover-loading-novedades" data-imagen-novedades-id="{{ imagen.id_Imagen }}">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <img src="" 
+                                 data-drive-url="{{ imagen.google_drive_url }}"
+                                 data-imagen-novedades-id="{{ imagen.id_Imagen }}"
+                                 style="display: none;"
+                                 alt="{{ imagen.titulo }}">
+                        {% else %}
+                            <div class="cover-placeholder-novedades">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="art-info">
                         <h4>{{ imagen.titulo|truncatechars:40 }}</h4>
@@ -672,18 +580,21 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">{{ imagen.titulo }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="modal-body text-center">
-                                <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}" class="img-fluid mb-3" style="max-height: 60vh;">
+                            <div class="modal-body text-center" style="padding: 1.5rem;">
+                                <div id="modalImagenLoader{{ imagen.id_Imagen }}" style="display: none; padding: 2rem;">
+                                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--accent);"></i>
+                                </div>
+                                <img id="modalImagenNovedades{{ imagen.id_Imagen }}" 
+                                     src="" 
+                                     data-drive-url="{{ imagen.google_drive_url }}"
+                                     alt="{{ imagen.titulo }}" 
+                                     class="img-fluid mb-3" 
+                                     style="max-height: 60vh; border-radius: 12px;">
                                 <p><strong>Autor:</strong> {{ imagen.autorImg }}</p>
                                 {% if imagen.descripcion %}
                                 <p><strong>Descripción:</strong> {{ imagen.descripcion }}</p>
-                                {% endif %}
-                                {% if imagen.pdf %}
-                                <a href="{{ imagen.pdf.url }}" class="btn-view" style="display: inline-block; width: auto; padding: 0.5rem 1rem;" target="_blank">
-                                    <i class="fas fa-file-pdf"></i> Ver PDF
-                                </a>
                                 {% endif %}
                             </div>
                         </div>
@@ -700,9 +611,279 @@
     </main>
 </div>
 
+<!-- Modal visor PDF -->
+<div class="modal fade pdf-modal" id="visorPDFNovedadesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-dark); border-bottom: 1px solid var(--accent);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-book-open"></i> <span id="pdfNovedadesTitulo"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="pdf-controls-bar" id="pdfNovedadesControls" style="display: none;">
+                    <button type="button" onclick="pdfNovedadesPrev()" id="pdfNovedadesPrevBtn"><i class="fas fa-chevron-left"></i></button>
+                    <span>Pág. <span id="pdfNovedadesCurrentPage">1</span> / <span id="pdfNovedadesTotalPages">?</span></span>
+                    <button type="button" onclick="pdfNovedadesNext()" id="pdfNovedadesNextBtn"><i class="fas fa-chevron-right"></i></button>
+                    <span style="margin-left: 0.5rem;">|</span>
+                    <button type="button" onclick="pdfNovedadesZoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <span id="pdfNovedadesZoomLevel">100%</span>
+                    <button type="button" onclick="pdfNovedadesZoomIn()"><i class="fas fa-search-plus"></i></button>
+                </div>
+                <div id="pdfNovedadesCanvasContainer">
+                    <div id="pdfNovedadesLoading" style="text-align: center; padding: 3rem; color: white;">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p style="margin-top: 1rem;">Cargando PDF...</p>
+                    </div>
+                    <canvas id="pdfNovedadesCanvas" style="display: none;"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-light);">
+                <small class="text-muted"><i class="fas fa-lock"></i> Modo solo lectura</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Toggle de secciones de filtros
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfNovedadesDoc = null;
+    let pdfNovedadesCurrentPageNum = 1;
+    let pdfNovedadesScale = 1.5;
+    let pdfNovedadesRendering = false;
+    let visorPDFNovedadesModal;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        visorPDFNovedadesModal = new bootstrap.Modal(document.getElementById('visorPDFNovedadesModal'));
+
+        // Cargar portadas de libros
+        cargarPortadasLibrosNovedades();
+
+        // Cargar imágenes cuando se cambie a esa pestaña
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.dataset.tab === 'imagenes') {
+                    cargarPortadasImagenesNovedades();
+                }
+            });
+        });
+
+        const canvas = document.getElementById('pdfNovedadesCanvas');
+        if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
+    });
+
+    // Cargar portadas de libros
+    async function cargarPortadasLibrosNovedades() {
+        const imagenes = document.querySelectorAll('img[data-drive-url][data-portada-novedades-id]');
+        for (const img of imagenes) {
+            const loader = document.querySelector(`.cover-loading-novedades[data-portada-novedades-id="${img.dataset.portadaNovedadesId}"]`);
+            try {
+                const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`);
+                const data = await response.json();
+                if (data.success && data.base64) {
+                    const nuevaImg = new Image();
+                    nuevaImg.onload = function() {
+                        img.src = data.base64;
+                        img.style.display = 'block';
+                        if (loader) loader.style.display = 'none';
+                    };
+                    nuevaImg.src = data.base64;
+                } else {
+                    if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+                }
+            } catch (e) {
+                console.error(e);
+                if (loader) loader.innerHTML = '<i class="fas fa-book"></i>';
+            }
+        }
+    }
+
+    // Cargar portadas de imágenes
+    async function cargarPortadasImagenesNovedades() {
+        const imagenes = document.querySelectorAll('img[data-drive-url][data-imagen-novedades-id]');
+        for (const img of imagenes) {
+            if (img.src) continue; // Ya cargada
+            const loader = document.querySelector(`.cover-loading-novedades[data-imagen-novedades-id="${img.dataset.imagenNovedadesId}"]`);
+            try {
+                const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`);
+                const data = await response.json();
+                if (data.success && data.base64) {
+                    const nuevaImg = new Image();
+                    nuevaImg.onload = function() {
+                        img.src = data.base64;
+                        img.style.display = 'block';
+                        if (loader) loader.style.display = 'none';
+                    };
+                    nuevaImg.src = data.base64;
+                } else {
+                    if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+                }
+            } catch (e) {
+                console.error(e);
+                if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+            }
+        }
+    }
+
+    // Abrir modal de imagen
+    window.abrirModalImagenNovedades = function(imagenId) {
+        const modalEl = document.getElementById('imagenModal' + imagenId);
+        if (!modalEl) return;
+
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        modalEl.addEventListener('shown.bs.modal', function() {
+            const img = modalEl.querySelector('img[data-drive-url]');
+            const loader = modalEl.querySelector('[id^="modalImagenLoader"]');
+            if (img && img.dataset.driveUrl && !img.src) {
+                if (loader) loader.style.display = 'block';
+                fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.base64) {
+                            const nuevaImg = new Image();
+                            nuevaImg.onload = function() {
+                                img.src = data.base64;
+                                if (loader) loader.style.display = 'none';
+                            };
+                            nuevaImg.src = data.base64;
+                        } else {
+                            if (loader) loader.innerHTML = '<i class="fas fa-image fa-3x" style="color: var(--text-secondary);"></i>';
+                        }
+                    })
+                    .catch(e => {
+                        console.error(e);
+                        if (loader) loader.style.display = 'none';
+                    });
+            }
+        }, { once: true });
+    };
+
+    // ============================================
+    // VISOR PDF CON PDF.JS
+    // ============================================
+    window.abrirVisorPDFNovedades = async function(libroId, titulo, driveUrl) {
+        document.getElementById('pdfNovedadesTitulo').innerText = titulo;
+        pdfNovedadesDoc = null;
+        pdfNovedadesCurrentPageNum = 1;
+        pdfNovedadesScale = 1.5;
+
+        const canvas = document.getElementById('pdfNovedadesCanvas');
+        const loading = document.getElementById('pdfNovedadesLoading');
+        const controls = document.getElementById('pdfNovedadesControls');
+
+        canvas.style.display = 'none';
+        controls.style.display = 'none';
+        loading.style.display = 'block';
+        loading.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando PDF...</p>';
+
+        visorPDFNovedadesModal.show();
+
+        if (!driveUrl) {
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>No hay PDF disponible</p>';
+            return;
+        }
+
+        // Registrar visita
+        fetch("{% url 'registrar_visita_libro' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'libro_id=' + encodeURIComponent(libroId)
+        }).catch(error => console.error('Error:', error));
+
+        try {
+            const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+            const loadingTask = pdfjsLib.getDocument({
+                url: proxyUrl,
+                withCredentials: true,
+                rangeChunkSize: 65536,
+                disableStream: false
+            });
+            loadingTask.onProgress = function(progress) {
+                if (progress.total > 0) {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    loading.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top: 1rem;">Cargando... ${percent}%</p>`;
+                }
+            };
+            pdfNovedadesDoc = await loadingTask.promise;
+            document.getElementById('pdfNovedadesTotalPages').innerText = pdfNovedadesDoc.numPages;
+            loading.style.display = 'none';
+            controls.style.display = 'flex';
+            canvas.style.display = 'block';
+            await renderPdfNovedadesPage(pdfNovedadesCurrentPageNum);
+            updatePdfNovedadesButtons();
+        } catch (error) {
+            console.error('Error:', error);
+            loading.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p>Error al cargar PDF</p>';
+        }
+    };
+
+    async function renderPdfNovedadesPage(numPage) {
+        if (!pdfNovedadesDoc || pdfNovedadesRendering) return;
+        pdfNovedadesRendering = true;
+        const canvas = document.getElementById('pdfNovedadesCanvas');
+        const context = canvas.getContext('2d');
+        try {
+            const page = await pdfNovedadesDoc.getPage(numPage);
+            let scale = pdfNovedadesScale;
+            const viewport = page.getViewport({scale: 1});
+            const maxWidth = 1200;
+            if (viewport.width * scale > maxWidth) scale = maxWidth / viewport.width;
+            const scaledViewport = page.getViewport({scale: scale});
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+            await page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            document.getElementById('pdfNovedadesCurrentPage').innerText = numPage;
+            document.getElementById('pdfNovedadesZoomLevel').innerText = Math.round(scale * 100 / 1.5) + '%';
+            updatePdfNovedadesButtons();
+            pdfNovedadesRendering = false;
+        } catch (error) {
+            console.error('Error:', error);
+            pdfNovedadesRendering = false;
+        }
+    }
+
+    function updatePdfNovedadesButtons() {
+        if (pdfNovedadesDoc) {
+            document.getElementById('pdfNovedadesPrevBtn').disabled = pdfNovedadesCurrentPageNum <= 1;
+            document.getElementById('pdfNovedadesNextBtn').disabled = pdfNovedadesCurrentPageNum >= pdfNovedadesDoc.numPages;
+        }
+    }
+    function pdfNovedadesPrev() { if (pdfNovedadesDoc && pdfNovedadesCurrentPageNum > 1) { pdfNovedadesCurrentPageNum--; renderPdfNovedadesPage(pdfNovedadesCurrentPageNum); } }
+    function pdfNovedadesNext() { if (pdfNovedadesDoc && pdfNovedadesCurrentPageNum < pdfNovedadesDoc.numPages) { pdfNovedadesCurrentPageNum++; renderPdfNovedadesPage(pdfNovedadesCurrentPageNum); } }
+    function pdfNovedadesZoomIn() { if (pdfNovedadesScale < 3) { pdfNovedadesScale += 0.25; renderPdfNovedadesPage(pdfNovedadesCurrentPageNum); } }
+    function pdfNovedadesZoomOut() { if (pdfNovedadesScale > 0.5) { pdfNovedadesScale -= 0.25; renderPdfNovedadesPage(pdfNovedadesCurrentPageNum); } }
+
+    document.getElementById('visorPDFNovedadesModal').addEventListener('hidden.bs.modal', function () {
+        pdfNovedadesDoc = null;
+        pdfNovedadesCurrentPageNum = 1;
+        pdfNovedadesScale = 1.5;
+        const canvas = document.getElementById('pdfNovedadesCanvas');
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
+        document.getElementById('pdfNovedadesControls').style.display = 'none';
+        document.getElementById('pdfNovedadesLoading').style.display = 'block';
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('visorPDFNovedadesModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') pdfNovedadesPrev();
+            if (e.key === 'ArrowRight') pdfNovedadesNext();
+        }
+    });
+
+    // ============================================
+    // FILTROS Y PESTAÑAS
+    // ============================================
     document.querySelectorAll('.filter-title').forEach(title => {
         title.addEventListener('click', () => {
             const targetId = title.dataset.target;
@@ -714,7 +895,6 @@
         });
     });
 
-    // Pestañas
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = {
         libros: document.getElementById('tab-libros'),
@@ -733,46 +913,18 @@
         });
     });
 
-    // Limpiar filtros
-    document.getElementById('clearFilters').addEventListener('click', () => {
+    document.getElementById('clearFilters')?.addEventListener('click', () => {
         window.location.href = "{% url 'novedades_libros' %}";
     });
 
-    // Búsqueda en tiempo real
-    document.getElementById('searchInput').addEventListener('keyup', function() {
+    document.getElementById('searchInput')?.addEventListener('keyup', function() {
         const searchTerm = this.value.toLowerCase();
         const bookCards = document.querySelectorAll('#tab-libros .book-card');
-        
         bookCards.forEach(card => {
             const title = card.querySelector('.book-title')?.textContent.toLowerCase() || '';
             const author = card.querySelector('.book-meta')?.textContent.toLowerCase() || '';
             card.style.display = (title.includes(searchTerm) || author.includes(searchTerm)) ? '' : 'none';
         });
     });
-
-    // Función para ver PDF
-    function verPdf(pdfUrl, libroId, tienePermiso) {
-        if (!pdfUrl || pdfUrl === 'None' || pdfUrl === '') {
-            Swal.fire('Error', 'No hay PDF disponible para este libro', 'error');
-            return;
-        }
-        
-        // Registrar visita
-        fetch("{% url 'registrar_visita_libro' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: 'libro_id=' + encodeURIComponent(libroId)
-        }).catch(error => console.error('Error:', error));
-        
-        if (tienePermiso) {
-            window.open(pdfUrl, '_blank');
-        } else {
-            Swal.fire('Información', 'Este libro no tiene autorización de descarga. Solo puede visualizarse online.', 'info');
-            window.open(pdfUrl, '_blank');
-        }
-    }
 </script>
 {% endblock %}
