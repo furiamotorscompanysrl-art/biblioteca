@@ -984,7 +984,7 @@ def agregar_imagen(request):
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
-            # ✅ LÍMITE AUMENTADO A 100MB para imágenes
+            # ✅ LÍMITE 100MB para imágenes
             if tamaño_mb > 100:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)'}, status=400)
@@ -992,44 +992,68 @@ def agregar_imagen(request):
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
             nombre_archivo = imagen_original.name
+            
+            # ✅ Leer bytes UNA SOLA VEZ y rebobinar
             contenido_bytes = imagen_original.read()
             imagen_original.seek(0)
             
+            if not contenido_bytes:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'El archivo está vacío'}, status=400)
+                messages.error(request, 'El archivo está vacío')
+                return render(request, 'agregar_imagen.html', {'categorias': categorias})
+            
+            # 1. Crear el registro en BD
             nueva_imagen = Imagen(
                 titulo=titulo,
                 descripcion=descripcion,
                 autorImg=autorImg,
             )
-            
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
-            try:
-                thread = threading.Thread(
-                    target=subir_imagen_a_drive_async,
-                    args=(contenido_bytes, nombre_archivo, imagen_id)
-                )
-                thread.daemon = True
-                thread.start()
-                logger.info(f"🔄 Hilo de subida a Drive iniciado para imagen ID {imagen_id}")
-            except Exception as e:
-                logger.error(f"⚠️ Error iniciando subida a Drive: {e}")
-            
+            # 2. Asignar categorías ANTES de lanzar el thread
+            #    (así están listas cuando el template las consulte)
             for cat_id in request.POST.getlist('categorias'):
                 try:
                     categoria = Categoria.objects.get(pk=cat_id)
                     nueva_imagen.categorias.add(categoria)
-                except:
-                    pass
+                except Categoria.DoesNotExist:
+                    logger.warning(f"⚠️ Categoría {cat_id} no encontrada")
+            
+            # 3. Subir PDF si viene (opcional)
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                pdf_bytes = pdf_original.read()
+                pdf_original.seek(0)
+                logger.info(f"📄 PDF detectado para imagen ID {imagen_id}: {pdf_original.name}")
+                thread_pdf = threading.Thread(
+                    target=subir_pdf_a_drive_async,
+                    args=(pdf_bytes, pdf_original.name, imagen_id, 'Material_Biblioteca/Imagenes/PDFs'),
+                    kwargs={'campo': 'google_drive_pdf_url'} if hasattr(Imagen, 'google_drive_pdf_url') else {}
+                )
+                thread_pdf.daemon = True
+                thread_pdf.start()
+            
+            # 4. Lanzar subida de la imagen a Drive en segundo plano
+            #    ✅ Ahora pasamos los BYTES (la función corregida los acepta)
+            thread = threading.Thread(
+                target=subir_imagen_a_drive_async,
+                args=(contenido_bytes, nombre_archivo, imagen_id)
+            )
+            thread.daemon = True
+            thread.start()
+            logger.info(f"🔄 Hilo de subida a Drive iniciado para imagen ID {imagen_id} ({tamaño_mb:.2f} MB)")
             
             if is_ajax:
                 return JsonResponse({
                     'success': True,
-                    'message': 'Imagen agregada correctamente',
-                    'id': nueva_imagen.id_Imagen
+                    'message': f'Imagen "{titulo}" agregada. Se está subiendo a Drive...',
+                    'id': nueva_imagen.id_Imagen,
+                    'redirect_url': reverse('lista_imagenes')
                 })
             
-            messages.success(request, 'Imagen agregada correctamente')
+            messages.success(request, f'Imagen "{titulo}" agregada correctamente')
             return redirect('lista_imagenes')
             
         except Exception as e:
@@ -1040,7 +1064,6 @@ def agregar_imagen(request):
             return render(request, 'agregar_imagen.html', {'categorias': categorias, 'error': str(e)})
     
     return render(request, 'agregar_imagen.html', {'categorias': categorias})
-
 
 @login_required
 @admin_required

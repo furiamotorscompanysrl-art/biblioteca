@@ -633,30 +633,46 @@ def subir_autorizacion_a_drive_async(archivo, nombre_archivo, libro_id, folder_p
 
 
 def subir_imagen_a_drive_async(imagen_original, nombre_archivo, imagen_id, folder_path='Material_Biblioteca/Imagenes/Obras'):
-    """Sube una imagen de la galería a Google Drive en segundo plano"""
+    """
+    Sube una imagen de la galería a Google Drive en segundo plano.
+    
+    ✅ Acepta tanto un archivo (InMemoryUploadedFile) como bytes.
+    """
     try:
-        contenido_bytes = imagen_original.read()
-        imagen_original.seek(0)
-        nombre_original = imagen_original.name if hasattr(imagen_original, 'name') else nombre_archivo
+        # ✅ Detectar si es bytes o archivo
+        if isinstance(imagen_original, (bytes, bytearray)):
+            contenido_bytes = imagen_original
+            nombre_original = nombre_archivo
+        else:
+            contenido_bytes = imagen_original.read()
+            imagen_original.seek(0)
+            nombre_original = getattr(imagen_original, 'name', None) or nombre_archivo
+        
+        if not contenido_bytes:
+            logger.error(f"❌ Contenido vacío para imagen ID {imagen_id}")
+            return None
     except Exception as e:
-        logger.error(f"❌ Error leyendo imagen antes de subir: {e}")
+        logger.error(f"❌ Error leyendo imagen antes de subir (ID {imagen_id}): {e}", exc_info=True)
         return None
 
     def upload_thread():
         try:
             Imagen = apps.get_model('biblioartdis', 'Imagen')
+            logger.info(f"📤 Iniciando subida a Drive: {nombre_original} ({len(contenido_bytes)/1024:.1f} KB) - Imagen ID {imagen_id}")
+            
             drive_url = subir_imagen_a_drive_from_bytes(contenido_bytes, nombre_original, folder_path)
             
             if drive_url:
                 imagen = Imagen.objects.get(id_Imagen=imagen_id)
-                if hasattr(imagen, 'google_drive_url'):
-                    imagen.google_drive_url = drive_url
-                imagen.save()
-                logger.info(f"✅ Imagen subida: {drive_url} (Imagen ID: {imagen_id})")
+                imagen.google_drive_url = drive_url
+                imagen.save(update_fields=['google_drive_url'])
+                logger.info(f"✅ Imagen subida y guardada en BD: {drive_url} (Imagen ID: {imagen_id})")
             else:
-                logger.error(f"❌ Fallo subida de imagen para ID {imagen_id}")
+                logger.error(f"❌ Fallo subida a Drive para imagen ID {imagen_id}")
+        except Imagen.DoesNotExist:
+            logger.error(f"❌ Imagen ID {imagen_id} no existe en la BD")
         except Exception as e:
-            logger.error(f"❌ Error en subida asincrona de imagen: {str(e)}")
+            logger.error(f"❌ Error en subida asincrona de imagen (ID {imagen_id}): {str(e)}", exc_info=True)
     
     thread = threading.Thread(target=upload_thread, daemon=True)
     thread.start()
