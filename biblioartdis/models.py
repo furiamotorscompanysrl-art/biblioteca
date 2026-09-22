@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import date
 import io
+import re
 from PIL import Image, ImageDraw, ImageFont
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -14,8 +15,9 @@ from django.db.models import Count
 # Importar Cloudinary (solo para imágenes y archivos pequeños)
 from cloudinary.models import CloudinaryField
 
+
 def get_fecha_baja_default():
-    return timezone.now() + timedelta(days=5*365)
+    return timezone.now() + timedelta(days=5 * 365)
 
 
 class Usuario(models.Model):
@@ -39,7 +41,7 @@ class Usuario(models.Model):
         ('BE', 'BE'),
         ('PD', 'PD'),
     )
-    
+
     # ============================================
     # ESTADOS DE REGISTRO PARA APROBACIÓN MANUAL
     # ============================================
@@ -49,8 +51,8 @@ class Usuario(models.Model):
         ('rechazado', 'Rechazado'),
         ('inactivo', 'Inactivo'),
     )
-    
-    usuario_id = models.AutoField(primary_key=True)  
+
+    usuario_id = models.AutoField(primary_key=True)
     nombres = models.CharField(max_length=50)
     apepat = models.CharField(max_length=30)
     apemat = models.CharField(max_length=30)
@@ -65,23 +67,23 @@ class Usuario(models.Model):
     fecha_alta = models.DateTimeField(default=timezone.now)
     fecha_baja = models.DateTimeField(null=True, blank=True, default=get_fecha_baja_default)
     esta_activo = models.BooleanField(default=True)
-    
+
     # ============================================
-    # NUEVOS CAMPOS PARA REGISTRO CON APROBACIÓN
+    # CAMPOS PARA REGISTRO CON APROBACIÓN
     # ============================================
     estado_registro = models.CharField(
-        max_length=20, 
-        choices=ESTADO_REGISTRO_CHOICES, 
+        max_length=20,
+        choices=ESTADO_REGISTRO_CHOICES,
         default='pendiente'
     )
-    
+
     # Datos personales para registro
     telefono = models.CharField(max_length=20, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     carrera = models.CharField(max_length=100, blank=True, null=True)
     semestre = models.CharField(max_length=10, blank=True, null=True)
     anio_ingreso = models.CharField(max_length=10, blank=True, null=True)
-    
+
     # Documentos subidos (Cloudinary - para archivos pequeños)
     matricula_pdf = CloudinaryField(
         'Matrícula',
@@ -102,8 +104,8 @@ class Usuario(models.Model):
         null=True,
         blank=True
     )
-    
-    # ✅ NUEVO: URLs de Google Drive para documentos grandes
+
+    # URLs de Google Drive para documentos grandes
     google_drive_matricula_url = models.URLField(
         'URL Matrícula (Google Drive)',
         max_length=500,
@@ -125,19 +127,19 @@ class Usuario(models.Model):
         null=True,
         help_text='Enlace de Google Drive para el carnet reverso'
     )
-    
+
     # Fechas y aprobación
     fecha_solicitud = models.DateTimeField(auto_now_add=True, null=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
     aprobado_por = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        'Usuario',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='aprobados'
     )
     motivo_rechazo = models.TextField(blank=True, null=True)
-    
+
     # Flag para saber si puede restablecer contraseña
     puede_restablecer_password = models.BooleanField(default=False)
 
@@ -172,15 +174,15 @@ class Usuario(models.Model):
         if self.dias_restantes <= 0:
             return "Expirado"
         return "Activo"
-    
+
     @property
     def esta_pendiente(self):
         return self.estado_registro == 'pendiente'
-    
+
     @property
     def esta_aprobado(self):
         return self.estado_registro == 'aprobado'
-    
+
     @property
     def esta_rechazado(self):
         return self.estado_registro == 'rechazado'
@@ -202,7 +204,7 @@ class Usuario(models.Model):
         por_tipo = cls.objects.filter(esta_activo=True).values(
             'tipo_usuario'
         ).annotate(total=Count('tipo_usuario'))
-        
+
         return {
             'total_usuarios': total,
             'usuarios_activos': activos,
@@ -227,7 +229,7 @@ class Autor(models.Model):
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
     nom_cat = models.CharField(max_length=100)
-    
+
     def __str__(self):
         try:
             if self.nom_cat and self.nom_cat.strip():
@@ -237,7 +239,47 @@ class Categoria(models.Model):
             return f"Categoría {self.id_categoria}"
 
 
-# models.py (solo la parte de Libro)
+# ============================================================
+# UTILIDAD: EXTRAER FILE_ID DE CUALQUIER URL DE GOOGLE DRIVE
+# ============================================================
+
+def extraer_drive_file_id(url):
+    """
+    Extrae el file_id de cualquier formato de URL de Google Drive.
+    Soporta:
+      - https://drive.google.com/file/d/{id}/preview
+      - https://drive.google.com/file/d/{id}/view
+      - https://drive.google.com/uc?id={id}
+      - https://drive.google.com/open?id={id}
+      - https://drive.google.com/thumbnail?id={id}
+      - https://lh3.googleusercontent.com/d/{id}
+      - Solo el ID (si la URL es solo el id)
+    Devuelve None si no encuentra nada.
+    """
+    if not url:
+        return None
+
+    url = url.strip()
+
+    patterns = [
+        r'lh3\.googleusercontent\.com/d/([a-zA-Z0-9_-]+)',  # lh3 primero (más específico)
+        r'/file/d/([a-zA-Z0-9_-]+)',                        # /file/d/{id}/...
+        r'thumbnail\?id=([a-zA-Z0-9_-]+)',                  # thumbnail?id={id}
+        r'[?&]id=([a-zA-Z0-9_-]+)',                         # ?id={id}
+        r'/d/([a-zA-Z0-9_-]+)',                             # /d/{id}
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    # Si la URL es solo el ID
+    if re.match(r'^[a-zA-Z0-9_-]{10,}$', url):
+        return url
+
+    return None
+
 
 class Libro(models.Model):
     opciones_categ = (
@@ -246,7 +288,7 @@ class Libro(models.Model):
         ('NIVEL 3', 'NIVEL 3'),
         ('NIVEL 4', 'NIVEL 4'),
         ('OTRO', 'OTRO'),
-    ) 
+    )
 
     opciones_tipo = (
         ('LIBRO', 'Libro'),
@@ -259,17 +301,17 @@ class Libro(models.Model):
         ('INFORME', 'Informe'),
         ('OTRO', 'Otro'),
     )
-    
+
     id_libro = models.AutoField(primary_key=True)
     tipo = models.CharField(max_length=15, choices=opciones_tipo)
     titulo = models.CharField(max_length=255)
-    edicion = models.CharField(max_length=50, blank=True, null=True)  
+    edicion = models.CharField(max_length=50, blank=True, null=True)
     categoria = models.CharField(max_length=15, choices=opciones_categ)
-    
+
     # ============================================
     # SOLO GOOGLE DRIVE - NADA DE CLOUDINARY
     # ============================================
-    
+
     # Portada en Google Drive
     google_drive_portada_url = models.URLField(
         'URL de Portada (Google Drive)',
@@ -278,7 +320,7 @@ class Libro(models.Model):
         null=True,
         help_text='URL de la imagen de portada en Google Drive'
     )
-    
+
     # PDF en Google Drive
     google_drive_url = models.URLField(
         'URL de Google Drive (PDF)',
@@ -287,15 +329,15 @@ class Libro(models.Model):
         null=True,
         help_text='URL del PDF en Google Drive (vista previa embed)'
     )
-    
+
     # URL externa alternativa (para otros servicios)
     pdf_url = models.URLField(
-        max_length=500, 
-        blank=True, 
+        max_length=500,
+        blank=True,
         null=True,
         help_text='URL externa del PDF (alternativa)'
     )
-    
+
     # Autorización en Google Drive
     google_drive_autorizacion_url = models.URLField(
         'URL de Autorización (Google Drive)',
@@ -304,7 +346,7 @@ class Libro(models.Model):
         null=True,
         help_text='URL del archivo de autorización en Google Drive'
     )
-    
+
     autores = models.ManyToManyField('Autor')
     fecha_publicacion = models.DateField(default=date.today)
     descripcion = models.TextField(blank=True, null=True)
@@ -323,7 +365,7 @@ class Libro(models.Model):
         if self.pdf_url:
             return self.pdf_url
         return None
-    
+
     def get_portada_display_url(self):
         """
         Devuelve la URL de la portada (Google Drive).
@@ -331,66 +373,56 @@ class Libro(models.Model):
         """
         if self.google_drive_portada_url:
             if 'drive.google.com' in self.google_drive_portada_url:
-                # Extraer file_id de cualquier formato de URL
                 file_id = None
-                
+
                 if '/file/d/' in self.google_drive_portada_url:
                     file_id = self.google_drive_portada_url.split('/file/d/')[1].split('/')[0]
                 elif 'id=' in self.google_drive_portada_url:
                     file_id = self.google_drive_portada_url.split('id=')[1].split('&')[0]
                 elif 'lh3.googleusercontent.com/d/' in self.google_drive_portada_url:
                     file_id = self.google_drive_portada_url.split('lh3.googleusercontent.com/d/')[1].split('/')[0]
-                
+
                 if file_id:
-                    # ✅ FORMATO QUE SÍ FUNCIONA EN <img>
                     return f'https://lh3.googleusercontent.com/d/{file_id}'
-            
+
             return self.google_drive_portada_url
         return None
-    
+
     def get_autorizacion_display_url(self):
         """Devuelve la URL de autorización (Google Drive)"""
         if self.google_drive_autorizacion_url:
             if 'drive.google.com' in self.google_drive_autorizacion_url:
                 file_id = None
-                
+
                 if '/file/d/' in self.google_drive_autorizacion_url:
                     file_id = self.google_drive_autorizacion_url.split('/file/d/')[1].split('/')[0]
                 elif 'id=' in self.google_drive_autorizacion_url:
                     file_id = self.google_drive_autorizacion_url.split('id=')[1].split('&')[0]
-                
+
                 if file_id:
                     return f'https://drive.google.com/file/d/{file_id}/preview'
-            
+
             return self.google_drive_autorizacion_url
         return None
 
     def agregar_palabras_claves(self, palabras):
         """
         Agrega palabras clave al libro
-        
-        Args:
-            palabras: String con palabras separadas por coma o lista de palabras
         """
         if not palabras:
             return
-        
-        # Si es una lista, unir con comas
+
         if isinstance(palabras, list):
             palabras = ', '.join(palabras)
-        
-        # Si ya tiene palabras clave, agregar las nuevas
+
         if self.palabra_clave:
-            # Dividir las existentes y las nuevas
             existentes = [p.strip() for p in self.palabra_clave.split(',') if p.strip()]
             nuevas = [p.strip() for p in palabras.split(',') if p.strip()]
-            
-            # Combinar y eliminar duplicados
             todas = list(set(existentes + nuevas))
             self.palabra_clave = ', '.join(todas)
         else:
             self.palabra_clave = palabras
-        
+
         self.save(update_fields=['palabra_clave'])
 
     def __str__(self):
@@ -401,6 +433,7 @@ class Libro(models.Model):
         except:
             return f"Libro {self.id_libro}"
 
+
 class Sugerencia(models.Model):
     id_sugerencia = models.AutoField(primary_key=True)
     solicitante = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -410,9 +443,15 @@ class Sugerencia(models.Model):
     edicion = models.CharField(max_length=50)
     estado_respuesta = models.CharField(max_length=20, default='Pendiente')
     descripcion = models.TextField()
-    respondido_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='sugerencias_respondidas')
+    respondido_por = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sugerencias_respondidas'
+    )
     fecha_respuesta = models.DateTimeField(null=True, blank=True)
-    
+
     def __str__(self):
         try:
             titulo = str(self.titulo_sugerencia) if self.titulo_sugerencia else "Sin título"
@@ -444,7 +483,7 @@ class Revista(models.Model):
     id_revista = models.AutoField(primary_key=True)
     nro_revista = models.IntegerField(null=True, blank=True)
     coleccion = models.ForeignKey(Coleccion, on_delete=models.CASCADE)
-    
+
     img_portada = CloudinaryField(
         'Portada',
         folder='revistas/portadas/',
@@ -452,7 +491,7 @@ class Revista(models.Model):
         null=True,
         blank=True
     )
-    
+
     pdf = CloudinaryField(
         'PDF',
         folder='revistas/pdfs/',
@@ -460,7 +499,7 @@ class Revista(models.Model):
         null=True,
         blank=True
     )
-    
+
     google_drive_url = models.URLField(
         'URL de Google Drive (PDF)',
         max_length=500,
@@ -468,8 +507,8 @@ class Revista(models.Model):
         null=True,
         help_text='Enlace de Google Drive para PDFs grandes'
     )
-    
-    # ✅ NUEVO: Campo para URL de Google Drive de la IMAGEN
+
+    # Campo para URL de Google Drive de la IMAGEN
     google_drive_img_url = models.URLField(
         'URL de Google Drive (Imagen)',
         max_length=500,
@@ -477,43 +516,37 @@ class Revista(models.Model):
         null=True,
         help_text='Enlace de Google Drive para la imagen de portada'
     )
-    
+
     url = models.URLField(max_length=200, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
     def get_pdf_display_url(self):
-        """
-        Devuelve la URL del PDF (prioriza Google Drive).
-        Usa /preview para que funcione en iframe.
-        """
+        """Devuelve la URL del PDF (prioriza Google Drive). Usa /preview para iframe."""
         if self.google_drive_url:
             if 'drive.google.com' in self.google_drive_url:
-                # Extraer file_id
                 file_id = None
-                
+
                 if '/file/d/' in self.google_drive_url:
                     file_id = self.google_drive_url.split('/file/d/')[1].split('/')[0]
                 elif 'id=' in self.google_drive_url:
                     file_id = self.google_drive_url.split('id=')[1].split('&')[0]
-                
+
                 if file_id:
-                    # ✅ FORMATO PARA IFRAME
                     return f'https://drive.google.com/file/d/{file_id}/preview'
-            
+
             return self.google_drive_url
-        
-        if self.pdf_url:
-            return self.pdf_url
-        
+
+        if self.pdf:
+            return self.pdf.url
+
         return None
 
     def get_img_display_url(self):
-        """Devuelve la URL de la imagen de portada (prioriza Drive)"""
+        """Devuelve la URL de la imagen de portada (prioriza Drive)."""
         if self.google_drive_img_url:
-            if 'drive.google.com' in self.google_drive_img_url:
-                file_id = self.google_drive_img_url.split('/d/')[1].split('/')[0] if '/d/' in self.google_drive_img_url else None
-                if file_id:
-                    return f'https://drive.google.com/uc?id={file_id}'
+            fid = extraer_drive_file_id(self.google_drive_img_url)
+            if fid:
+                return f'https://lh3.googleusercontent.com/d/{fid}'
             return self.google_drive_img_url
         if self.img_portada:
             return self.img_portada.url
@@ -561,7 +594,7 @@ class Imagen(models.Model):
     titulo = models.CharField(max_length=255)
     autorImg = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    
+
     img_portada = CloudinaryField(
         'Imagen',
         folder='imagenes/',
@@ -569,7 +602,7 @@ class Imagen(models.Model):
         null=True,
         blank=True
     )
-    
+
     pdf = CloudinaryField(
         'PDF',
         folder='imagenes/pdfs/',
@@ -577,17 +610,17 @@ class Imagen(models.Model):
         null=True,
         blank=True
     )
-    
+
     fecha_subida = models.DateTimeField(auto_now_add=True)
-    
+
     marca_agua = CloudinaryField(
         'Marca de agua',
         folder='imagenes/marcas_agua/',
         null=True,
         blank=True
     )
-    
-    # ✅ NUEVO: URL de Google Drive para imágenes
+
+    # URL de Google Drive para imágenes
     google_drive_url = models.URLField(
         'URL de Google Drive',
         max_length=500,
@@ -595,7 +628,7 @@ class Imagen(models.Model):
         null=True,
         help_text='Enlace de Google Drive para la imagen'
     )
-    
+
     categorias = models.ManyToManyField(Categoria, blank=True)
 
     def __str__(self):
@@ -609,15 +642,56 @@ class Imagen(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
+    # ============================================
+    # PROPIEDADES PARA GOOGLE DRIVE
+    # ============================================
+
+    @property
+    def drive_file_id(self):
+        """Extrae el file_id de cualquier formato de URL de Google Drive."""
+        return extraer_drive_file_id(self.google_drive_url)
+
+    @property
+    def drive_thumbnail_url(self):
+        """URL para mostrar como <img> en la tabla (400px)."""
+        fid = self.drive_file_id
+        if not fid:
+            return None
+        return f"https://drive.google.com/thumbnail?id={fid}&sz=w400"
+
+    @property
+    def drive_full_url(self):
+        """URL para mostrar en el visor grande (modal, 1200px)."""
+        fid = self.drive_file_id
+        if not fid:
+            return None
+        return f"https://drive.google.com/thumbnail?id={fid}&sz=w1200"
+
+    @property
+    def drive_preview_url(self):
+        """URL para abrir en nueva pestaña (preview de Drive)."""
+        fid = self.drive_file_id
+        if not fid:
+            return None
+        return f"https://drive.google.com/file/d/{fid}/preview"
+
+    @property
+    def drive_download_url(self):
+        """URL de descarga directa."""
+        fid = self.drive_file_id
+        if not fid:
+            return None
+        return f"https://drive.google.com/uc?export=download&id={fid}"
+
 
 class HistorialBusqueda(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     termino_busqueda = models.CharField(max_length=255)
     fecha_busqueda = models.DateTimeField(auto_now_add=True)
-   
+
     class Meta:
         ordering = ['-fecha_busqueda']
-    
+
     def __str__(self):
         try:
             usuario_str = str(self.usuario.username) if self.usuario and self.usuario.username else "Usuario desconocido"
@@ -634,12 +708,12 @@ class CodigoVerificacion(models.Model):
     creado_en = models.DateTimeField(auto_now_add=True)
     expira_en = models.DateTimeField()
     usado = models.BooleanField(default=False)
-    
+
     class Meta:
         verbose_name = "Código de verificación"
         verbose_name_plural = "Códigos de verificación"
         ordering = ['-creado_en']
-    
+
     def __str__(self):
         try:
             email = str(self.usuario.email) if self.usuario and self.usuario.email else "usuario desconocido"
@@ -647,7 +721,7 @@ class CodigoVerificacion(models.Model):
             return f"Código para {email} - Expira: {expira}"
         except:
             return f"Código {self.id_codigo}"
-    
+
     def es_valido(self):
         from django.utils import timezone
         return not self.usado and timezone.now() < self.expira_en

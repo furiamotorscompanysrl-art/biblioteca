@@ -304,7 +304,7 @@
         text-decoration: underline;
     }
 
-    /* ✅ Nuevo: Estilos para el visor de imágenes */
+    /* ✅ Estilos para el visor de imágenes */
     .image-viewer-modal .modal-body {
         background: rgba(0, 0, 0, 0.9);
         padding: 0;
@@ -333,7 +333,7 @@
         filter: brightness(0) invert(1);
     }
 
-    /* ✅ Nuevo: Badge para estado de Drive */
+    /* ✅ Badge para estado de Drive */
     .drive-badge {
         display: inline-block;
         padding: 0.1rem 0.4rem;
@@ -409,24 +409,22 @@
                     <td>
                         {% if imagen.img_portada %}
                             <!-- Imagen desde Cloudinary -->
-                            <img src="{{ imagen.img_portada.url }}" 
-                                 class="image-thumb" 
-                                 onclick="abrirVisor('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}')"
+                            <img src="{{ imagen.img_portada.url }}"
+                                 class="image-thumb"
+                                 onclick="abrirVisor('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.img_portada.url }}')"
                                  alt="{{ imagen.titulo }}"
                                  loading="lazy">
-                        {% elif imagen.google_drive_url %}
+                        {% elif imagen.drive_thumbnail_url %}
                             <!-- ✅ Imagen desde Google Drive -->
-                            {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing" %}
-                            <img src="https://drive.google.com/thumbnail?id={{ drive_id }}&sz=w200" 
-                                 class="image-thumb" 
-                                 onclick="abrirVisor('https://drive.google.com/file/d/{{ drive_id }}/preview', '{{ imagen.titulo|escapejs }}')"
+                            <img src="{{ imagen.drive_thumbnail_url }}"
+                                 class="image-thumb"
+                                 onclick="abrirVisor('{{ imagen.drive_full_url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.drive_preview_url }}')"
                                  alt="{{ imagen.titulo }}"
                                  loading="lazy"
                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect width=\'60\' height=\'60\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'30\' y=\'30\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'10\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
                             <div class="drive-badge">
                                 <i class="fas fa-cloud"></i> Drive
                             </div>
-                            {% endwith %}
                         {% else %}
                             <div class="image-thumb no-image" title="No hay imagen disponible">
                                 <i class="fas fa-image"></i>
@@ -441,12 +439,10 @@
                             <a href="{{ imagen.pdf.url }}" target="_blank" class="drive-link">
                                 <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
                             </a>
-                        {% elif imagen.google_drive_url %}
-                            {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing" %}
-                            <a href="https://drive.google.com/file/d/{{ drive_id }}/preview" target="_blank" class="drive-link">
+                        {% elif imagen.drive_preview_url %}
+                            <a href="{{ imagen.drive_preview_url }}" target="_blank" class="drive-link">
                                 <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Ver PDF
                             </a>
-                            {% endwith %}
                         {% else %}
                             <span class="text-muted">—</span>
                         {% endif %}
@@ -559,37 +555,27 @@
 <script>
     // Variables globales para el visor
     let imagenActualUrl = '';
+    let imagenPreviewUrl = '';
 
     // ✅ Función mejorada para abrir el visor
-    function abrirVisor(url, titulo) {
+    // url: la URL que se muestra en el <img> (thumbnail grande)
+    // titulo: título de la imagen
+    // previewUrl: (opcional) URL para "abrir en nueva pestaña"
+    function abrirVisor(url, titulo, previewUrl) {
         imagenActualUrl = url;
+        imagenPreviewUrl = previewUrl || url;
+
         const modal = new bootstrap.Modal(document.getElementById('visorModal'));
         document.getElementById('visorTitulo').textContent = titulo || 'Vista de Imagen';
-        
-        // Determinar si es un preview de Drive o una imagen directa
-        const imagenElement = document.getElementById('visorImagen');
-        if (url.includes('drive.google.com') && url.includes('/preview')) {
-            // Es un preview de Drive, extraer el ID
-            const driveId = url.split('/file/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
-            if (driveId) {
-                // Usar thumbnail para mejor rendimiento
-                imagenElement.src = `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`;
-                // Guardar la URL completa para "Abrir original"
-                imagenActualUrl = `https://drive.google.com/file/d/${driveId}/preview`;
-            } else {
-                imagenElement.src = url;
-            }
-        } else {
-            imagenElement.src = url;
-        }
-        
+
+        document.getElementById('visorImagen').src = url;
         modal.show();
     }
 
     // ✅ Función para abrir la imagen original en nueva pestaña
     function abrirOriginal() {
-        if (imagenActualUrl) {
-            window.open(imagenActualUrl, '_blank');
+        if (imagenPreviewUrl) {
+            window.open(imagenPreviewUrl, '_blank');
         }
     }
 
@@ -597,7 +583,7 @@
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#imagenesTableBody tr');
-        
+
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(input) ? '' : 'none';
@@ -661,7 +647,6 @@
 
     // ✅ Manejar errores de carga de imágenes
     document.addEventListener('DOMContentLoaded', function() {
-        // Para imágenes que fallan al cargar, mostrar un placeholder
         document.querySelectorAll('.image-thumb').forEach(img => {
             img.addEventListener('error', function() {
                 if (!this.dataset.fallback) {

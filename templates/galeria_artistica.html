@@ -439,31 +439,29 @@
                 <!-- ✅ OBTENER LA URL DE LA IMAGEN CORRECTAMENTE -->
                 {% if imagen.img_portada %}
                     <!-- Imagen desde Cloudinary -->
-                    <img src="{{ imagen.img_portada.url }}" 
-                         alt="{{ imagen.titulo }}" 
+                    <img src="{{ imagen.img_portada.url }}"
+                         alt="{{ imagen.titulo }}"
                          loading="lazy"
                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'280\' viewBox=\'0 0 400 280\'%3E%3Crect width=\'400\' height=\'280\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'200\' y=\'140\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'24\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
                     <span class="image-source-badge">
                         <i class="fas fa-cloud"></i> Cloud
                     </span>
-                {% elif imagen.google_drive_url %}
+                {% elif imagen.drive_thumbnail_url %}
                     <!-- ✅ Imagen desde Google Drive -->
-                    {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing"|cut:"?usp=drive_link" %}
-                    <img src="https://drive.google.com/thumbnail?id={{ drive_id }}&sz=w400" 
-                         alt="{{ imagen.titulo }}" 
+                    <img src="{{ imagen.drive_thumbnail_url }}"
+                         alt="{{ imagen.titulo }}"
                          loading="lazy"
                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'280\' viewBox=\'0 0 400 280\'%3E%3Crect width=\'400\' height=\'280\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'200\' y=\'140\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'24\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
                     <span class="image-source-badge drive">
                         <i class="fab fa-google-drive"></i> Drive
                     </span>
-                    {% endwith %}
                 {% else %}
                     <!-- Sin imagen -->
                     <div class="image-placeholder">
                         <i class="fas fa-image"></i>
                     </div>
                 {% endif %}
-                
+
                 <div class="art-overlay">
                     <span><i class="fas fa-expand"></i> Ver detalles</span>
                 </div>
@@ -497,12 +495,10 @@
                             <!-- ✅ IMAGEN EN EL MODAL -->
                             {% if imagen.img_portada %}
                                 <img src="{{ imagen.img_portada.url }}" alt="{{ imagen.titulo }}">
-                            {% elif imagen.google_drive_url %}
-                                {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing"|cut:"?usp=drive_link" %}
-                                <img src="https://drive.google.com/thumbnail?id={{ drive_id }}&sz=w800" 
+                            {% elif imagen.drive_full_url %}
+                                <img src="{{ imagen.drive_full_url }}"
                                      alt="{{ imagen.titulo }}"
                                      onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'600\' height=\'400\' viewBox=\'0 0 600 400\'%3E%3Crect width=\'600\' height=\'400\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'300\' y=\'200\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'32\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
-                                {% endwith %}
                             {% else %}
                                 <div style="padding: 2rem; color: var(--text-secondary);">
                                     <i class="fas fa-image fa-3x mb-2"></i>
@@ -512,14 +508,14 @@
                         </div>
                         <div class="artwork-info">
                             <h2>{{ imagen.titulo }}</h2>
-                            
+
                             <div class="info-section">
                                 <div class="info-label">
                                     <i class="fas fa-user"></i> Artista
                                 </div>
                                 <div class="info-value">{{ imagen.autorImg }}</div>
                             </div>
-                            
+
                             {% if imagen.descripcion %}
                             <div class="info-section">
                                 <div class="info-label">
@@ -528,14 +524,14 @@
                                 <div class="info-value description-text">{{ imagen.descripcion }}</div>
                             </div>
                             {% endif %}
-                            
+
                             <div class="info-section">
                                 <div class="info-label">
                                     <i class="fas fa-calendar"></i> Fecha de registro
                                 </div>
                                 <div class="info-value">{{ imagen.fecha_subida|date:"d/m/Y" }}</div>
                             </div>
-                            
+
                             {% if imagen.categorias.all %}
                             <div class="info-section">
                                 <div class="info-label">
@@ -548,18 +544,16 @@
                                 </div>
                             </div>
                             {% endif %}
-                            
+
                             <!-- ✅ PDF desde Cloudinary o Drive -->
                             {% if imagen.pdf %}
                                 <a href="{{ imagen.pdf.url }}" class="pdf-link" target="_blank">
                                     <i class="fas fa-file-pdf"></i> Ver documentación
                                 </a>
-                            {% elif imagen.google_drive_url %}
-                                {% with drive_id=imagen.google_drive_url|cut:"https://drive.google.com/file/d/"|cut:"/preview"|cut:"?usp=sharing"|cut:"?usp=drive_link" %}
-                                <a href="https://drive.google.com/file/d/{{ drive_id }}/preview" class="pdf-link drive-pdf-link" target="_blank">
+                            {% elif imagen.drive_preview_url %}
+                                <a href="{{ imagen.drive_preview_url }}" class="pdf-link drive-pdf-link" target="_blank">
                                     <i class="fas fa-file-pdf"></i> Ver documentación (Drive)
                                 </a>
-                                {% endwith %}
                             {% endif %}
                         </div>
                     </div>
@@ -580,18 +574,17 @@
     // Filtrado de imágenes
     const filterButtons = document.querySelectorAll('.filter-btn');
     const artCards = document.querySelectorAll('.art-card');
-    
+
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Actualizar botón activo
             filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            
+
             const filterValue = button.getAttribute('data-filter');
-            
+
             artCards.forEach(card => {
                 const categories = card.getAttribute('data-categories') || '';
-                
+
                 if (filterValue === 'all' || categories.includes(filterValue)) {
                     card.style.display = 'block';
                     card.style.animation = 'fadeInUp 0.4s ease-out';
@@ -601,11 +594,10 @@
             });
         });
     });
-    
+
     // Abrir modal al hacer clic en la tarjeta
     document.querySelectorAll('.art-card').forEach(card => {
         card.addEventListener('click', (e) => {
-            // Evitar que el modal se abra si se hizo clic en un enlace dentro
             if (!e.target.closest('a')) {
                 const modalId = card.nextElementSibling?.id;
                 if (modalId) {
