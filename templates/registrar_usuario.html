@@ -26,11 +26,7 @@
             --border-light: #E5E7EB;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -47,10 +43,7 @@
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23F59E0B' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
             background-size: cover;
             opacity: 0.15;
@@ -84,10 +77,7 @@
             letter-spacing: 0.5px;
         }
 
-        .card-header-custom h2 i {
-            margin-right: 12px;
-            color: var(--accent);
-        }
+        .card-header-custom h2 i { margin-right: 12px; color: var(--accent); }
 
         .card-header-custom p {
             color: rgba(255, 255, 255, 0.8);
@@ -96,9 +86,7 @@
             font-weight: 400;
         }
 
-        .card-body-custom {
-            padding: 2.5rem 3rem;
-        }
+        .card-body-custom { padding: 2.5rem 3rem; }
 
         .section-title {
             font-size: 1rem;
@@ -113,25 +101,16 @@
             gap: 12px;
         }
 
-        .section-title:first-of-type {
-            margin-top: 0;
-        }
+        .section-title:first-of-type { margin-top: 0; }
+        .section-title i { color: var(--accent); font-size: 1.15rem; width: 24px; text-align: center; }
 
-        .section-title i {
-            color: var(--accent);
-            font-size: 1.15rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        /* TIPO DE USUARIO - DESTACADO */
+        /* TIPO DE USUARIO */
         .tipo-usuario-section {
             background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
             border-radius: 16px;
             padding: 1.5rem 2rem;
             margin-bottom: 2rem;
             border: 2px solid var(--accent);
-            position: relative;
         }
 
         .tipo-usuario-section .section-title {
@@ -140,13 +119,7 @@
             margin-top: 0;
         }
 
-        .tipo-usuario-section .section-title i {
-            color: var(--accent);
-        }
-
-        .tipo-usuario-section .form-text {
-            color: #92400E;
-        }
+        .tipo-usuario-section .form-text { color: #92400E; }
 
         .tipo-usuario-section .form-control,
         .tipo-usuario-section .form-select {
@@ -163,13 +136,9 @@
             background-color: white;
         }
 
-        .tipo-usuario-section .input-icon {
-            color: var(--accent);
-        }
+        .tipo-usuario-section .input-icon { color: var(--accent); }
 
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
+        .form-group { margin-bottom: 1.25rem; }
 
         .form-label {
             font-size: 0.85rem;
@@ -181,15 +150,9 @@
             gap: 6px;
         }
 
-        .form-label i {
-            color: var(--accent);
-            font-size: 0.8rem;
-            width: 18px;
-        }
+        .form-label i { color: var(--accent); font-size: 0.8rem; width: 18px; }
 
-        .input-group-custom {
-            position: relative;
-        }
+        .input-group-custom { position: relative; }
 
         .input-icon {
             position: absolute;
@@ -202,8 +165,7 @@
             pointer-events: none;
         }
 
-        .form-control,
-        .form-select {
+        .form-control, .form-select {
             width: 100%;
             height: 46px;
             padding: 0 3rem 0 2.6rem;
@@ -214,25 +176,18 @@
             transition: all 0.2s ease;
             background-color: var(--bg-light);
             color: var(--text-primary);
-            appearance: auto;
         }
 
-        textarea.form-control {
-            height: 80px;
-            padding-top: 0.8rem;
-            resize: vertical;
-        }
+        textarea.form-control { height: 80px; padding-top: 0.8rem; resize: vertical; }
 
-        .form-control:focus,
-        .form-select:focus {
+        .form-control:focus, .form-select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
             background-color: white;
         }
 
-        .form-control.is-invalid,
-        .form-select.is-invalid {
+        .form-control.is-invalid, .form-select.is-invalid {
             border-color: var(--danger);
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
         }
@@ -242,10 +197,7 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
-        .form-control::placeholder {
-            color: #A0AEC0;
-            font-size: 0.82rem;
-        }
+        .form-control::placeholder { color: #A0AEC0; font-size: 0.82rem; }
 
         .form-text {
             font-size: 0.72rem;
@@ -256,21 +208,19 @@
             gap: 4px;
         }
 
-        .form-text i {
-            color: var(--accent);
-            font-size: 0.7rem;
-        }
+        .form-text i { color: var(--accent); font-size: 0.7rem; }
 
         .invalid-feedback {
             font-size: 0.75rem;
             color: var(--danger);
             margin-top: 0.25rem;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 4px;
         }
 
-        /* Botón toggle password */
+        .invalid-feedback.show { display: flex; }
+
         .toggle-password {
             position: absolute;
             right: 12px;
@@ -286,9 +236,7 @@
             transition: color 0.2s ease;
         }
 
-        .toggle-password:hover {
-            color: var(--accent);
-        }
+        .toggle-password:hover { color: var(--accent); }
 
         .file-input-wrapper {
             position: relative;
@@ -323,10 +271,7 @@
             margin-bottom: 4px;
         }
 
-        .file-input-wrapper .file-text {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
+        .file-input-wrapper .file-text { color: var(--text-secondary); font-size: 0.8rem; }
 
         .file-input-wrapper .file-name {
             color: var(--text-primary);
@@ -338,10 +283,8 @@
 
         .file-input-wrapper input[type="file"] {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             opacity: 0;
             cursor: pointer;
         }
@@ -352,10 +295,7 @@
             margin-top: 4px;
         }
 
-        .required-star {
-            color: var(--danger);
-            margin-left: 2px;
-        }
+        .required-star { color: var(--danger); margin-left: 2px; }
 
         .btn-register {
             padding: 0.85rem 3rem;
@@ -468,9 +408,7 @@
             padding: 0 4px;
         }
 
-        .close-btn:hover {
-            opacity: 1;
-        }
+        .close-btn:hover { opacity: 1; }
 
         .loading {
             display: none;
@@ -478,9 +416,7 @@
             padding: 1rem 0;
         }
 
-        .loading.show {
-            display: block;
-        }
+        .loading.show { display: block; }
 
         .spinner {
             width: 35px;
@@ -506,23 +442,101 @@
             border-radius: 8px;
         }
 
-        .upload-status.show {
-            display: block;
+        .upload-status.show { display: block; }
+
+        .upload-status.success { color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .upload-status.error { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .upload-status.loading { color: var(--accent); background: rgba(245, 158, 11, 0.1); }
+
+        /* ============================================
+           BARRA DE PROGRESO DE ENVÍO
+           ============================================ */
+        .progress-container {
+            margin: 1.5rem 0;
+            padding: 1.2rem 1.5rem;
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+            border-radius: 16px;
+            border: 1.5px solid var(--border-light);
+            animation: fadeInUp 0.4s ease;
         }
 
-        .upload-status.success {
-            color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-dark);
         }
 
-        .upload-status.error {
-            color: var(--danger);
-            background: rgba(239, 68, 68, 0.1);
-        }
+        .progress-header i { color: var(--accent); margin-right: 6px; }
 
-        .upload-status.loading {
+        #progressPercent {
+            font-size: 1.1rem;
             color: var(--accent);
-            background: rgba(245, 158, 11, 0.1);
+            font-weight: 700;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #E5E7EB;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-hover) 50%, var(--success) 100%);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-steps .step {
+            padding: 3px 8px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .progress-steps .step.active {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-steps .step.done {
+            background: var(--success);
+            color: white;
+            font-weight: 600;
         }
 
         @keyframes spin {
@@ -541,145 +555,57 @@
         }
 
         @media (max-width: 992px) {
-            .register-card {
-                max-width: 96%;
-                width: 96%;
-            }
-            .card-body-custom {
-                padding: 2rem 2rem;
-            }
+            .register-card { max-width: 96%; width: 96%; }
+            .card-body-custom { padding: 2rem 2rem; }
         }
 
         @media (max-width: 768px) {
-            .register-card {
-                width: 98%;
-                margin: 0.5rem;
-            }
-            .card-body-custom {
-                padding: 1.5rem 1.2rem;
-            }
-            .card-header-custom {
-                padding: 1.5rem 1.2rem;
-            }
-            .card-header-custom h2 {
-                font-size: 1.3rem;
-            }
-            .card-header-custom p {
-                font-size: 0.8rem;
-            }
-            .section-title {
-                font-size: 0.9rem;
-                margin-top: 1.5rem;
-            }
-            .form-control,
-            .form-select {
-                height: 44px;
-                font-size: 0.85rem;
-                padding: 0 3rem 0 2.4rem;
-            }
-            .form-label {
-                font-size: 0.8rem;
-            }
-            .form-actions {
-                flex-direction: column-reverse;
-                gap: 12px;
-            }
-            .btn-register {
-                width: 100%;
-                min-width: unset;
-                padding: 0.8rem;
-            }
-            .btn-back {
-                width: 100%;
-                justify-content: center;
-                padding: 0.7rem;
-            }
-            .tipo-usuario-section {
-                padding: 1rem;
-            }
+            .register-card { width: 98%; margin: 0.5rem; }
+            .card-body-custom { padding: 1.5rem 1.2rem; }
+            .card-header-custom { padding: 1.5rem 1.2rem; }
+            .card-header-custom h2 { font-size: 1.3rem; }
+            .card-header-custom p { font-size: 0.8rem; }
+            .section-title { font-size: 0.9rem; margin-top: 1.5rem; }
+            .form-control, .form-select { height: 44px; font-size: 0.85rem; padding: 0 3rem 0 2.4rem; }
+            .form-label { font-size: 0.8rem; }
+            .form-actions { flex-direction: column-reverse; gap: 12px; }
+            .btn-register { width: 100%; min-width: unset; padding: 0.8rem; }
+            .btn-back { width: 100%; justify-content: center; padding: 0.7rem; }
+            .tipo-usuario-section { padding: 1rem; }
             .tipo-usuario-section .form-control,
-            .tipo-usuario-section .form-select {
-                height: 44px;
-            }
+            .tipo-usuario-section .form-select { height: 44px; }
         }
 
         @media (max-width: 576px) {
-            body {
-                padding: 20px 10px;
-            }
-            .card-body-custom {
-                padding: 1rem 0.8rem;
-            }
-            .card-header-custom {
-                padding: 1.2rem 0.8rem;
-            }
-            .card-header-custom h2 {
-                font-size: 1.1rem;
-            }
-            .card-header-custom p {
-                font-size: 0.75rem;
-            }
-            .form-control,
-            .form-select {
+            body { padding: 20px 10px; }
+            .card-body-custom { padding: 1rem 0.8rem; }
+            .card-header-custom { padding: 1.2rem 0.8rem; }
+            .card-header-custom h2 { font-size: 1.1rem; }
+            .card-header-custom p { font-size: 0.75rem; }
+            .form-control, .form-select {
                 height: 42px;
                 font-size: 0.82rem;
                 padding: 0 3rem 0 2.2rem;
                 border-radius: 14px;
             }
-            .input-icon {
-                left: 0.7rem;
-                font-size: 0.85rem;
-            }
-            .toggle-password {
-                right: 8px;
-                font-size: 0.95rem;
-            }
-            .form-group {
-                margin-bottom: 0.9rem;
-            }
-            .section-title {
-                font-size: 0.82rem;
-                margin-top: 1.2rem;
-                padding-bottom: 8px;
-            }
-            .section-title i {
-                font-size: 0.95rem;
-                width: 20px;
-            }
-            .file-input-wrapper {
-                padding: 0.8rem 0.6rem;
-                min-height: 80px;
-            }
-            .file-input-wrapper .file-icon {
-                font-size: 1.4rem;
-            }
-            .file-input-wrapper .file-text {
-                font-size: 0.7rem;
-            }
-            .file-input-wrapper .file-name {
-                font-size: 0.7rem;
-            }
-            .btn-register {
-                font-size: 0.85rem;
-                padding: 0.7rem;
-            }
-            .btn-back {
-                font-size: 0.8rem;
-                padding: 0.6rem;
-            }
-            .form-actions {
-                margin-top: 1.5rem;
-                padding-top: 1rem;
-                gap: 10px;
-            }
-            .tipo-usuario-section {
-                padding: 0.8rem;
-            }
+            .input-icon { left: 0.7rem; font-size: 0.85rem; }
+            .toggle-password { right: 8px; font-size: 0.95rem; }
+            .form-group { margin-bottom: 0.9rem; }
+            .section-title { font-size: 0.82rem; margin-top: 1.2rem; padding-bottom: 8px; }
+            .section-title i { font-size: 0.95rem; width: 20px; }
+            .file-input-wrapper { padding: 0.8rem 0.6rem; min-height: 80px; }
+            .file-input-wrapper .file-icon { font-size: 1.4rem; }
+            .file-input-wrapper .file-text { font-size: 0.7rem; }
+            .file-input-wrapper .file-name { font-size: 0.7rem; }
+            .btn-register { font-size: 0.85rem; padding: 0.7rem; }
+            .btn-back { font-size: 0.8rem; padding: 0.6rem; }
+            .form-actions { margin-top: 1.5rem; padding-top: 1rem; gap: 10px; }
+            .tipo-usuario-section { padding: 0.8rem; }
             .tipo-usuario-section .form-control,
-            .tipo-usuario-section .form-select {
-                height: 40px;
-                font-size: 0.8rem;
-            }
+            .tipo-usuario-section .form-select { height: 40px; font-size: 0.8rem; }
+            .progress-steps { font-size: 0.58rem; }
+            .progress-steps .step { padding: 2px 4px; }
+            .progress-header { font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -725,7 +651,7 @@
         <form method="post" enctype="multipart/form-data" id="registroForm" novalidate>
             {% csrf_token %}
 
-            <!-- TIPO DE USUARIO - DESTACADO ARRIBA -->
+            <!-- TIPO DE USUARIO -->
             <div class="tipo-usuario-section">
                 <div class="section-title">
                     <i class="fas fa-user-tag"></i> Selecciona tu Tipo de Usuario
@@ -741,7 +667,7 @@
                                 <i class="fas fa-info-circle"></i> {{ form.tipo_usuario.help_text }}
                             </div>
                             {% if form.tipo_usuario.errors %}
-                                <div class="invalid-feedback">{{ form.tipo_usuario.errors.0 }}</div>
+                                <div class="invalid-feedback show">{{ form.tipo_usuario.errors.0 }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -763,8 +689,9 @@
                             <i class="fas fa-user input-icon"></i>
                             {{ form.nombres|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-nombres"></div>
                         {% if form.nombres.errors %}
-                            <div class="invalid-feedback">{{ form.nombres.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.nombres.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -778,8 +705,9 @@
                             <i class="fas fa-user input-icon"></i>
                             {{ form.apepat|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-apepat"></div>
                         {% if form.apepat.errors %}
-                            <div class="invalid-feedback">{{ form.apepat.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.apepat.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -793,8 +721,9 @@
                             <i class="fas fa-user input-icon"></i>
                             {{ form.apemat|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-apemat"></div>
                         {% if form.apemat.errors %}
-                            <div class="invalid-feedback">{{ form.apemat.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.apemat.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -810,8 +739,9 @@
                             <i class="fas fa-id-card input-icon"></i>
                             {{ form.ci|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-ci"></div>
                         {% if form.ci.errors %}
-                            <div class="invalid-feedback">{{ form.ci.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.ci.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -825,8 +755,9 @@
                             <i class="fas fa-map-marker-alt input-icon"></i>
                             {{ form.extension|add_class:"form-select" }}
                         </div>
+                        <div class="invalid-feedback" id="error-extension"></div>
                         {% if form.extension.errors %}
-                            <div class="invalid-feedback">{{ form.extension.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.extension.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -840,8 +771,9 @@
                             <i class="fas fa-plus-circle input-icon"></i>
                             {{ form.complemento|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-complemento"></div>
                         {% if form.complemento.errors %}
-                            <div class="invalid-feedback">{{ form.complemento.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.complemento.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -863,10 +795,12 @@
                             {{ form.correo|add_class:"form-control" }}
                         </div>
                         <div class="form-text">
-                            <i class="fas fa-info-circle"></i> {{ form.correo.help_text }}
+                            <i class="fas fa-info-circle"></i>
+                            <span id="correo-hint">Si eres de la UMSA usa <b>@umsa.bo</b>. Si eres externo usa <b>@gmail.com</b>.</span>
                         </div>
+                        <div class="invalid-feedback" id="error-correo"></div>
                         {% if form.correo.errors %}
-                            <div class="invalid-feedback">{{ form.correo.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.correo.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -880,8 +814,9 @@
                             <i class="fas fa-phone input-icon"></i>
                             {{ form.telefono|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-telefono"></div>
                         {% if form.telefono.errors %}
-                            <div class="invalid-feedback">{{ form.telefono.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.telefono.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -902,14 +837,15 @@
                             <i class="fas fa-home input-icon" style="top:1.2rem;"></i>
                             {{ form.direccion|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-direccion"></div>
                         {% if form.direccion.errors %}
-                            <div class="invalid-feedback">{{ form.direccion.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.direccion.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- DATOS ACADÉMICOS - SOLO PARA ESTUDIANTES -->
+            <!-- DATOS ACADÉMICOS -->
             <div class="section-title" id="academico-section">
                 <i class="fas fa-graduation-cap"></i> Datos Académicos
             </div>
@@ -924,8 +860,9 @@
                             <i class="fas fa-book input-icon"></i>
                             {{ form.carrera|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-carrera"></div>
                         {% if form.carrera.errors %}
-                            <div class="invalid-feedback">{{ form.carrera.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.carrera.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -939,8 +876,9 @@
                             <i class="fas fa-layer-group input-icon"></i>
                             {{ form.semestre|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-semestre"></div>
                         {% if form.semestre.errors %}
-                            <div class="invalid-feedback">{{ form.semestre.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.semestre.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -954,8 +892,9 @@
                             <i class="fas fa-calendar-alt input-icon"></i>
                             {{ form.anio_ingreso|add_class:"form-control" }}
                         </div>
+                        <div class="invalid-feedback" id="error-anio_ingreso"></div>
                         {% if form.anio_ingreso.errors %}
-                            <div class="invalid-feedback">{{ form.anio_ingreso.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.anio_ingreso.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -983,8 +922,9 @@
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i> {{ form.password.help_text }}
                         </div>
+                        <div class="invalid-feedback" id="error-password"></div>
                         {% if form.password.errors %}
-                            <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.password.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -1002,8 +942,9 @@
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
+                        <div class="invalid-feedback" id="error-password_confirm"></div>
                         {% if form.password_confirm.errors %}
-                            <div class="invalid-feedback">{{ form.password_confirm.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.password_confirm.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -1015,7 +956,6 @@
             </div>
 
             <div class="row" id="documentos-fields">
-                <!-- Matrícula - SOLO para estudiantes -->
                 <div class="col-lg-4 col-md-6" id="matricula-group">
                     <div class="form-group">
                         <label class="form-label">
@@ -1032,12 +972,11 @@
                         <div class="upload-status" id="matricula-status"></div>
                         {{ form.google_drive_matricula_url }}
                         {% if form.matricula_pdf.errors %}
-                            <div class="invalid-feedback">{{ form.matricula_pdf.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.matricula_pdf.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Carnet Frente - TODOS excepto Docente y Administrador -->
                 <div class="col-lg-4 col-md-6" id="carnet-frente-group">
                     <div class="form-group">
                         <label class="form-label">
@@ -1054,12 +993,11 @@
                         <div class="upload-status" id="frente-status"></div>
                         {{ form.google_drive_carnet_frente_url }}
                         {% if form.carnet_frente.errors %}
-                            <div class="invalid-feedback">{{ form.carnet_frente.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.carnet_frente.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Carnet Reverso - TODOS excepto Docente y Administrador -->
                 <div class="col-lg-4 col-md-6" id="carnet-reverso-group">
                     <div class="form-group">
                         <label class="form-label">
@@ -1076,7 +1014,7 @@
                         <div class="upload-status" id="reverso-status"></div>
                         {{ form.google_drive_carnet_reverso_url }}
                         {% if form.carnet_reverso.errors %}
-                            <div class="invalid-feedback">{{ form.carnet_reverso.errors.0 }}</div>
+                            <div class="invalid-feedback show">{{ form.carnet_reverso.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -1092,6 +1030,23 @@
                 </a>
             </div>
 
+            <!-- BARRA DE PROGRESO -->
+            <div class="progress-container" id="progressContainer" style="display:none;">
+                <div class="progress-header">
+                    <span id="progressLabel"><i class="fas fa-cloud-upload-alt"></i> Enviando solicitud...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-steps" id="progressSteps">
+                    <span class="step" data-step="1">📋 Validando</span>
+                    <span class="step" data-step="2">📤 Subiendo</span>
+                    <span class="step" data-step="3">💾 Guardando</span>
+                    <span class="step" data-step="4">✅ Listo</span>
+                </div>
+            </div>
+
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p><i class="fas fa-clock"></i> Enviando solicitud, por favor espera...</p>
@@ -1104,14 +1059,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     // ============================================
-    // FUNCIÓN PARA MOSTRAR/OCULTAR CONTRASEÑA
+    // TOGGLE PASSWORD
     // ============================================
     function togglePasswordVisibility(inputId, button) {
         const input = document.getElementById(inputId);
         const icon = button.querySelector('i');
-        
         if (!input) return;
-        
         if (input.type === 'password') {
             input.type = 'text';
             icon.className = 'fas fa-eye-slash';
@@ -1122,54 +1075,124 @@
     }
 
     // ============================================
+    // UTILIDADES DE ERRORES BAJO EL CAMPO
+    // ============================================
+    function mostrarError(campoId, mensaje) {
+        const errorDiv = document.getElementById('error-' + campoId);
+        const input = document.querySelector(`[name="${campoId}"]`);
+        if (errorDiv) {
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + mensaje;
+            errorDiv.classList.add('show');
+        }
+        if (input) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+        }
+    }
+
+    function limpiarError(campoId) {
+        const errorDiv = document.getElementById('error-' + campoId);
+        const input = document.querySelector(`[name="${campoId}"]`);
+        if (errorDiv) {
+            errorDiv.innerHTML = '';
+            errorDiv.classList.remove('show');
+        }
+        if (input) {
+            input.classList.remove('is-invalid');
+        }
+    }
+
+    function marcarValido(campoId) {
+        const input = document.querySelector(`[name="${campoId}"]`);
+        if (input) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        }
+    }
+
+    // ============================================
+    // VALIDACIÓN DE CORREO: UMSA o GMAIL
+    // ============================================
+    function validarCorreo(correo) {
+        // Retorna {valido: bool, mensaje: string}
+        const c = correo.toLowerCase().trim();
+        if (!c) return {valido: false, mensaje: 'El correo es obligatorio'};
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) {
+            return {valido: false, mensaje: 'Formato de correo inválido'};
+        }
+        // UMSA: @umsa.bo  |  Externo: @gmail.com
+        if (c.endsWith('@umsa.bo')) {
+            return {valido: true, mensaje: 'Correo institucional UMSA ✓'};
+        }
+        if (c.endsWith('@gmail.com')) {
+            return {valido: true, mensaje: 'Correo Gmail (externo) ✓'};
+        }
+        return {
+            valido: false,
+            mensaje: 'Solo se permiten correos @umsa.bo (UMSA) o @gmail.com (externos)'
+        };
+    }
+
+    // ============================================
     // INICIALIZACIÓN
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
 
         const correoInput = document.querySelector('input[name="correo"]');
+        const passInput = document.querySelector('input[name="password"]');
+        const passConfirmInput = document.querySelector('input[name="password_confirm"]');
+        const tipoUsuario = document.querySelector('select[name="tipo_usuario"]');
+
+        // ============================================
+        // VALIDACIÓN EN TIEMPO REAL DEL CORREO
+        // ============================================
         if (correoInput) {
             correoInput.addEventListener('input', function() {
-                const correo = this.value.toLowerCase().trim();
-                if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
-                    this.classList.add('is-invalid');
-                    this.classList.remove('is-valid');
-                } else if (correo) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
+                const correo = this.value;
+                if (!correo.trim()) {
+                    limpiarError('correo');
+                    return;
+                }
+                const res = validarCorreo(correo);
+                if (res.valido) {
+                    limpiarError('correo');
+                    marcarValido('correo');
                 } else {
-                    this.classList.remove('is-invalid');
-                    this.classList.remove('is-valid');
+                    mostrarError('correo', res.mensaje);
                 }
             });
         }
 
-        const passInput = document.querySelector('input[name="password"]');
-        const passConfirmInput = document.querySelector('input[name="password_confirm"]');
-
+        // ============================================
+        // VALIDACIÓN EN TIEMPO REAL DE CONTRASEÑA
+        // ============================================
         if (passInput) {
             passInput.addEventListener('input', function() {
-                if (this.value.length >= 9) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
+                if (this.value.length === 0) {
+                    limpiarError('password');
+                } else if (this.value.length < 9) {
+                    mostrarError('password', `Faltan ${9 - this.value.length} caracteres (mínimo 9)`);
                 } else {
-                    this.classList.remove('is-valid');
-                    if (this.value.length > 0) {
-                        this.classList.add('is-invalid');
-                    }
+                    limpiarError('password');
+                    marcarValido('password');
+                }
+                if (passConfirmInput && passConfirmInput.value.length > 0) {
+                    passConfirmInput.dispatchEvent(new Event('input'));
                 }
             });
         }
 
         if (passConfirmInput) {
             passConfirmInput.addEventListener('input', function() {
-                if (passInput && this.value === passInput.value && this.value.length >= 9) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
+                if (this.value.length === 0) {
+                    limpiarError('password_confirm');
+                } else if (passInput && this.value !== passInput.value) {
+                    mostrarError('password_confirm', 'Las contraseñas no coinciden');
+                } else if (this.value.length < 9) {
+                    mostrarError('password_confirm', 'Mínimo 9 caracteres');
                 } else {
-                    this.classList.remove('is-valid');
-                    if (this.value.length > 0) {
-                        this.classList.add('is-invalid');
-                    }
+                    limpiarError('password_confirm');
+                    marcarValido('password_confirm');
                 }
             });
         }
@@ -1177,7 +1200,6 @@
         // ============================================
         // MOSTRAR/OCULTAR CAMPOS SEGÚN ROL
         // ============================================
-        const tipoUsuario = document.querySelector('select[name="tipo_usuario"]');
         const academicoSection = document.getElementById('academico-section');
         const academicoFields = document.getElementById('academico-fields');
         const documentosSection = document.getElementById('documentos-section');
@@ -1228,38 +1250,17 @@
         }
 
         // ============================================
-        // SUBIDA A GOOGLE DRIVE EN TIEMPO REAL
+        // SUBIDA A GOOGLE DRIVE
         // ============================================
-        
         const uploadConfigs = [
-            { 
-                inputId: 'id_matricula_pdf', 
-                statusId: 'matricula-status', 
-                urlId: 'id_google_drive_matricula_url',
-                nameId: 'matricula-name',
-                wrapperId: 'wrapper-matricula',
-                iconId: 'matricula-icon',
-                tipo: 'matricula'
-            },
-            { 
-                inputId: 'id_carnet_frente', 
-                statusId: 'frente-status', 
-                urlId: 'id_google_drive_carnet_frente_url',
-                nameId: 'frente-name',
-                wrapperId: 'wrapper-frente',
-                iconId: 'frente-icon',
-                tipo: 'carnet_frente'
-            },
-            { 
-                inputId: 'id_carnet_reverso', 
-                statusId: 'reverso-status', 
-                urlId: 'id_google_drive_carnet_reverso_url',
-                nameId: 'reverso-name',
-                wrapperId: 'wrapper-reverso',
-                iconId: 'reverso-icon',
-                tipo: 'carnet_reverso'
-            }
+            { inputId: 'id_matricula_pdf', statusId: 'matricula-status', urlId: 'id_google_drive_matricula_url', nameId: 'matricula-name', wrapperId: 'wrapper-matricula', iconId: 'matricula-icon', tipo: 'matricula' },
+            { inputId: 'id_carnet_frente', statusId: 'frente-status', urlId: 'id_google_drive_carnet_frente_url', nameId: 'frente-name', wrapperId: 'wrapper-frente', iconId: 'frente-icon', tipo: 'carnet_frente' },
+            { inputId: 'id_carnet_reverso', statusId: 'reverso-status', urlId: 'id_google_drive_carnet_reverso_url', nameId: 'reverso-name', wrapperId: 'wrapper-reverso', iconId: 'reverso-icon', tipo: 'carnet_reverso' }
         ];
+
+        const archivosSubidos = { matricula: false, carnet_frente: false, carnet_reverso: false };
+        let totalArchivosReq = 0;
+        let subidosCount = 0;
 
         uploadConfigs.forEach(function(config) {
             const input = document.getElementById(config.inputId);
@@ -1272,9 +1273,7 @@
             if (input) {
                 input.addEventListener('change', function() {
                     const file = this.files[0];
-                    if (!file) {
-                        return;
-                    }
+                    if (!file) return;
 
                     nameDisplay.textContent = file.name;
                     nameDisplay.style.color = '#10B981';
@@ -1295,27 +1294,24 @@
 
                     fetch('/upload-to-drive/', {
                         method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken
-                        },
+                        headers: { 'X-CSRFToken': csrfToken },
                         body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             urlInput.value = data.url;
-                            
                             status.className = 'upload-status show success';
                             status.innerHTML = '<i class="fas fa-check-circle"></i> Archivo subido a Google Drive';
-                            
                             if (icon) {
                                 icon.className = 'fas fa-check-circle file-icon';
                                 icon.style.color = '#10B981';
                             }
+                            archivosSubidos[config.tipo] = true;
+                            actualizarProgresoArchivos();
                         } else {
                             status.className = 'upload-status show error';
                             status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + data.error;
-                            
                             nameDisplay.textContent = 'Ningún archivo seleccionado';
                             nameDisplay.style.color = '#6B7280';
                             wrapper.classList.remove('has-file');
@@ -1324,12 +1320,13 @@
                                 icon.style.color = '#F59E0B';
                             }
                             urlInput.value = '';
+                            archivosSubidos[config.tipo] = false;
+                            actualizarProgresoArchivos();
                         }
                     })
-                    .catch(function(error) {
+                    .catch(function() {
                         status.className = 'upload-status show error';
                         status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error de conexión';
-                        
                         nameDisplay.textContent = 'Ningún archivo seleccionado';
                         nameDisplay.style.color = '#6B7280';
                         wrapper.classList.remove('has-file');
@@ -1338,80 +1335,112 @@
                             icon.style.color = '#F59E0B';
                         }
                         urlInput.value = '';
+                        archivosSubidos[config.tipo] = false;
+                        actualizarProgresoArchivos();
                     });
                 });
             }
         });
 
         // ============================================
-        // PREVENIR DOBLE ENVÍO
+        // BARRA DE PROGRESO
+        // ============================================
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressLabel = document.getElementById('progressLabel');
+        const progressSteps = document.querySelectorAll('.progress-steps .step');
+
+        function setProgress(porcentaje, labelTexto) {
+            if (progressFill) progressFill.style.width = porcentaje + '%';
+            if (progressPercent) progressPercent.textContent = Math.round(porcentaje) + '%';
+            if (labelTexto && progressLabel) {
+                progressLabel.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> ${labelTexto}`;
+            }
+            const stepIndex = Math.min(3, Math.floor(porcentaje / 25));
+            progressSteps.forEach((step, i) => {
+                step.classList.remove('active', 'done');
+                if (i < stepIndex) step.classList.add('done');
+                else if (i === stepIndex) step.classList.add('active');
+            });
+        }
+
+        function getArchivosRequeridos() {
+            const tipo = tipoUsuario ? tipoUsuario.value : '';
+            if (tipo === 'Estudiante') return ['matricula', 'carnet_frente', 'carnet_reverso'];
+            if (tipo === 'Investigador') return ['carnet_frente', 'carnet_reverso'];
+            return [];
+        }
+
+        function actualizarProgresoArchivos() {
+            const requeridos = getArchivosRequeridos();
+            totalArchivosReq = requeridos.length;
+            subidosCount = requeridos.filter(t => archivosSubidos[t]).length;
+            if (totalArchivosReq === 0) return;
+            // 0-50% es para archivos
+            const pct = (subidosCount / totalArchivosReq) * 50;
+            if (progressContainer && progressContainer.style.display !== 'none') {
+                setProgress(pct, `Subiendo archivos (${subidosCount}/${totalArchivosReq})...`);
+            }
+        }
+
+        // ============================================
+        // ENVÍO DEL FORMULARIO
         // ============================================
         const form = document.getElementById('registroForm');
         const btn = document.getElementById('btnRegistrar');
         const loading = document.getElementById('loading');
+        let enviando = false;
 
         form.addEventListener('submit', function(e) {
-            const correo = correoInput ? correoInput.value.toLowerCase().trim() : '';
-            if (correo && !correo.endsWith('@umsa.bo') && correo !== 'vc3070934@gmail.com') {
+            if (enviando) {
                 e.preventDefault();
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert-custom alert-error';
-                alertDiv.innerHTML = `
-                    <i class="fas fa-exclamation-circle"></i>
-                    ❌ Debes usar un correo institucional @umsa.bo
-                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                const container = document.querySelector('.card-body-custom');
-                container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
                 return false;
             }
 
+            let hayErrores = false;
+
+            // Limpiar errores previos
+            ['correo', 'password', 'password_confirm', 'nombres', 'apepat', 'ci', 'telefono'].forEach(limpiarError);
+
+            // Validar correo
+            const correo = correoInput ? correoInput.value : '';
+            const resCorreo = validarCorreo(correo);
+            if (!correo.trim()) {
+                mostrarError('correo', 'El correo es obligatorio');
+                hayErrores = true;
+            } else if (!resCorreo.valido) {
+                mostrarError('correo', resCorreo.mensaje);
+                hayErrores = true;
+            }
+
+            // Validar contraseña
             if (passInput && passInput.value.length < 9) {
-                e.preventDefault();
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert-custom alert-error';
-                alertDiv.innerHTML = `
-                    <i class="fas fa-exclamation-circle"></i>
-                    ❌ La contraseña debe tener al menos 9 caracteres
-                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                const container = document.querySelector('.card-body-custom');
-                container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
-                return false;
+                mostrarError('password', `La contraseña debe tener al menos 9 caracteres (tienes ${passInput.value.length})`);
+                hayErrores = true;
             }
 
+            // Validar confirmación
             if (passConfirmInput && passInput && passConfirmInput.value !== passInput.value) {
+                mostrarError('password_confirm', 'Las contraseñas no coinciden');
+                hayErrores = true;
+            } else if (passConfirmInput && passConfirmInput.value.length < 9) {
+                mostrarError('password_confirm', 'Mínimo 9 caracteres');
+                hayErrores = true;
+            }
+
+            if (hayErrores) {
                 e.preventDefault();
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert-custom alert-error';
-                alertDiv.innerHTML = `
-                    <i class="fas fa-exclamation-circle"></i>
-                    ❌ Las contraseñas no coinciden
-                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                const container = document.querySelector('.card-body-custom');
-                container.insertBefore(alertDiv, container.firstChild);
-                setTimeout(function() { if (alertDiv) alertDiv.remove(); }, 5000);
+                const primerError = document.querySelector('.is-invalid');
+                if (primerError) {
+                    primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    primerError.focus();
+                }
                 return false;
             }
 
-            const tipoUsuarioVal = tipoUsuario ? tipoUsuario.value : '';
-            let archivosRequeridos = [];
-            
-            if (tipoUsuarioVal === 'Estudiante') {
-                archivosRequeridos = ['matricula', 'carnet_frente', 'carnet_reverso'];
-            } else if (tipoUsuarioVal === 'Investigador') {
-                archivosRequeridos = ['carnet_frente', 'carnet_reverso'];
-            }
-            
+            // Validar archivos requeridos
+            const archivosRequeridos = getArchivosRequeridos();
             let todosSubidos = true;
             archivosRequeridos.forEach(function(tipo) {
                 const urlInput = document.getElementById('id_google_drive_' + tipo + '_url');
@@ -1424,7 +1453,7 @@
                     }
                 }
             });
-            
+
             if (!todosSubidos) {
                 e.preventDefault();
                 const alertDiv = document.createElement('div');
@@ -1442,9 +1471,77 @@
                 return false;
             }
 
+            // ✅ TODO OK - Mostrar barra de progreso
+            e.preventDefault();
+            enviando = true;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            loading.classList.add('show');
+            if (loading) loading.classList.add('show');
+            if (progressContainer) progressContainer.style.display = 'block';
+
+            // Ya tenemos 50% por archivos
+            let progreso = 50;
+            setProgress(progreso, 'Validando datos...');
+
+            const interval = setInterval(() => {
+                if (progreso < 90) {
+                    progreso += Math.random() * 6;
+                    if (progreso > 90) progreso = 90;
+                    setProgress(progreso, 'Guardando solicitud...');
+                }
+            }, 400);
+
+            // Enviar por fetch
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json().then(data => ({status: response.status, data: data, response: response})))
+            .then(({status, data, response}) => {
+                clearInterval(interval);
+
+                if (data.success) {
+                    setProgress(100, '¡Solicitud enviada!');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/';
+                    }, 1000);
+                } else {
+                    // Hay errores del servidor
+                    setProgress(100, 'Revisa los errores');
+                    const errores = data.errors || {};
+                    Object.keys(errores).forEach(campo => {
+                        mostrarError(campo, errores[campo]);
+                    });
+                    setTimeout(() => {
+                        enviando = false;
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Solicitud';
+                        if (loading) loading.classList.remove('show');
+                        if (progressContainer) progressContainer.style.display = 'none';
+                        const primerError = document.querySelector('.is-invalid');
+                        if (primerError) {
+                            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                clearInterval(interval);
+                setProgress(100, 'Error de conexión');
+                alert('❌ Error al enviar la solicitud. Intenta nuevamente.');
+                enviando = false;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Solicitud';
+                if (loading) loading.classList.remove('show');
+                if (progressContainer) progressContainer.style.display = 'none';
+            });
         });
 
         document.querySelectorAll('.close-btn').forEach(function(btn) {
@@ -1452,7 +1549,6 @@
                 this.parentElement.remove();
             });
         });
-
     });
 </script>
 

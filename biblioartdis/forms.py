@@ -399,17 +399,19 @@ class RegistroUsuarioForm(forms.ModelForm):
         }
     
     def clean_correo(self):
-        correo = self.cleaned_data.get('correo', '').lower().strip()
-        CORREO_ESPECIAL = 'vc3070934@gmail.com'
+        correo = self.cleaned_data.get('correo', '').strip().lower()
+        if not correo:
+            raise ValidationError('El correo es obligatorio.')
         
-        if not (correo.endswith('@umsa.bo') or correo == CORREO_ESPECIAL):
-            raise forms.ValidationError('❌ Solo se permiten correos institucionales @umsa.bo')
+        # ✅ Aceptar @umsa.bo Y @gmail.com
+        if not (correo.endswith('@umsa.bo') or correo.endswith('@gmail.com')):
+            raise ValidationError(
+                'Solo se permiten correos @umsa.bo (UMSA) o @gmail.com (externos).'
+            )
         
+        # Verificar que no exista
         if User.objects.filter(email=correo).exists():
-            raise forms.ValidationError('❌ Este correo ya está registrado')
-        
-        if Usuario.objects.filter(correo=correo).exists():
-            raise forms.ValidationError('❌ Este correo ya está registrado')
+            raise ValidationError('Ya existe una cuenta con este correo.')
         
         return correo
     

@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 import json
 import logging
 import re
@@ -191,18 +192,50 @@ def registrar_usuario(request):
     
     if request.method == 'POST':
         form = RegistroUsuarioForm(request.POST, request.FILES)
+        
+        # ✅ Validación manual del correo: UMSA o Gmail
+        correo = request.POST.get('correo', '').strip().lower()
+        error_correo = None
+        
+        if correo:
+            if not (correo.endswith('@umsa.bo') or correo.endswith('@gmail.com')):
+                error_correo = 'Solo se permiten correos @umsa.bo (UMSA) o @gmail.com (externos)'
+        
+        # Si hay error de correo manual, lo inyectamos en el form
+        if error_correo:
+            form.add_error('correo', error_correo)
+        
         if form.is_valid():
-            # El formulario ya se encarga de crear el User y el Usuario
             usuario = form.save()
-            
-            # Notificar al administrador
             notificar_admin_nuevo_registro(usuario)
             
             messages.success(request, 
-                '✅ Tu solicitud ha sido enviada. '
+                '✅ Tu solicitud ha sido enviada exitosamente. '
                 'El administrador revisará tus documentos y te notificará por correo.'
             )
-            return redirect('login')
+            
+            # ✅ Si es AJAX, devolver JSON con redirect
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Solicitud enviada',
+                    'redirect_url': reverse('home')
+                })
+            
+            return redirect('home')
+        else:
+            # ✅ Si es AJAX y hay errores, devolver JSON con errores por campo
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                errores = {}
+                for campo, lista_errores in form.errors.items():
+                    # Mapear nombres de campos del form a los nombres del HTML
+                    # Si tu form usa 'correo', 'password', etc., coinciden directo
+                    errores[campo] = lista_errores[0]
+                
+                return JsonResponse({
+                    'success': False,
+                    'errors': errores
+                }, status=400)
     else:
         form = RegistroUsuarioForm()
     
