@@ -36,11 +36,7 @@
             --border-light: #E5E7EB;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background-color: var(--bg-light);
@@ -66,9 +62,10 @@
             align-items: center;
             width: 100%;
             position: relative;
+            height: 60px;
         }
 
-        /* Logo fijo */
+        /* Logo */
         .navbar-brand-wrapper {
             flex-shrink: 0;
             padding: 0.6rem 1.2rem;
@@ -83,11 +80,7 @@
             text-decoration: none;
         }
 
-        .brand-logo {
-            width: 36px;
-            height: 36px;
-            object-fit: contain;
-        }
+        .brand-logo { width: 36px; height: 36px; object-fit: contain; }
 
         .brand-text {
             font-weight: 600;
@@ -96,7 +89,7 @@
             white-space: nowrap;
         }
 
-        /* Contenedor del menú con scroll */
+        /* Contenedor del menú con scroll (SOLO DESKTOP) */
         .menu-scroll-wrapper {
             flex: 1;
             overflow-x: auto;
@@ -105,20 +98,10 @@
             position: relative;
         }
 
-        .menu-scroll-wrapper::-webkit-scrollbar {
-            height: 3px;
-        }
+        .menu-scroll-wrapper::-webkit-scrollbar { height: 3px; }
+        .menu-scroll-wrapper::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+        .menu-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
 
-        .menu-scroll-wrapper::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .menu-scroll-wrapper::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 3px;
-        }
-
-        /* Navegación */
         .navbar-nav {
             display: flex;
             flex-direction: row;
@@ -128,15 +111,8 @@
             gap: 0.15rem;
         }
 
-        .nav-item {
-            list-style: none;
-            flex-shrink: 0;
-        }
-
-        /* IMPORTANTE: Dropdown - sin overflow issues */
-        .nav-item.dropdown {
-            position: static;
-        }
+        .nav-item { list-style: none; flex-shrink: 0; }
+        .nav-item.dropdown { position: static; }
 
         /* Botones scroll */
         .scroll-btn {
@@ -157,20 +133,9 @@
             transition: all 0.2s;
         }
 
-        .scroll-btn:hover {
-            opacity: 1;
-            color: var(--accent-hover);
-        }
-
-        .scroll-left {
-            left: 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .scroll-right {
-            right: 0;
-            border-radius: 8px 0 0 8px;
-        }
+        .scroll-btn:hover { opacity: 1; color: var(--accent-hover); }
+        .scroll-left { left: 0; border-radius: 0 8px 8px 0; }
+        .scroll-right { right: 0; border-radius: 8px 0 0 8px; }
 
         /* Estilos de NAV-LINK */
         .nav-link {
@@ -200,9 +165,7 @@
             transform: translateY(-1px);
         }
 
-        .nav-link:hover i {
-            color: var(--accent-hover);
-        }
+        .nav-link:hover i { color: var(--accent-hover); }
 
         .nav-link.active {
             background: var(--active-bg);
@@ -211,9 +174,7 @@
             font-weight: 600;
         }
 
-        .nav-link.active i {
-            color: var(--accent-hover);
-        }
+        .nav-link.active i { color: var(--accent-hover); }
 
         .nav-link.dropdown-toggle.show {
             color: var(--accent-hover);
@@ -229,7 +190,7 @@
         }
 
         /* ============================================ */
-        /* DROPDOWN FLOTANTE (se renderiza en body)     */
+        /* DROPDOWN FLOTANTE                            */
         /* ============================================ */
         .dropdown-menu-floating {
             position: fixed !important;
@@ -244,9 +205,7 @@
             display: none;
         }
 
-        .dropdown-menu-floating.show {
-            display: block;
-        }
+        .dropdown-menu-floating.show { display: block; }
 
         .dropdown-menu-floating::before {
             content: '';
@@ -286,11 +245,7 @@
         }
 
         /* Perfil usuario */
-        .user-wrapper {
-            flex-shrink: 0;
-            padding-right: 1rem;
-            z-index: 10;
-        }
+        .user-wrapper { flex-shrink: 0; padding-right: 1rem; z-index: 10; }
 
         .user-dropdown {
             display: flex;
@@ -316,11 +271,7 @@
             border: 2px solid var(--accent);
         }
 
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
+        .user-info { display: flex; flex-direction: column; line-height: 1.2; }
 
         .user-name {
             font-size: 0.8rem;
@@ -328,10 +279,7 @@
             color: var(--white);
         }
 
-        .user-role {
-            font-size: 0.65rem;
-            color: var(--accent);
-        }
+        .user-role { font-size: 0.65rem; color: var(--accent); }
 
         .admin-badge {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
@@ -342,9 +290,238 @@
             margin-left: 6px;
         }
 
+        /* ============================================ */
+        /* BOTÓN HAMBURGUESA (solo móvil)               */
+        /* ============================================ */
+        .hamburger-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--accent);
+            color: var(--accent-hover);
+        }
+
+        /* ============================================ */
+        /* PANEL LATERAL MÓVIL                          */
+        /* ============================================ */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-menu-panel {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            max-width: 85vw;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            z-index: 1050;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        .mobile-menu-panel.show { left: 0; }
+
+        .mobile-menu-header {
+            padding: 1.2rem 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .mobile-menu-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .mobile-menu-header .brand img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .mobile-close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--white);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-close-btn:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+
+        /* Info usuario móvil */
+        .mobile-user-info {
+            padding: 1rem 1.2rem;
+            background: rgba(245, 158, 11, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-user-info img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+        }
+
+        .mobile-user-info .info { line-height: 1.3; }
+        .mobile-user-info .name {
+            color: var(--white);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .mobile-user-info .role {
+            color: var(--accent);
+            font-size: 0.72rem;
+        }
+
+        /* Lista de items móvil */
+        .mobile-menu-list {
+            list-style: none;
+            padding: 0.8rem 0;
+            flex: 1;
+            margin: 0;
+        }
+
+        .mobile-menu-list li { list-style: none; }
+
+        .mobile-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0.85rem 1.4rem;
+            color: rgba(255, 255, 255, 0.88);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .mobile-menu-link i.icon {
+            width: 22px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .mobile-menu-link:hover,
+        .mobile-menu-link.active {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--white);
+            border-left-color: var(--accent);
+        }
+
+        .mobile-menu-link .arrow {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            transition: transform 0.25s ease;
+        }
+
+        .mobile-menu-link.expanded .arrow {
+            transform: rotate(90deg);
+            color: var(--accent);
+        }
+
+        /* Submenú móvil */
+        .mobile-submenu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background: rgba(0, 0, 0, 0.18);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .mobile-submenu.show { max-height: 500px; }
+
+        .mobile-submenu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 1.4rem 0.7rem 3rem;
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-submenu a i {
+            width: 18px;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        .mobile-submenu a:hover,
+        .mobile-submenu a.active {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--white);
+        }
+
+        .mobile-menu-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.12);
+            margin: 0.5rem 1.2rem;
+        }
+
         /* Contenido principal */
         .content-wrapper {
-            margin-top: 70px;
+            margin-top: 60px;
             min-height: calc(100vh - 120px);
             padding: 1.5rem;
             background-color: var(--bg-light);
@@ -363,24 +540,54 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
+        /* ============================================ */
+        /* MEDIA QUERIES                                */
+        /* ============================================ */
+
+        /* Tablet y Desktop pequeño */
+        @media (max-width: 1199px) {
+            .nav-link { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+        }
+
+        /* MÓVIL: ≤991px → activar menú hamburguesa */
         @media (max-width: 991px) {
             .navbar-brand-wrapper {
-                padding: 0.5rem 0.8rem;
+                padding: 0.5rem 0.7rem;
+                border-right: none;
             }
-            .brand-text {
-                font-size: 0.8rem;
+            .brand-text { font-size: 0.85rem; }
+
+            /* Ocultar menú horizontal y flechas */
+            .menu-scroll-wrapper,
+            .scroll-btn,
+            .user-wrapper {
+                display: none !important;
             }
-            .user-name {
-                max-width: 100px;
-                overflow: hidden;
-                text-overflow: ellipsis;
+
+            /* Mostrar hamburguesa */
+            .hamburger-btn {
+                display: flex;
+                margin-left: auto;
+                margin-right: 0.8rem;
             }
-            .user-role {
-                display: none;
+
+            .navbar-container {
+                justify-content: space-between;
             }
+
             .content-wrapper {
-                margin-top: 65px;
+                margin-top: 60px;
                 padding: 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar-container { height: 56px; }
+            .brand-logo { width: 30px; height: 30px; }
+            .brand-text { font-size: 0.78rem; }
+            .content-wrapper {
+                margin-top: 56px;
+                padding: 0.8rem;
             }
         }
     </style>
@@ -399,61 +606,51 @@
                 </a>
             </div>
 
-            <!-- Flecha izquierda -->
+            <!-- Flecha izquierda (desktop) -->
             <button class="scroll-btn scroll-left" id="scrollLeftBtn">
                 <i class="fas fa-chevron-left"></i>
             </button>
 
-            <!-- Menú con scroll -->
+            <!-- Menú horizontal (solo desktop) -->
             <div class="menu-scroll-wrapper" id="menuScrollWrapper">
                 <ul class="navbar-nav" id="mainMenu">
-                    
                     {% if user.is_authenticated and user.usuario.tipo_usuario == 'Administrador' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'principal' %}">
                                 <i class="fas fa-chart-line"></i> Dashboard
                             </a>
                         </li>
-                        
                         <li class="nav-item dropdown" data-dropdown="usuarios">
                             <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownUsuarios">
                                 <i class="fas fa-users"></i> Usuarios
                             </a>
                         </li>
-
-                        <!-- ✅ NUEVO: Usuarios Activos -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'usuarios_activos' %}">
                                 <i class="fas fa-user-clock"></i> Usuarios Activos
                             </a>
                         </li>
-
                         <li class="nav-item dropdown" data-dropdown="bibliografia">
                             <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownBibliografia">
                                 <i class="fas fa-book"></i> Bibliografía
                             </a>
                         </li>
-
                         <li class="nav-item dropdown" data-dropdown="revistas">
                             <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownRevistas">
                                 <i class="fas fa-newspaper"></i> Revistas
                             </a>
                         </li>
-                        
                         <li class="nav-item dropdown" data-dropdown="imagenes">
                             <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownImagenes">
                                 <i class="fas fa-images"></i> Imágenes
                             </a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'listar_sugerencias' %}">
                                 <i class="fas fa-bell"></i> Sugerencias
                             </a>
                         </li>
-
                         <span class="nav-separator"></span>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'inicio' %}">
                                 <i class="fas fa-home"></i> Inicio
@@ -522,12 +719,12 @@
                 </ul>
             </div>
 
-            <!-- Flecha derecha -->
+            <!-- Flecha derecha (desktop) -->
             <button class="scroll-btn scroll-right" id="scrollRightBtn">
                 <i class="fas fa-chevron-right"></i>
             </button>
 
-            <!-- Perfil usuario -->
+            <!-- Perfil usuario (desktop) -->
             {% if user.is_authenticated %}
             <div class="user-wrapper">
                 <div class="user-dropdown" id="userDropdown">
@@ -547,10 +744,206 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- BOTÓN HAMBURGUESA (solo móvil) -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
 
-    <!-- Contenedor para dropdowns flotantes -->
+    <!-- ============================================ -->
+    <!-- PANEL LATERAL MÓVIL                          -->
+    <!-- ============================================ -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <aside class="mobile-menu-panel" id="mobileMenuPanel">
+        <div class="mobile-menu-header">
+            <div class="brand">
+                <img src="{% static 'images/logoBiblio.png' %}" alt="Logo">
+                <span>Biblioteca Art-Dis</span>
+            </div>
+            <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Cerrar menú">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="mobile-user-info">
+            <img src="{% static 'images/user.png' %}" alt="Avatar">
+            <div class="info">
+                <div class="name">
+                    {{ user.username|cut:"@gmail.com"|cut:"@umsa.bo"|truncatechars:20 }}
+                    {% if user.usuario.tipo_usuario == 'Administrador' %}
+                        <span class="admin-badge">Admin</span>
+                    {% endif %}
+                </div>
+                <div class="role">{{ user.usuario.tipo_usuario }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <ul class="mobile-menu-list">
+            {% if user.is_authenticated and user.usuario.tipo_usuario == 'Administrador' %}
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'principal' %}">
+                        <i class="fas fa-chart-line icon"></i> Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" data-submenu="submenu-usuarios">
+                        <i class="fas fa-users icon"></i> Usuarios
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </a>
+                    <ul class="mobile-submenu" id="submenu-usuarios">
+                        <li><a href="{% url 'lista_usuarios' %}"><i class="fas fa-list"></i> Lista de Usuarios</a></li>
+                        <li><a href="{% url 'agregar_usuario' %}"><i class="fas fa-user-plus"></i> Agregar Usuario</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'usuarios_activos' %}">
+                        <i class="fas fa-user-clock icon"></i> Usuarios Activos
+                    </a>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" data-submenu="submenu-bibliografia">
+                        <i class="fas fa-book icon"></i> Bibliografía
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </a>
+                    <ul class="mobile-submenu" id="submenu-bibliografia">
+                        <li><a href="{% url 'listar_libros' %}"><i class="fas fa-list"></i> Lista de Libros</a></li>
+                        <li><a href="{% url 'agregar_libro' %}"><i class="fas fa-plus"></i> Agregar Libro</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" data-submenu="submenu-revistas">
+                        <i class="fas fa-newspaper icon"></i> Revistas
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </a>
+                    <ul class="mobile-submenu" id="submenu-revistas">
+                        <li><a href="{% url 'listar_revistas' %}"><i class="fas fa-list"></i> Lista de Revistas</a></li>
+                        <li><a href="{% url 'agregar_revista' %}"><i class="fas fa-plus"></i> Agregar Revista</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" data-submenu="submenu-imagenes">
+                        <i class="fas fa-images icon"></i> Imágenes
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </a>
+                    <ul class="mobile-submenu" id="submenu-imagenes">
+                        <li><a href="{% url 'lista_imagenes' %}"><i class="fas fa-list"></i> Lista de Imágenes</a></li>
+                        <li><a href="{% url 'agregar_imagen' %}"><i class="fas fa-plus"></i> Agregar Imagen</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'listar_sugerencias' %}">
+                        <i class="fas fa-bell icon"></i> Sugerencias
+                    </a>
+                </li>
+
+                <div class="mobile-menu-separator"></div>
+
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'inicio' %}">
+                        <i class="fas fa-home icon"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'catalogo' %}">
+                        <i class="fas fa-layer-group icon"></i> Colecciones
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'galeria_artistica' %}">
+                        <i class="fas fa-palette icon"></i> Galería
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'chatbot_view' %}">
+                        <i class="fas fa-robot icon"></i> Asistente
+                    </a>
+                </li>
+
+            {% elif user.is_authenticated %}
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'inicio' %}">
+                        <i class="fas fa-home icon"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" data-submenu="submenu-nivel">
+                        <i class="fas fa-graduation-cap icon"></i> Nivel
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </a>
+                    <ul class="mobile-submenu" id="submenu-nivel">
+                        <li><a href="{% url 'libros_nivel' 1 %}"><i class="fas fa-1"></i> Nivel 1</a></li>
+                        <li><a href="{% url 'libros_nivel' 2 %}"><i class="fas fa-2"></i> Nivel 2</a></li>
+                        <li><a href="{% url 'libros_nivel' 3 %}"><i class="fas fa-3"></i> Nivel 3</a></li>
+                        <li><a href="{% url 'libros_nivel' 4 %}"><i class="fas fa-4"></i> Nivel 4</a></li>
+                        <li><a href="{% url 'libros_nivel' 5 %}"><i class="fas fa-ellipsis-h"></i> Otro</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'catalogo' %}">
+                        <i class="fas fa-layer-group icon"></i> Colecciones
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'novedades_libros' %}">
+                        <i class="fas fa-search icon"></i> Catálogo
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'listar_sugerencias_usuario' %}">
+                        <i class="fas fa-lightbulb icon"></i> Sugerencia
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'galeria_artistica' %}">
+                        <i class="fas fa-palette icon"></i> Galería
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'chatbot_view' %}">
+                        <i class="fas fa-robot icon"></i> Asistente
+                    </a>
+                </li>
+
+                <div class="mobile-menu-separator"></div>
+
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'perfil' %}">
+                        <i class="fas fa-id-card icon"></i> Mi Perfil
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'historial_visitas' %}">
+                        <i class="fas fa-history icon"></i> Mi Historial
+                    </a>
+                </li>
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'logout' %}" style="color:#FCA5A5;">
+                        <i class="fas fa-sign-out-alt icon" style="color:#FCA5A5;"></i> Cerrar Sesión
+                    </a>
+                </li>
+
+            {% else %}
+                <li>
+                    <a class="mobile-menu-link" href="{% url 'home' %}">
+                        <i class="fas fa-sign-in-alt icon"></i> Iniciar Sesión
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </aside>
+
+    <!-- Contenedor para dropdowns flotantes (desktop) -->
     <div id="dropdownContainer"></div>
 
     <main class="content-wrapper">
@@ -567,10 +960,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ============================================
-        // DROPDOWN FLOTANTE - NO SE CORTA NUNCA
+        // DROPDOWN FLOTANTE (DESKTOP)
         // ============================================
-        
-        // Contenido de los dropdowns
         const dropdownContent = {
             usuarios: `
                 <a class="dropdown-item" href="{% url 'lista_usuarios' %}"><i class="fas fa-list"></i> Lista de Usuarios</a>
@@ -614,48 +1005,41 @@
         }
 
         function showDropdown(dropdownId, triggerElement) {
-            if (!floatingMenu) {
-                floatingMenu = createFloatingMenu();
-            }
-            
+            if (window.innerWidth <= 991) return; // No en móvil
+
+            if (!floatingMenu) floatingMenu = createFloatingMenu();
+
             if (activeDropdown === dropdownId && floatingMenu.classList.contains('show')) {
                 hideDropdown();
                 return;
             }
-            
+
             const content = dropdownContent[dropdownId];
             if (!content) return;
-            
+
             floatingMenu.innerHTML = content;
-            
+
             const rect = triggerElement.getBoundingClientRect();
             floatingMenu.style.top = (rect.bottom + 5) + 'px';
             floatingMenu.style.left = rect.left + 'px';
             floatingMenu.classList.add('show');
             activeDropdown = dropdownId;
-            
-            // Marcar el trigger como activo
-            document.querySelectorAll('.dropdown-toggle').forEach(el => {
-                el.classList.remove('show');
-            });
+
+            document.querySelectorAll('.dropdown-toggle').forEach(el => el.classList.remove('show'));
             triggerElement.classList.add('show');
         }
 
         function hideDropdown() {
             if (floatingMenu) {
                 floatingMenu.classList.remove('show');
-                document.querySelectorAll('.dropdown-toggle').forEach(el => {
-                    el.classList.remove('show');
-                });
+                document.querySelectorAll('.dropdown-toggle').forEach(el => el.classList.remove('show'));
                 activeDropdown = null;
             }
         }
 
-        // Configurar triggers de dropdown
         document.querySelectorAll('.dropdown').forEach(dropdown => {
             const dropdownId = dropdown.getAttribute('data-dropdown');
             const trigger = dropdown.querySelector('.dropdown-toggle');
-            
             if (trigger && dropdownId) {
                 trigger.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -665,7 +1049,6 @@
             }
         });
 
-        // Dropdown de usuario
         const userTrigger = document.querySelector('#userDropdown');
         if (userTrigger) {
             userTrigger.addEventListener('click', (e) => {
@@ -675,52 +1058,104 @@
             });
         }
 
-        // Cerrar dropdown al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (floatingMenu && !floatingMenu.contains(e.target)) {
                 let isTrigger = false;
                 document.querySelectorAll('.dropdown-toggle, #userDropdown').forEach(trigger => {
                     if (trigger.contains(e.target)) isTrigger = true;
                 });
-                if (!isTrigger) {
-                    hideDropdown();
-                }
+                if (!isTrigger) hideDropdown();
             }
         });
 
-        // Scroll horizontal con flechas
+        // ============================================
+        // SCROLL HORIZONTAL (DESKTOP)
+        // ============================================
         const wrapper = document.getElementById('menuScrollWrapper');
         const leftBtn = document.getElementById('scrollLeftBtn');
         const rightBtn = document.getElementById('scrollRightBtn');
 
         if (wrapper && leftBtn && rightBtn) {
             const scrollAmount = 200;
-
-            leftBtn.addEventListener('click', () => {
-                wrapper.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            });
-
-            rightBtn.addEventListener('click', () => {
-                wrapper.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            });
+            leftBtn.addEventListener('click', () => wrapper.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+            rightBtn.addEventListener('click', () => wrapper.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
 
             const checkScroll = () => {
                 const hasScroll = wrapper.scrollWidth > wrapper.clientWidth;
                 leftBtn.style.display = hasScroll ? 'flex' : 'none';
                 rightBtn.style.display = hasScroll ? 'flex' : 'none';
             };
-
             checkScroll();
             window.addEventListener('resize', checkScroll);
         }
 
-        // Marcar enlace activo
+        // ============================================
+        // MENÚ HAMBURGUESA MÓVIL
+        // ============================================
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileCloseBtn = document.getElementById('mobileCloseBtn');
+
+        function openMobileMenu() {
+            mobileMenuPanel.classList.add('show');
+            mobileMenuOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenuPanel.classList.remove('show');
+            mobileMenuOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', openMobileMenu);
+        if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeMobileMenu);
+        if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+
+        // Cerrar con tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileMenu();
+        });
+
+        // Toggle de submenús móvil
+        document.querySelectorAll('.mobile-menu-link[data-submenu]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const submenuId = link.getAttribute('data-submenu');
+                const submenu = document.getElementById(submenuId);
+                if (!submenu) return;
+
+                // Cerrar otros submenús
+                document.querySelectorAll('.mobile-submenu.show').forEach(sm => {
+                    if (sm.id !== submenuId) {
+                        sm.classList.remove('show');
+                        const otherLink = document.querySelector(`[data-submenu="${sm.id}"]`);
+                        if (otherLink) otherLink.classList.remove('expanded');
+                    }
+                });
+
+                submenu.classList.toggle('show');
+                link.classList.toggle('expanded');
+            });
+        });
+
+        // ============================================
+        // MARCAR ENLACE ACTIVO
+        // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-link').forEach(link => {
+            document.querySelectorAll('.nav-link, .mobile-menu-link, .mobile-submenu a').forEach(link => {
                 const href = link.getAttribute('href');
                 if (href && href !== '#' && href !== '/' && currentPath === href) {
                     link.classList.add('active');
+                    // Si está en submenú, expandir el padre
+                    const parentSubmenu = link.closest('.mobile-submenu');
+                    if (parentSubmenu) {
+                        parentSubmenu.classList.add('show');
+                        const parentLink = document.querySelector(`[data-submenu="${parentSubmenu.id}"]`);
+                        if (parentLink) parentLink.classList.add('expanded');
+                    }
                 }
             });
         });
