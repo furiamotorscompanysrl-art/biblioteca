@@ -439,12 +439,27 @@
         if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
     });
 
-    // Cargar portadas con proxy
+    // ============================================
+    // ✅ CARGAR PORTADAS EN PARALELO
+    // ============================================
     async function cargarTodasLasPortadasNivel() {
         const imagenes = document.querySelectorAll('img[data-drive-url][data-portada-id]');
-        for (const img of imagenes) {
-            await cargarImagenProxyNivel(img.dataset.driveUrl, img, img.dataset.portadaId);
-        }
+        if (imagenes.length === 0) return;
+
+        console.log(`🚀 Cargando ${imagenes.length} portadas en paralelo...`);
+        const inicio = performance.now();
+
+        const promesas = Array.from(imagenes).map(img => {
+            const url = img.dataset.driveUrl;
+            const portadaId = img.dataset.portadaId;
+            if (!url) return Promise.resolve();
+            return cargarImagenProxyNivel(url, img, portadaId);
+        });
+
+        await Promise.allSettled(promesas);
+
+        const duracion = ((performance.now() - inicio) / 1000).toFixed(2);
+        console.log(`✅ Todas las portadas cargadas en ${duracion}s`);
     }
 
     async function cargarImagenProxyNivel(url, imgElement, portadaId) {

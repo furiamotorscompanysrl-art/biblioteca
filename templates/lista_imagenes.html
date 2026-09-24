@@ -145,15 +145,26 @@
         background-color: var(--bg-light);
     }
 
+    /* Contenedor del thumbnail con loader */
+    .thumb-container {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-light);
+        background: var(--bg-light);
+    }
+
     .image-thumb {
         width: 60px;
         height: 60px;
         object-fit: cover;
-        border-radius: 10px;
         cursor: pointer;
-        border: 1px solid var(--border-light);
+        border-radius: 10px;
         transition: transform 0.2s;
         background: var(--bg-light);
+        display: block;
     }
 
     .image-thumb:hover {
@@ -167,8 +178,19 @@
         background: var(--bg-light);
         color: var(--text-secondary);
         font-size: 0.7rem;
-        width: 60px;
-        height: 60px;
+    }
+
+    /* Loader para imágenes de Drive */
+    .thumb-loader {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-light);
+        color: var(--accent);
+        font-size: 1.1rem;
+        z-index: 1;
     }
 
     .category-badge {
@@ -358,7 +380,7 @@
             flex-direction: column;
             align-items: center;
         }
-        .image-thumb {
+        .image-thumb, .thumb-container {
             width: 40px;
             height: 40px;
         }
@@ -409,25 +431,35 @@
                     <td>
                         {% if imagen.img_portada %}
                             <!-- Imagen desde Cloudinary -->
-                            <img src="{{ imagen.img_portada.url }}"
-                                 class="image-thumb"
-                                 onclick="abrirVisor('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.img_portada.url }}')"
-                                 alt="{{ imagen.titulo }}"
-                                 loading="lazy">
-                        {% elif imagen.drive_thumbnail_url %}
-                            <!-- ✅ Imagen desde Google Drive -->
-                            <img src="{{ imagen.drive_thumbnail_url }}"
-                                 class="image-thumb"
-                                 onclick="abrirVisor('{{ imagen.drive_full_url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.drive_preview_url }}')"
-                                 alt="{{ imagen.titulo }}"
-                                 loading="lazy"
-                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect width=\'60\' height=\'60\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'30\' y=\'30\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'10\' font-family=\'sans-serif\'%3E%F0%9F%96%BC%3C/text%3E%3C/svg%3E';">
+                            <div class="thumb-container">
+                                <img src="{{ imagen.img_portada.url }}"
+                                     class="image-thumb"
+                                     onclick="abrirVisor('{{ imagen.img_portada.url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.img_portada.url }}')"
+                                     alt="{{ imagen.titulo }}"
+                                     loading="lazy">
+                            </div>
+                        {% elif imagen.drive_full_url %}
+                            <!-- ✅ Imagen desde Google Drive - carga paralela con proxy -->
+                            <div class="thumb-container">
+                                <div class="thumb-loader" data-imagen-drive-id="{{ imagen.id_Imagen }}">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <img src=""
+                                     class="image-thumb"
+                                     style="display: none;"
+                                     data-drive-url="{{ imagen.drive_full_url }}"
+                                     data-imagen-drive-id="{{ imagen.id_Imagen }}"
+                                     onclick="abrirVisorProxy('{{ imagen.drive_full_url }}', '{{ imagen.titulo|escapejs }}', '{{ imagen.drive_preview_url }}')"
+                                     alt="{{ imagen.titulo }}">
+                            </div>
                             <div class="drive-badge">
                                 <i class="fas fa-cloud"></i> Drive
                             </div>
                         {% else %}
-                            <div class="image-thumb no-image" title="No hay imagen disponible">
-                                <i class="fas fa-image"></i>
+                            <div class="thumb-container">
+                                <div class="image-thumb no-image" title="No hay imagen disponible">
+                                    <i class="fas fa-image"></i>
+                                </div>
                             </div>
                         {% endif %}
                     </td>
@@ -536,7 +568,11 @@
             </div>
             <div class="modal-body" style="background: rgba(0,0,0,0.9); border-radius: 0 0 12px 12px; padding: 20px; min-height: 70vh; display: flex; align-items: center; justify-content: center;">
                 <div id="visorContenedor" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <img id="visorImagen" src="" alt="Imagen" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
+                    <div id="visorLoader" style="display: none; text-align: center;">
+                        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--accent);"></i>
+                        <p style="color: white; margin-top: 1rem;">Cargando imagen...</p>
+                    </div>
+                    <img id="visorImagen" src="" alt="Imagen" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; display: none;">
                 </div>
             </div>
             <div class="modal-footer" style="background: rgba(0,0,0,0.8); border-radius: 0 0 12px 12px; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -553,33 +589,175 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Variables globales para el visor
+    // ============================================
+    // VARIABLES GLOBALES PARA EL VISOR
+    // ============================================
     let imagenActualUrl = '';
     let imagenPreviewUrl = '';
+    let visorModalInstance = null;
 
-    // ✅ Función mejorada para abrir el visor
-    // url: la URL que se muestra en el <img> (thumbnail grande)
-    // titulo: título de la imagen
-    // previewUrl: (opcional) URL para "abrir en nueva pestaña"
+    // ============================================
+    // ✅ HELPER: Ejecuta promesas con límite de concurrencia
+    // ============================================
+    async function ejecutarConLimite(tareas, limite = 6) {
+        const resultados = [];
+        const ejecutando = new Set();
+
+        for (const tarea of tareas) {
+            const promesa = Promise.resolve()
+                .then(() => tarea())
+                .finally(() => ejecutando.delete(promesa));
+
+            resultados.push(promesa);
+            ejecutando.add(promesa);
+
+            if (ejecutando.size >= limite) {
+                await Promise.race(ejecutando);
+            }
+        }
+
+        return Promise.allSettled(resultados);
+    }
+
+    // ============================================
+    // ✅ CARGAR TODAS LAS IMÁGENES DE DRIVE EN PARALELO
+    // ============================================
+    async function cargarImagenesDriveParalelo() {
+        const imagenes = document.querySelectorAll('img[data-drive-url][data-imagen-drive-id]');
+        if (imagenes.length === 0) return;
+
+        console.log(`🚀 Cargando ${imagenes.length} imágenes de Drive en paralelo (máx 6)...`);
+        const inicio = performance.now();
+
+        // Crear tareas (funciones) para ejecutar con límite
+        const tareas = Array.from(imagenes).map(img => {
+            return async () => {
+                const url = img.dataset.driveUrl;
+                const imagenId = img.dataset.imagenDriveId;
+                const loader = document.querySelector(`.thumb-loader[data-imagen-drive-id="${imagenId}"]`);
+
+                if (!url) {
+                    if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(url)}`);
+                    const data = await response.json();
+
+                    if (data.success && data.base64) {
+                        const nuevaImg = new Image();
+                        nuevaImg.onload = function() {
+                            img.src = data.base64;
+                            img.style.display = 'block';
+                            if (loader) loader.style.display = 'none';
+                        };
+                        nuevaImg.onerror = function() {
+                            if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+                        };
+                        nuevaImg.src = data.base64;
+                    } else {
+                        if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+                    }
+                } catch (error) {
+                    console.error('Error cargando imagen:', error);
+                    if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
+                }
+            };
+        });
+
+        // Ejecutar con límite de 6 concurrentes
+        await ejecutarConLimite(tareas, 6);
+
+        const duracion = ((performance.now() - inicio) / 1000).toFixed(2);
+        console.log(`✅ Todas las imágenes cargadas en ${duracion}s`);
+    }
+
+    // ============================================
+    // ✅ FUNCIÓN: Abrir visor con imagen ya cargada (directa)
+    // ============================================
     function abrirVisor(url, titulo, previewUrl) {
         imagenActualUrl = url;
         imagenPreviewUrl = previewUrl || url;
 
-        const modal = new bootstrap.Modal(document.getElementById('visorModal'));
-        document.getElementById('visorTitulo').textContent = titulo || 'Vista de Imagen';
+        if (!visorModalInstance) {
+            visorModalInstance = new bootstrap.Modal(document.getElementById('visorModal'));
+        }
 
-        document.getElementById('visorImagen').src = url;
-        modal.show();
+        document.getElementById('visorTitulo').textContent = titulo || 'Vista de Imagen';
+        const img = document.getElementById('visorImagen');
+        const loader = document.getElementById('visorLoader');
+
+        // Mostrar directamente (ya está en base64 o es URL directa)
+        img.src = url;
+        img.style.display = 'block';
+        loader.style.display = 'none';
+
+        visorModalInstance.show();
     }
 
-    // ✅ Función para abrir la imagen original en nueva pestaña
+    // ============================================
+    // ✅ FUNCIÓN: Abrir visor con imagen de Drive (vía proxy)
+    // ============================================
+    async function abrirVisorProxy(driveUrl, titulo, previewUrl) {
+        imagenActualUrl = driveUrl;
+        imagenPreviewUrl = previewUrl || driveUrl;
+
+        if (!visorModalInstance) {
+            visorModalInstance = new bootstrap.Modal(document.getElementById('visorModal'));
+        }
+
+        document.getElementById('visorTitulo').textContent = titulo || 'Vista de Imagen';
+        const img = document.getElementById('visorImagen');
+        const loader = document.getElementById('visorLoader');
+
+        img.src = '';
+        img.style.display = 'none';
+        loader.style.display = 'block';
+
+        visorModalInstance.show();
+
+        try {
+            const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(driveUrl)}`);
+            const data = await response.json();
+
+            if (data.success && data.base64) {
+                const nuevaImg = new Image();
+                nuevaImg.onload = function() {
+                    img.src = data.base64;
+                    img.style.display = 'block';
+                    loader.style.display = 'none';
+                };
+                nuevaImg.onerror = function() {
+                    loader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p style="color: white;">Error al cargar imagen</p>';
+                };
+                nuevaImg.src = data.base64;
+            } else {
+                loader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p style="color: white;">No se pudo cargar la imagen</p>';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            loader.innerHTML = '<i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i><p style="color: white;">Error de conexión</p>';
+        }
+    }
+
+    // ============================================
+    // ✅ FUNCIÓN: Abrir imagen original en nueva pestaña
+    // ============================================
     function abrirOriginal() {
         if (imagenPreviewUrl) {
             window.open(imagenPreviewUrl, '_blank');
         }
     }
 
-    // Búsqueda en tiempo real
+    // Exponer funciones al scope global
+    window.abrirVisor = abrirVisor;
+    window.abrirVisorProxy = abrirVisorProxy;
+    window.abrirOriginal = abrirOriginal;
+
+    // ============================================
+    // BÚSQUEDA EN TIEMPO REAL
+    // ============================================
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
         const rows = document.querySelectorAll('#imagenesTableBody tr');
@@ -590,7 +768,9 @@
         });
     });
 
-    // Confirmar eliminación
+    // ============================================
+    // CONFIRMAR ELIMINACIÓN
+    // ============================================
     function confirmarEliminacion(idImagen) {
         Swal.fire({
             title: '¿Eliminar imagen?',
@@ -630,7 +810,11 @@
         });
     }
 
-    // ✅ Función para copiar URL de Drive al portapapeles (opcional)
+    window.confirmarEliminacion = confirmarEliminacion;
+
+    // ============================================
+    // ✅ FUNCIÓN: Copiar URL de Drive (opcional)
+    // ============================================
     function copiarUrlDrive(url) {
         navigator.clipboard.writeText(url).then(() => {
             Swal.fire({
@@ -645,8 +829,16 @@
         });
     }
 
-    // ✅ Manejar errores de carga de imágenes
+    window.copiarUrlDrive = copiarUrlDrive;
+
+    // ============================================
+    // INICIALIZACIÓN
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+        // ✅ Cargar todas las imágenes de Drive EN PARALELO
+        cargarImagenesDriveParalelo();
+
+        // Manejar errores de carga de imágenes locales
         document.querySelectorAll('.image-thumb').forEach(img => {
             img.addEventListener('error', function() {
                 if (!this.dataset.fallback) {

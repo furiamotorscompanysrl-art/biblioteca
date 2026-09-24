@@ -805,13 +805,26 @@
     });
 
     // ============================================
-    // CARGAR PORTADAS CON PROXY
+    // ✅ CARGAR PORTADAS EN PARALELO (TODAS A LA VEZ)
     // ============================================
     async function cargarTodasLasPortadas() {
         const imagenes = document.querySelectorAll('img[data-drive-url]');
-        for (const img of imagenes) {
-            await cargarImagenProxy(img.dataset.driveUrl, img, img.dataset.portadaId);
-        }
+        if (imagenes.length === 0) return;
+
+        console.log(`🚀 Cargando ${imagenes.length} portadas en paralelo...`);
+        const inicio = performance.now();
+
+        const promesas = Array.from(imagenes).map(img => {
+            const url = img.dataset.driveUrl;
+            const portadaId = img.dataset.portadaId;
+            if (!url) return Promise.resolve();
+            return cargarImagenProxy(url, img, portadaId);
+        });
+
+        await Promise.allSettled(promesas);
+
+        const duracion = ((performance.now() - inicio) / 1000).toFixed(2);
+        console.log(`✅ Todas las portadas cargadas en ${duracion}s`);
     }
 
     async function cargarImagenProxy(url, imgElement, portadaId) {

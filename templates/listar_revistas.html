@@ -517,12 +517,27 @@
         if (canvas) canvas.addEventListener('contextmenu', e => e.preventDefault());
     });
 
-    // Cargar portadas de revistas con proxy
+    // ============================================
+    // ✅ CARGAR PORTADAS DE REVISTAS EN PARALELO
+    // ============================================
     async function cargarTodasLasPortadasRevista() {
         const imagenes = document.querySelectorAll('img[data-drive-url][data-revista-id]');
-        for (const img of imagenes) {
-            await cargarImagenProxyRevista(img.dataset.driveUrl, img, img.dataset.revistaId);
-        }
+        if (imagenes.length === 0) return;
+
+        console.log(`🚀 Cargando ${imagenes.length} portadas de revistas en paralelo...`);
+        const inicio = performance.now();
+
+        const promesas = Array.from(imagenes).map(img => {
+            const url = img.dataset.driveUrl;
+            const revistaId = img.dataset.revistaId;
+            if (!url) return Promise.resolve();
+            return cargarImagenProxyRevista(url, img, revistaId);
+        });
+
+        await Promise.allSettled(promesas);
+
+        const duracion = ((performance.now() - inicio) / 1000).toFixed(2);
+        console.log(`✅ Todas las portadas de revistas cargadas en ${duracion}s`);
     }
 
     async function cargarImagenProxyRevista(url, imgElement, revistaId) {

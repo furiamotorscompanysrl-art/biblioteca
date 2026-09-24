@@ -463,11 +463,16 @@
     };
 
     // ============================================
-    // CARGAR PORTADAS DE LAS CARDS
+    // ✅ CARGAR PORTADAS DEL CATÁLOGO EN PARALELO
     // ============================================
     async function cargarPortadasCatalogo() {
         const imagenes = document.querySelectorAll('img[data-drive-url][data-revista-catalogo-id]');
-        for (const img of imagenes) {
+        if (imagenes.length === 0) return;
+
+        console.log(`🚀 Cargando ${imagenes.length} portadas del catálogo en paralelo...`);
+        const inicio = performance.now();
+
+        const promesas = Array.from(imagenes).map(async img => {
             const loader = document.querySelector(`.cover-loading-catalogo[data-revista-catalogo-id="${img.dataset.revistaCatalogoId}"]`);
             try {
                 const response = await fetch(`/proxy/imagen/?url=${encodeURIComponent(img.dataset.driveUrl)}`);
@@ -487,7 +492,12 @@
                 console.error(e);
                 if (loader) loader.innerHTML = '<i class="fas fa-image"></i>';
             }
-        }
+        });
+
+        await Promise.allSettled(promesas);
+
+        const duracion = ((performance.now() - inicio) / 1000).toFixed(2);
+        console.log(`✅ Todas las portadas del catálogo cargadas en ${duracion}s`);
     }
 
     // ============================================
