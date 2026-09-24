@@ -162,7 +162,7 @@ def proxy_pdf(request):
     try:
         response = requests.get(
             download_url, 
-            stream=True,  # ✅ SIEMPRE stream para no cargar todo en memoria
+            stream=True,
             timeout=300,
             allow_redirects=True
         )
@@ -193,7 +193,6 @@ def proxy_pdf(request):
         if es_base64:
             content_length = int(response.headers.get('content-length', 0))
             
-            # ✅ LÍMITE REDUCIDO A 20MB para Base64
             if content_length > 20 * 1024 * 1024:  # 20MB
                 logger.warning(f"PDF muy grande para Base64: {content_length / 1024 / 1024:.1f}MB")
                 return JsonResponse({
@@ -211,7 +210,7 @@ def proxy_pdf(request):
         
         # ✅ MODO STREAM (RECOMENDADO)
         def generate():
-            for chunk in response.iter_content(chunk_size=65536):  # 64KB chunks
+            for chunk in response.iter_content(chunk_size=65536):
                 if chunk:
                     yield chunk
         
@@ -221,7 +220,6 @@ def proxy_pdf(request):
         )
         django_response['Content-Disposition'] = 'inline; filename="documento.pdf"'
         django_response['Cache-Control'] = 'no-cache'
-        # ✅ Permitir CORS para PDF.js
         django_response['Access-Control-Allow-Origin'] = '*'
         django_response['Accept-Ranges'] = 'bytes'
         
@@ -274,30 +272,55 @@ def listar_libros(request):
     })
 
 
+@login_required
 @admin_required
 def agregar_libro(request):
-    """Agrega un nuevo libro al sistema - TODO a Google Drive"""
+    """
+    Agrega un nuevo libro al sistema - TODO a Google Drive
+    ✅ CORREGIDO: Validaciones al PRINCIPIO para evitar libros huérfanos
+    """
     autores = Autor.objects.all()
     categorias = Categoria.objects.all()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         try:
+            # ✅ VALIDACIONES PRIMERO (antes de tocar la BD)
             titulo = request.POST.get('titulo', '').strip()
-            edicion = request.POST.get('edicion', '').strip()
+            if not titulo:
+                return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
+            
             tipo = request.POST.get('tipo')
+            if not tipo:
+                return JsonResponse({'success': False, 'error': 'El tipo de material es obligatorio'}, status=400)
+            
+            # ✅ Validar tamaño de PDF ANTES de crear el libro
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                tamaño_mb = pdf_original.size / (1024 * 1024)
+                if tamaño_mb > 2048:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.'
+                    }, status=400)
+                logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
+            
+            # ✅ Validar tamaño de portada ANTES de crear el libro
+            if 'portada' in request.FILES:
+                portada = request.FILES['portada']
+                if portada.size / (1024 * 1024) > 100:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'La portada supera los 100MB.'
+                    }, status=400)
+                logger.info(f"📷 Portada detectada: {portada.name}")
+            
+            # ✅ AHORA SÍ: crear el libro
+            edicion = request.POST.get('edicion', '').strip()
             categoria = request.POST.get('categoria')
             descripcion = request.POST.get('descripcion', '').strip()
-            autores_seleccionados = request.POST.getlist('autores')
-            palabras_claves = request.POST.get('palabras_claves', '').split(',')
             pdf_url = request.POST.get('pdf_url', '').strip()
             google_drive_url = request.POST.get('google_drive_url', '').strip()
-            categorias_seleccionadas = request.POST.getlist('categorias')
-            
-            if not titulo:
-                return JsonResponse({'success': False, 'error': 'El título es obligatorio'})
-            
-            if not tipo:
-                return JsonResponse({'success': False, 'error': 'El tipo de material es obligatorio'})
             
             nuevo_libro = Libro(
                 titulo=titulo,
@@ -309,37 +332,23 @@ def agregar_libro(request):
                 google_drive_url=google_drive_url,
                 descarga_autorizada=False
             )
-            
             nuevo_libro.save()
             libro_id = nuevo_libro.id_libro
             
             # Subir portada a Drive
             if 'portada' in request.FILES:
-                portada = request.FILES['portada']
-                logger.info(f"📷 Portada detectada: {portada.name}")
                 thread = threading.Thread(
                     target=subir_portada_a_drive_async,
-                    args=(portada, titulo, libro_id)
+                    args=(request.FILES['portada'], titulo, libro_id)
                 )
                 thread.daemon = True
                 thread.start()
             
             # Subir PDF a Drive
             if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                tamaño_mb = pdf_original.size / (1024 * 1024)
-                logger.info(f"📄 PDF detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
-                
-                # ✅ LÍMITE AUMENTADO A 2GB (Google Drive permite hasta 5TB)
-                if tamaño_mb > 2048:
-                    return JsonResponse({
-                        'success': False,
-                        'error': f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.'
-                    })
-                
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
-                    args=(pdf_original, titulo, libro_id)
+                    args=(request.FILES['pdf'], titulo, libro_id)
                 )
                 thread.daemon = True
                 thread.start()
@@ -347,7 +356,12 @@ def agregar_libro(request):
             # Subir autorización a Drive
             if 'autorizacion' in request.FILES:
                 autorizacion = request.FILES['autorizacion']
-                logger.info(f"📄 Autorización detectada: {autorizacion.name}")
+                if autorizacion.size / (1024 * 1024) > 100:
+                    # No bloqueamos, solo advertimos
+                    logger.warning(f"⚠️ Autorización grande: {autorizacion.size / 1024 / 1024:.2f} MB")
+                else:
+                    logger.info(f"📄 Autorización detectada: {autorizacion.name}")
+                
                 thread = threading.Thread(
                     target=subir_autorizacion_a_drive_async,
                     args=(autorizacion, f"{titulo}_autorizacion", libro_id)
@@ -356,6 +370,7 @@ def agregar_libro(request):
                 thread.start()
             
             # Agregar autores
+            autores_seleccionados = request.POST.getlist('autores')
             nuevo_autor_nombre = request.POST.get('nombre_autor', '').strip()
             if nuevo_autor_nombre:
                 autor_existente = Autor.objects.filter(nombre__iexact=nuevo_autor_nombre).first()
@@ -373,6 +388,7 @@ def agregar_libro(request):
                     logger.warning(f"⚠️ Autor {autor_id} no encontrado")
             
             # Agregar categorías
+            categorias_seleccionadas = request.POST.getlist('categorias')
             for categoria_id in categorias_seleccionadas:
                 try:
                     cat = Categoria.objects.get(pk=categoria_id)
@@ -381,10 +397,20 @@ def agregar_libro(request):
                     logger.warning(f"⚠️ Categoría {categoria_id} no encontrada")
             
             # Agregar palabras clave
+            palabras_claves = request.POST.get('palabras_claves', '').split(',')
             for palabra in palabras_claves:
                 palabra = palabra.strip()
-                if palabra:
+                if palabra and hasattr(nuevo_libro, 'agregar_palabras_claves'):
                     nuevo_libro.agregar_palabras_claves(palabra)
+                elif palabra:
+                    # Fallback si no existe el método
+                    palabras_actuales = nuevo_libro.palabra_clave or ''
+                    if palabra not in palabras_actuales:
+                        nueva_lista = [p for p in palabras_actuales.split(',') if p] + [palabra]
+                        nuevo_libro.palabra_clave = ','.join(nueva_lista)
+            
+            if palabras_claves:
+                nuevo_libro.save(update_fields=['palabra_clave'])
             
             logger.info(f"✅ Libro '{titulo}' creado exitosamente por {request.user.username}")
             
@@ -397,7 +423,7 @@ def agregar_libro(request):
             
         except Exception as e:
             logger.error(f"❌ Error agregando libro: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)})
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return render(request, 'agregar_libro.html', {
         'autores': autores,
@@ -408,14 +434,57 @@ def agregar_libro(request):
 @login_required
 @admin_required
 def editar_libro(request, libro_id):
-    """Edita un libro existente"""
+    """
+    Edita un libro existente
+    ✅ CORREGIDO: Validaciones al PRINCIPIO + respuesta AJAX
+    """
     libro = get_object_or_404(Libro, id_libro=libro_id)
     categorias = Categoria.objects.all()
     autores = Autor.objects.all()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         try:
-            libro.titulo = request.POST.get('titulo', '').strip()
+            # ✅ VALIDACIONES PRIMERO (antes de modificar el objeto)
+            titulo = request.POST.get('titulo', '').strip()
+            if not titulo:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
+                messages.error(request, 'El título es obligatorio')
+                return render(request, 'editar_libro.html', {
+                    'libro': libro, 'autores': autores, 'categorias': categorias,
+                    'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
+                })
+            
+            # ✅ Validar tamaño PDF ANTES de modificar
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
+                tamaño_mb = pdf_original.size / (1024 * 1024)
+                if tamaño_mb > 2048:
+                    msg = f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.'
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'error': msg}, status=400)
+                    messages.error(request, msg)
+                    return render(request, 'editar_libro.html', {
+                        'libro': libro, 'autores': autores, 'categorias': categorias,
+                        'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
+                    })
+                logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.2f} MB)")
+            
+            # ✅ Validar tamaño portada ANTES de modificar
+            if 'portada' in request.FILES:
+                if request.FILES['portada'].size / (1024 * 1024) > 100:
+                    msg = 'La portada supera los 100MB.'
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'error': msg}, status=400)
+                    messages.error(request, msg)
+                    return render(request, 'editar_libro.html', {
+                        'libro': libro, 'autores': autores, 'categorias': categorias,
+                        'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
+                    })
+            
+            # ✅ AHORA SÍ: modificar el objeto
+            libro.titulo = titulo
             libro.edicion = request.POST.get('edicion', '').strip()
             libro.tipo = request.POST.get('tipo')
             libro.descripcion = request.POST.get('descripcion', '').strip()
@@ -442,20 +511,6 @@ def editar_libro(request, libro_id):
             
             # Actualizar PDF
             if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                tamaño_mb = pdf_original.size / (1024 * 1024)
-                logger.info(f"📄 PDF detectado en edición: {pdf_original.name} ({tamaño_mb:.2f} MB)")
-                
-                # ✅ LÍMITE AUMENTADO A 2GB
-                if tamaño_mb > 2048:
-                    messages.error(request, f'El PDF supera los 2GB ({tamaño_mb:.0f}MB). Contacta al administrador.')
-                    return render(request, 'editar_libro.html', {
-                        'libro': libro,
-                        'autores': autores,
-                        'categorias': categorias,
-                        'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
-                    })
-                
                 if libro.google_drive_url:
                     file_id = extract_file_id_from_url(libro.google_drive_url)
                     if file_id:
@@ -464,7 +519,7 @@ def editar_libro(request, libro_id):
                 
                 thread = threading.Thread(
                     target=subir_pdf_a_drive_async,
-                    args=(pdf_original, libro.titulo, libro.id_libro)
+                    args=(request.FILES['pdf'], libro.titulo, libro.id_libro)
                 )
                 thread.daemon = True
                 thread.start()
@@ -494,12 +549,14 @@ def editar_libro(request, libro_id):
                 else:
                     libro.autores.clear()
             
+            # Actualizar palabras clave
             libro.palabra_clave = request.POST.get('palabras_claves', '')
             libro.save()
             
             logger.info(f"✅ Libro '{libro.titulo}' actualizado por {request.user.username}")
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # ✅ AJAX → JSON
+            if is_ajax:
                 return JsonResponse({
                     'success': True,
                     'message': 'Libro actualizado correctamente',
@@ -512,7 +569,7 @@ def editar_libro(request, libro_id):
         except Exception as e:
             logger.error(f"❌ Error editando libro: {str(e)}", exc_info=True)
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if is_ajax:
                 return JsonResponse({'success': False, 'error': str(e)}, status=400)
             
             messages.error(request, f'Error al editar libro: {str(e)}')
@@ -529,6 +586,7 @@ def editar_libro(request, libro_id):
         'categorias': categorias,
         'palabras_claves': libro.palabra_clave.split(',') if libro.palabra_clave else []
     })
+
 
 @login_required
 @admin_required
@@ -675,13 +733,31 @@ def agregar_revista(request):
     """Agrega una nueva revista - TODO a Google Drive"""
     if request.method == 'POST':
         try:
+            # ✅ Validaciones primero
             if not request.POST.get('coleccion'):
-                raise ValueError('La colección es requerida')
+                return JsonResponse({'success': False, 'message': 'La colección es requerida'}, status=400)
             
             coleccion = Coleccion.objects.get(id_coleccion=request.POST['coleccion'])
             nro_revista = request.POST.get('nro_revista')
             nro_revista = int(nro_revista) if nro_revista else None
             
+            # Validar imagen
+            if 'img_portada' in request.FILES:
+                if request.FILES['img_portada'].size / (1024 * 1024) > 100:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'La imagen supera los 100MB'
+                    }, status=400)
+            
+            # Validar PDF
+            if 'pdf' in request.FILES:
+                if request.FILES['pdf'].size / (1024 * 1024) > 2048:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'El PDF supera los 2GB'
+                    }, status=400)
+            
+            # ✅ Crear la revista
             revista = Revista(
                 nro_revista=nro_revista,
                 coleccion=coleccion,
@@ -690,32 +766,10 @@ def agregar_revista(request):
                 google_drive_url='',
                 google_drive_img_url=''
             )
-            
-            if 'img_portada' in request.FILES:
-                imagen_original = request.FILES['img_portada']
-                tamaño_mb = imagen_original.size / (1024 * 1024)
-                
-                # ✅ LÍMITE AUMENTADO A 100MB para imágenes de revista
-                if tamaño_mb > 100:
-                    raise ValueError(f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)')
-                
-                logger.info(f"📷 Imagen de portada detectada: {imagen_original.name} ({tamaño_mb:.2f} MB)")
-            
-            pdf_para_subir = None
-            if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                tamaño_mb = pdf_original.size / (1024 * 1024)
-                
-                # ✅ LÍMITE AUMENTADO A 2GB para PDFs de revista
-                if tamaño_mb > 2048:
-                    raise ValueError(f'El PDF supera los 2GB ({tamaño_mb:.0f}MB)')
-                
-                logger.info(f"📄 PDF de revista detectado: {pdf_original.name} ({tamaño_mb:.2f} MB)")
-                pdf_para_subir = pdf_original
-            
             revista.save()
             revista_id = revista.id_revista
             
+            # Subir imagen
             if 'img_portada' in request.FILES:
                 imagen_original = request.FILES['img_portada']
                 nombre_imagen = f"{coleccion.nomb_colecc}_{nro_revista or 'portada'}"
@@ -725,28 +779,33 @@ def agregar_revista(request):
                 )
                 thread_img.daemon = True
                 thread_img.start()
+                logger.info(f"🔄 Subida de imagen de revista iniciada (ID {revista_id})")
             
-            if pdf_para_subir:
+            # Subir PDF
+            if 'pdf' in request.FILES:
+                pdf_original = request.FILES['pdf']
                 nombre_pdf = f"{coleccion.nomb_colecc}_{nro_revista or 'revista'}"
                 thread_pdf = threading.Thread(
                     target=subir_revista_pdf_a_drive_async,
-                    args=(pdf_para_subir, nombre_pdf, revista_id)
+                    args=(pdf_original, nombre_pdf, revista_id)
                 )
                 thread_pdf.daemon = True
                 thread_pdf.start()
+                logger.info(f"🔄 Subida de PDF de revista iniciada (ID {revista_id})")
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
                     'message': 'Revista agregada correctamente',
-                    'id': revista.id_revista
+                    'id': revista.id_revista,
+                    'redirect_url': reverse('listar_revistas')
                 })
             
             messages.success(request, 'Revista agregada correctamente')
             return redirect('listar_revistas')
             
         except Exception as e:
-            logger.error(f"❌ Error agregando revista: {str(e)}")
+            logger.error(f"❌ Error agregando revista: {str(e)}", exc_info=True)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'message': str(e)}, status=400)
             messages.error(request, str(e))
@@ -758,11 +817,16 @@ def agregar_revista(request):
         'max_upload_size_mb': {'imagen': 100, 'pdf': 2048}
     })
 
+
 @login_required
 @admin_required
 def modificar_revista(request, id_revista):
-    """Modifica una revista existente"""
+    """
+    Modifica una revista existente
+    ✅ CORREGIDO: Serializa errores del form correctamente para AJAX
+    """
     revista = get_object_or_404(Revista, id_revista=id_revista)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         form = RevistaForm(request.POST, request.FILES, instance=revista)
@@ -805,7 +869,9 @@ def modificar_revista(request, id_revista):
                     revista.google_drive_url = ''
                     revista.save()
                 
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                logger.info(f"✅ Revista #{revista.nro_revista} actualizada por {request.user.username}")
+                
+                if is_ajax:
                     return JsonResponse({
                         'success': True,
                         'message': '✅ Revista actualizada correctamente',
@@ -816,20 +882,26 @@ def modificar_revista(request, id_revista):
                 return redirect('listar_revistas')
                 
             except Exception as e:
-                logger.error(f"❌ Error al modificar revista: {e}")
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                logger.error(f"❌ Error al modificar revista: {e}", exc_info=True)
+                if is_ajax:
                     return JsonResponse({
                         'success': False,
                         'message': f'Error: {str(e)}'
-                    })
+                    }, status=400)
                 messages.error(request, f'Error: {str(e)}')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # ✅ Serializar errores correctamente
+            errores = {campo: lista[0] for campo, lista in form.errors.items()}
+            mensaje_error = 'Error de validación: ' + ' | '.join(errores.values())
+            logger.warning(f"⚠️ Form inválido: {errores}")
+            
+            if is_ajax:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Error de validación en el formulario',
-                    'errors': form.errors
-                })
+                    'message': mensaje_error,
+                    'errors': errores
+                }, status=400)
+            
             messages.error(request, 'Por favor corrige los errores del formulario')
     
     form = RevistaForm(instance=revista)
@@ -896,17 +968,27 @@ def agregar_coleccion(request):
 def modificar_coleccion(request, id_coleccion):
     """Modifica una colección existente"""
     coleccion = get_object_or_404(Coleccion, id_coleccion=id_coleccion)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         form = ColeccionForm(request.POST, instance=coleccion)
         if form.is_valid():
             form.save()
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': 'Colección actualizada'})
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Colección actualizada',
+                    'redirect_url': reverse('listar_revistas')
+                })
             return redirect('listar_revistas')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': 'Error', 'errors': form.errors})
+            if is_ajax:
+                errores = {campo: lista[0] for campo, lista in form.errors.items()}
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Error de validación: ' + ' | '.join(errores.values()),
+                    'errors': errores
+                }, status=400)
     else:
         form = ColeccionForm(instance=coleccion)
     
@@ -951,6 +1033,7 @@ def listar_imagenes(request):
     return render(request, 'lista_imagenes.html', {'page_obj': page_obj})
 
 
+@login_required
 @admin_required
 def agregar_imagen(request):
     """Agrega una nueva imagen - TODO a Google Drive"""
@@ -959,10 +1042,11 @@ def agregar_imagen(request):
     
     if request.method == 'POST':
         try:
-            titulo = request.POST.get('titulo')
+            titulo = request.POST.get('titulo', '').strip()
             descripcion = request.POST.get('descripcion', '')
-            autorImg = request.POST.get('autorImg')
+            autorImg = request.POST.get('autorImg', '').strip()
             
+            # ✅ Validaciones primero
             if not titulo:
                 if is_ajax:
                     return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
@@ -984,16 +1068,13 @@ def agregar_imagen(request):
             imagen_original = request.FILES['img_portada']
             tamaño_mb = imagen_original.size / (1024 * 1024)
             
-            # ✅ LÍMITE 100MB para imágenes
             if tamaño_mb > 100:
                 if is_ajax:
-                    return JsonResponse({'success': False, 'error': f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)'}, status=400)
-                messages.error(request, f'La imagen supera los 100MB ({tamaño_mb:.0f}MB)')
+                    return JsonResponse({'success': False, 'error': f'La imagen supera 100MB ({tamaño_mb:.0f}MB)'}, status=400)
+                messages.error(request, f'La imagen supera 100MB ({tamaño_mb:.0f}MB)')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
             nombre_archivo = imagen_original.name
-            
-            # ✅ Leer bytes UNA SOLA VEZ y rebobinar
             contenido_bytes = imagen_original.read()
             imagen_original.seek(0)
             
@@ -1003,7 +1084,7 @@ def agregar_imagen(request):
                 messages.error(request, 'El archivo está vacío')
                 return render(request, 'agregar_imagen.html', {'categorias': categorias})
             
-            # 1. Crear el registro en BD
+            # Crear el registro
             nueva_imagen = Imagen(
                 titulo=titulo,
                 descripcion=descripcion,
@@ -1012,8 +1093,7 @@ def agregar_imagen(request):
             nueva_imagen.save()
             imagen_id = nueva_imagen.id_Imagen
             
-            # 2. Asignar categorías ANTES de lanzar el thread
-            #    (así están listas cuando el template las consulte)
+            # Asignar categorías
             for cat_id in request.POST.getlist('categorias'):
                 try:
                     categoria = Categoria.objects.get(pk=cat_id)
@@ -1021,22 +1101,7 @@ def agregar_imagen(request):
                 except Categoria.DoesNotExist:
                     logger.warning(f"⚠️ Categoría {cat_id} no encontrada")
             
-            # 3. Subir PDF si viene (opcional)
-            if 'pdf' in request.FILES:
-                pdf_original = request.FILES['pdf']
-                pdf_bytes = pdf_original.read()
-                pdf_original.seek(0)
-                logger.info(f"📄 PDF detectado para imagen ID {imagen_id}: {pdf_original.name}")
-                thread_pdf = threading.Thread(
-                    target=subir_pdf_a_drive_async,
-                    args=(pdf_bytes, pdf_original.name, imagen_id, 'Material_Biblioteca/Imagenes/PDFs'),
-                    kwargs={'campo': 'google_drive_pdf_url'} if hasattr(Imagen, 'google_drive_pdf_url') else {}
-                )
-                thread_pdf.daemon = True
-                thread_pdf.start()
-            
-            # 4. Lanzar subida de la imagen a Drive en segundo plano
-            #    ✅ Ahora pasamos los BYTES (la función corregida los acepta)
+            # Subir imagen a Drive
             thread = threading.Thread(
                 target=subir_imagen_a_drive_async,
                 args=(contenido_bytes, nombre_archivo, imagen_id)
@@ -1065,18 +1130,47 @@ def agregar_imagen(request):
     
     return render(request, 'agregar_imagen.html', {'categorias': categorias})
 
+
 @login_required
 @admin_required
 def editar_imagen(request, id_imagen):
-    """Edita una imagen existente"""
+    """
+    Edita una imagen existente
+    ✅ CORREGIDO: Agregado branch AJAX + validaciones primero
+    """
     imagen = get_object_or_404(Imagen, pk=id_imagen)
     categorias = Categoria.objects.all()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         try:
-            imagen.titulo = request.POST.get('titulo')
+            titulo = request.POST.get('titulo', '').strip()
+            autor = request.POST.get('autorImg', '').strip()
+            
+            # ✅ Validaciones primero
+            if not titulo:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
+                messages.error(request, 'El título es obligatorio')
+                return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
+            
+            if not autor:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': 'El autor es obligatorio'}, status=400)
+                messages.error(request, 'El autor es obligatorio')
+                return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
+            
+            if 'img_portada' in request.FILES:
+                if request.FILES['img_portada'].size / (1024 * 1024) > 100:
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'error': 'La imagen supera 100MB'}, status=400)
+                    messages.error(request, 'La imagen supera 100MB')
+                    return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
+            
+            # ✅ Modificar el objeto
+            imagen.titulo = titulo
             imagen.descripcion = request.POST.get('descripcion', '')
-            imagen.autorImg = request.POST.get('autorImg')
+            imagen.autorImg = autor
             
             if 'img_portada' in request.FILES:
                 if imagen.google_drive_url:
@@ -1095,20 +1189,35 @@ def editar_imagen(request, id_imagen):
                 )
                 thread.daemon = True
                 thread.start()
+                imagen.google_drive_url = ''
             
             imagen.save()
             imagen.categorias.set(request.POST.getlist('categorias'))
+            
+            logger.info(f"✅ Imagen '{imagen.titulo}' actualizada por {request.user.username}")
+            
+            # ✅ AJAX → JSON
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Imagen actualizada correctamente',
+                    'redirect_url': reverse('lista_imagenes')
+                })
+            
             messages.success(request, "Imagen actualizada correctamente")
             return redirect('lista_imagenes')
             
         except Exception as e:
-            logger.error(f"❌ Error editando imagen: {str(e)}")
+            logger.error(f"❌ Error editando imagen: {str(e)}", exc_info=True)
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': f'Error: {str(e)}'}, status=400)
             messages.error(request, f'Error: {str(e)}')
             return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
     
     return render(request, 'editar_imagen.html', {'imagen': imagen, 'categorias': categorias})
 
 
+@login_required
 @admin_required
 def eliminar_imagen(request, pk):
     """Elimina una imagen y su archivo de Google Drive"""
@@ -1122,6 +1231,10 @@ def eliminar_imagen(request, pk):
                 logger.info(f"🗑️ Imagen eliminada de Drive: {file_id}")
         
         imagen.delete()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        
         messages.success(request, "Imagen eliminada correctamente")
         return redirect('lista_imagenes')
     

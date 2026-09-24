@@ -3,9 +3,6 @@
 
 {% block content %}
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA EDITAR IMAGEN          */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -21,87 +18,26 @@
         --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
-    .form-container {
-        max-width: 800px;
-        margin: 2rem auto;
-    }
+    .form-container { max-width: 800px; margin: 2rem auto; }
+    .form-card { background: white; border-radius: 24px; box-shadow: var(--card-shadow); overflow: hidden; }
 
-    .form-card {
-        background: white;
-        border-radius: 24px;
-        box-shadow: var(--card-shadow);
-        overflow: hidden;
-    }
-
-    /* Header */
     .form-header {
         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
         padding: 1.5rem 2rem;
         border-bottom: 3px solid var(--accent);
     }
+    .form-header h2 { color: white; font-size: 1.5rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 12px; }
+    .form-header h2 i { color: var(--accent); font-size: 1.8rem; }
+    .form-header p { color: rgba(255, 255, 255, 0.8); margin: 0.5rem 0 0; font-size: 0.85rem; }
 
-    .form-header h2 {
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+    .form-body { padding: 2rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+    .full-width { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.2rem; }
 
-    .form-header h2 i {
-        color: var(--accent);
-        font-size: 1.8rem;
-    }
-
-    .form-header p {
-        color: rgba(255, 255, 255, 0.8);
-        margin: 0.5rem 0 0;
-        font-size: 0.85rem;
-    }
-
-    /* Body */
-    .form-body {
-        padding: 2rem;
-    }
-
-    /* Grid de campos */
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.2rem;
-    }
-
-    .full-width {
-        grid-column: span 2;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .form-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .form-label i {
-        color: var(--accent);
-        font-size: 0.9rem;
-    }
-
-    .required-star {
-        color: var(--danger);
-        font-size: 0.8rem;
-    }
+    .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .form-label i { color: var(--accent); font-size: 0.9rem; }
+    .required-star { color: var(--danger); font-size: 0.8rem; }
 
     .form-control, .form-select, textarea {
         padding: 0.75rem 1rem;
@@ -110,107 +46,32 @@
         font-size: 0.9rem;
         transition: all 0.2s ease;
         background-color: var(--bg-light);
+        width: 100%;
     }
-
     .form-control:focus, .form-select:focus, textarea:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
         background-color: white;
     }
+    .form-text { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem; }
+    .required-field { border-left: 4px solid var(--danger); }
 
-    .form-text {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
-    }
+    .multi-select-container { background: var(--bg-light); border-radius: 12px; border: 1.5px solid var(--border-light); overflow: hidden; }
+    .multi-select { width: 100%; min-height: 120px; padding: 0.5rem; border: none; background: transparent; }
+    .multi-select option { padding: 0.5rem; border-radius: 6px; margin-bottom: 2px; }
+    .multi-select option:checked { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: white; }
 
-    /* Campo requerido */
-    .required-field {
-        border-left: 4px solid var(--danger);
-    }
+    .categoria-buttons { display: flex; gap: 8px; margin-top: 0.5rem; }
+    .btn-cat { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-cat-add { background: var(--info); color: white; }
+    .btn-cat-edit { background: var(--accent); color: white; }
+    .btn-cat-delete { background: var(--danger); color: white; }
+    .btn-cat:hover { transform: translateY(-2px); }
 
-    /* Selector múltiple */
-    .multi-select-container {
-        background: var(--bg-light);
-        border-radius: 12px;
-        border: 1.5px solid var(--border-light);
-        overflow: hidden;
-    }
+    .image-preview { background: var(--bg-light); border-radius: 12px; padding: 1rem; margin-top: 1rem; text-align: center; }
+    .image-preview img { max-height: 200px; border-radius: 8px; border: 2px solid var(--border-light); }
 
-    .multi-select {
-        width: 100%;
-        min-height: 120px;
-        padding: 0.5rem;
-        border: none;
-        background: transparent;
-    }
-
-    .multi-select option {
-        padding: 0.5rem;
-        border-radius: 6px;
-        margin-bottom: 2px;
-    }
-
-    .multi-select option:checked {
-        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-        color: white;
-    }
-
-    .categoria-buttons {
-        display: flex;
-        gap: 8px;
-        margin-top: 0.5rem;
-    }
-
-    .btn-cat {
-        padding: 0.4rem 0.8rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .btn-cat-add {
-        background: var(--info);
-        color: white;
-    }
-
-    .btn-cat-edit {
-        background: var(--accent);
-        color: white;
-    }
-
-    .btn-cat-delete {
-        background: var(--danger);
-        color: white;
-    }
-
-    .btn-cat:hover {
-        transform: translateY(-2px);
-    }
-
-    /* Preview de imagen */
-    .image-preview {
-        background: var(--bg-light);
-        border-radius: 12px;
-        padding: 1rem;
-        margin-top: 1rem;
-        text-align: center;
-    }
-
-    .image-preview img {
-        max-height: 200px;
-        border-radius: 8px;
-        border: 2px solid var(--border-light);
-    }
-
-    /* Botón submit */
     .btn-submit {
         width: 100%;
         padding: 1rem;
@@ -228,27 +89,14 @@
         gap: 10px;
         margin-top: 1rem;
     }
+    .btn-submit:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3); }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
-    .btn-submit:hover {
-        background: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-        .full-width {
-            grid-column: span 1;
-        }
-        .form-body {
-            padding: 1.5rem;
-        }
-        .categoria-buttons {
-            flex-wrap: wrap;
-        }
+        .form-grid { grid-template-columns: 1fr; }
+        .full-width { grid-column: span 1; }
+        .form-body { padding: 1.5rem; }
+        .categoria-buttons { flex-wrap: wrap; }
     }
 </style>
 
@@ -265,14 +113,14 @@
         <div class="form-body">
             <form method="post" enctype="multipart/form-data" id="imagenForm">
                 {% csrf_token %}
-                
+
                 <div class="form-grid">
                     <!-- Título -->
                     <div class="form-group full-width">
                         <label class="form-label">
                             <i class="fas fa-heading"></i> Título de la imagen <span class="required-star">*</span>
                         </label>
-                        <input type="text" class="form-control required-field" id="titulo" name="titulo" 
+                        <input type="text" class="form-control required-field" id="titulo" name="titulo"
                                value="{{ imagen.titulo }}" required>
                         <div class="form-text">Un título descriptivo y conciso</div>
                     </div>
@@ -282,7 +130,7 @@
                         <label class="form-label">
                             <i class="fas fa-user"></i> Autor de la imagen <span class="required-star">*</span>
                         </label>
-                        <input type="text" class="form-control required-field" id="autorImg" name="autorImg" 
+                        <input type="text" class="form-control required-field" id="autorImg" name="autorImg"
                                value="{{ imagen.autorImg }}" required>
                         <div class="form-text">Nombre del autor o creador de la imagen</div>
                     </div>
@@ -301,12 +149,14 @@
                         <label class="form-label">
                             <i class="fas fa-image"></i> Imagen de Portada
                         </label>
-                        <input type="file" class="form-control" id="img_portada" name="img_portada" 
+                        <input type="file" class="form-control" id="img_portada" name="img_portada"
                                accept="image/*" onchange="previewImage(this);">
-                        <div class="form-text">Formatos aceptados: JPG, PNG, GIF. Máx 5MB</div>
+                        <div class="form-text">Formatos aceptados: JPG, PNG, GIF. Máx 100MB</div>
                         <div id="imagePreview" class="image-preview">
                             {% if imagen.img_portada %}
                                 <img src="{{ imagen.img_portada.url }}" alt="Vista previa">
+                            {% elif imagen.google_drive_url %}
+                                <img src="{{ imagen.google_drive_url }}" alt="Vista previa" onerror="this.parentElement.innerHTML='<p class=&quot;text-muted&quot;>Imagen en Drive (no se puede previsualizar)</p>'">
                             {% else %}
                                 <p class="text-muted">No hay imagen de portada</p>
                             {% endif %}
@@ -321,7 +171,7 @@
                         <input type="file" class="form-control" id="pdf" name="pdf" accept=".pdf">
                         {% if imagen.pdf %}
                             <div class="form-text">
-                                <i class="fas fa-paperclip"></i> PDF actual: 
+                                <i class="fas fa-paperclip"></i> PDF actual:
                                 <a href="{{ imagen.pdf.url }}" target="_blank" style="color: var(--info);">Ver PDF</a>
                             </div>
                         {% endif %}
@@ -413,9 +263,7 @@
         border-radius: 8px;
         transition: all 0.2s ease;
     }
-    .btn-save:hover {
-        background: var(--accent);
-    }
+    .btn-save:hover { background: var(--accent); }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -506,7 +354,8 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
@@ -540,5 +389,58 @@
             Swal.fire('Error', 'Hubo un problema al procesar la solicitud.', 'error');
         });
     }
+
+    // ============================================
+    // ENVÍO DEL FORMULARIO DE EDICIÓN ✅ CORREGIDO
+    // ============================================
+    document.getElementById('imagenForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+        const formData = new FormData(e.target);
+
+        try {
+            const response = await fetch("{% url 'editar_imagen' imagen.id_Imagen %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'   // ✅ CLAVE
+                }
+            });
+
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                const texto = await response.text();
+                console.error('Respuesta no JSON:', texto.substring(0, 500));
+                throw new Error('El servidor devolvió HTML. Verifica la vista editar_imagen.');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Cambios guardados!',
+                    text: data.message || 'La imagen se ha actualizado correctamente',
+                    icon: 'success',
+                    confirmButtonColor: '#F59E0B'
+                }).then(() => {
+                    window.location.href = "{% url 'lista_imagenes' %}";
+                });
+            } else {
+                Swal.fire('Error', data.error || 'Error al guardar', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', error.message || 'Error de conexión', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+        }
+    });
 </script>
 {% endblock %}
