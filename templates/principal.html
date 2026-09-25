@@ -3,10 +3,12 @@
 
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+
 <style>
-    /* ============================================ */
-    /* ESTILOS MODERNOS PARA DASHBOARD              */
-    /* ============================================ */
     :root {
         --primary-dark: #0F2B3D;
         --primary: #1A3A4F;
@@ -24,24 +26,10 @@
         --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    /* Dashboard Header */
-    .dashboard-header {
-        margin-bottom: 2rem;
-    }
+    .dashboard-header { margin-bottom: 2rem; }
+    .dashboard-title { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; }
+    .dashboard-subtitle { color: var(--text-secondary); font-size: 0.9rem; }
 
-    .dashboard-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-    }
-
-    .dashboard-subtitle {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-    }
-
-    /* Cards Modernas */
     .stat-card {
         background: white;
         border-radius: 20px;
@@ -51,18 +39,8 @@
         overflow: hidden;
         position: relative;
     }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-hover-shadow);
-    }
-
-    .stat-card-body {
-        padding: 1.5rem;
-        position: relative;
-        z-index: 1;
-    }
-
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--card-hover-shadow); }
+    .stat-card-body { padding: 1.5rem; position: relative; z-index: 1; }
     .stat-icon {
         position: absolute;
         right: 1.5rem;
@@ -71,19 +49,8 @@
         opacity: 0.15;
         transition: all 0.3s ease;
     }
-
-    .stat-card:hover .stat-icon {
-        opacity: 0.25;
-        transform: scale(1.1);
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 0.25rem;
-        color: var(--text-primary);
-    }
-
+    .stat-card:hover .stat-icon { opacity: 0.25; transform: scale(1.1); }
+    .stat-value { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem; color: var(--text-primary); }
     .stat-label {
         font-size: 0.85rem;
         font-weight: 500;
@@ -91,7 +58,6 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-
     .stat-link {
         display: inline-block;
         margin-top: 1rem;
@@ -101,41 +67,25 @@
         transition: all 0.2s ease;
     }
 
-    /* Colores específicos para cada card */
     .stat-card.users .stat-link { color: var(--primary); }
     .stat-card.users .stat-link:hover { color: var(--accent); }
-    
     .stat-card.books .stat-link { color: var(--success); }
     .stat-card.books .stat-link:hover { color: var(--accent); }
-    
     .stat-card.revistas .stat-link { color: var(--warning); }
     .stat-card.revistas .stat-link:hover { color: var(--accent); }
-    
     .stat-card.gallery .stat-link { color: var(--info); }
     .stat-card.gallery .stat-link:hover { color: var(--accent); }
-    
     .stat-card.suggestions .stat-link { color: var(--danger); }
     .stat-card.suggestions .stat-link:hover { color: var(--accent); }
 
-    /* Card de Solicitudes - DESTACADA */
     .stat-card.solicitudes {
         background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
         border: 2px solid var(--accent);
     }
+    .stat-card.solicitudes .stat-value { color: #D97706; }
+    .stat-card.solicitudes .stat-link { color: #D97706; }
+    .stat-card.solicitudes .stat-link:hover { color: #B45309; }
 
-    .stat-card.solicitudes .stat-value {
-        color: #D97706;
-    }
-
-    .stat-card.solicitudes .stat-link {
-        color: #D97706;
-    }
-
-    .stat-card.solicitudes .stat-link:hover {
-        color: #B45309;
-    }
-
-    /* Filtros */
     .filter-section {
         background: white;
         border-radius: 16px;
@@ -143,7 +93,6 @@
         margin-bottom: 1.5rem;
         box-shadow: var(--card-shadow);
     }
-
     .filter-title {
         font-size: 0.9rem;
         font-weight: 600;
@@ -152,26 +101,14 @@
         letter-spacing: 0.5px;
         margin-bottom: 1rem;
     }
-
-    .filter-form {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 1rem;
-    }
-
+    .filter-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem; }
     .filter-form select, .filter-form button {
         padding: 0.5rem 1rem;
         border-radius: 10px;
         border: 1px solid var(--border-light);
         font-size: 0.85rem;
     }
-
-    .filter-form select {
-        background: white;
-        min-width: 150px;
-    }
-
+    .filter-form select { background: white; min-width: 150px; }
     .filter-form button {
         background: linear-gradient(135deg, var(--primary-dark), var(--primary));
         color: white;
@@ -179,13 +116,8 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+    .filter-form button:hover { background: var(--accent); transform: translateY(-2px); }
 
-    .filter-form button:hover {
-        background: var(--accent);
-        transform: translateY(-2px);
-    }
-
-    /* Gráfica y Tabla */
     .chart-container, .table-container {
         background: white;
         border-radius: 16px;
@@ -202,17 +134,9 @@
         padding-bottom: 0.75rem;
         border-bottom: 2px solid var(--border-light);
     }
+    .section-title i { color: var(--accent); margin-right: 8px; }
 
-    .section-title i {
-        color: var(--accent);
-        margin-right: 8px;
-    }
-
-    .data-table {
-        width: 100%;
-        font-size: 0.85rem;
-    }
-
+    .data-table { width: 100%; font-size: 0.85rem; }
     .data-table th {
         background: var(--bg-light);
         padding: 0.75rem;
@@ -220,22 +144,14 @@
         color: var(--text-primary);
         border-bottom: 2px solid var(--border-light);
     }
-
     .data-table td {
         padding: 0.75rem;
         border-bottom: 1px solid var(--border-light);
         color: var(--text-secondary);
     }
+    .data-table tr:hover td { background-color: var(--bg-light); }
 
-    .data-table tr:hover td {
-        background-color: var(--bg-light);
-    }
-
-    /* Tabla de Solicitudes */
-    .solicitudes-table {
-        font-size: 0.85rem;
-    }
-
+    .solicitudes-table { font-size: 0.85rem; }
     .solicitudes-table th {
         background: #FEF3C7;
         padding: 0.75rem;
@@ -243,16 +159,12 @@
         color: #92400E;
         border-bottom: 2px solid var(--accent);
     }
-
     .solicitudes-table td {
         padding: 0.75rem;
         border-bottom: 1px solid var(--border-light);
         vertical-align: middle;
     }
-
-    .solicitudes-table tr:hover td {
-        background-color: #FFFBEB;
-    }
+    .solicitudes-table tr:hover td { background-color: #FFFBEB; }
 
     .btn-accion {
         padding: 0.25rem 0.6rem;
@@ -265,74 +177,16 @@
         display: inline-flex;
         align-items: center;
         gap: 4px;
+        cursor: pointer;
     }
+    .btn-accion-aprobar { background: var(--success); color: white; }
+    .btn-accion-aprobar:hover { background: #059669; color: white; transform: translateY(-1px); }
+    .btn-accion-rechazar { background: var(--danger); color: white; }
+    .btn-accion-rechazar:hover { background: #DC2626; color: white; transform: translateY(-1px); }
+    .btn-accion-documentos { background: var(--info); color: white; }
+    .btn-accion-documentos:hover { background: #2563EB; color: white; transform: translateY(-1px); }
 
-    .btn-accion-aprobar {
-        background: var(--success);
-        color: white;
-    }
-
-    .btn-accion-aprobar:hover {
-        background: #059669;
-        color: white;
-        transform: translateY(-1px);
-    }
-
-    .btn-accion-rechazar {
-        background: var(--danger);
-        color: white;
-    }
-
-    .btn-accion-rechazar:hover {
-        background: #DC2626;
-        color: white;
-        transform: translateY(-1px);
-    }
-
-    .btn-accion-documentos {
-        background: var(--info);
-        color: white;
-    }
-
-    .btn-accion-documentos:hover {
-        background: #2563EB;
-        color: white;
-        transform: translateY(-1px);
-    }
-
-    .badge-pendiente {
-        background: #F59E0B;
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .badge-aprobado {
-        background: var(--success);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .badge-rechazado {
-        background: var(--danger);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-secondary);
-    }
-
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-secondary); }
     .empty-state i {
         font-size: 3rem;
         color: var(--accent);
@@ -340,7 +194,6 @@
         margin-bottom: 1rem;
     }
 
-    /* Resumen General */
     .summary-section {
         background: white;
         border-radius: 16px;
@@ -348,14 +201,12 @@
         margin-top: 1.5rem;
         box-shadow: var(--card-shadow);
     }
-
     .summary-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-
     .summary-card {
         text-align: center;
         padding: 1rem;
@@ -363,41 +214,18 @@
         border-radius: 12px;
         transition: all 0.2s ease;
     }
+    .summary-card:hover { transform: translateY(-3px); }
+    .summary-card i { font-size: 2rem; margin-bottom: 0.5rem; }
+    .summary-card .count { font-size: 1.75rem; font-weight: 700; }
+    .summary-card .label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
 
-    .summary-card:hover {
-        transform: translateY(-3px);
-    }
-
-    .summary-card i {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .summary-card .count {
-        font-size: 1.75rem;
-        font-weight: 700;
-    }
-
-    .summary-card .label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-    }
-
-    /* Detalles de tipos */
     .type-details {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1rem;
         margin-top: 1rem;
     }
-
-    .type-card {
-        background: var(--bg-light);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-
+    .type-card { background: var(--bg-light); border-radius: 12px; padding: 1rem; }
     .type-header {
         font-weight: 600;
         margin-bottom: 0.75rem;
@@ -405,7 +233,6 @@
         border-bottom: 2px solid var(--accent);
         display: inline-block;
     }
-
     .type-row {
         display: flex;
         justify-content: space-between;
@@ -413,34 +240,64 @@
         font-size: 0.85rem;
         border-bottom: 1px dashed var(--border-light);
     }
+    .type-row:last-child { border-bottom: none; }
 
-    .type-row:last-child {
-        border-bottom: none;
+    /* ============================================ */
+    /* MODALES                                       */
+    /* ============================================ */
+    .modal-content { border-radius: 20px; overflow: hidden; border: none; }
+    
+    .modal-header-custom {
+        background: linear-gradient(135deg, #0F2B3D, #1A3A4F);
+        border-bottom: 3px solid #F59E0B;
+        padding: 1rem 1.5rem;
+    }
+    .modal-header-custom .modal-title { color: white; font-weight: 600; }
+    .modal-header-custom .btn-close { filter: brightness(0) invert(1); }
+    
+    .modal-header-success {
+        background: linear-gradient(135deg, #10B981, #059669);
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+    .modal-header-danger {
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+    
+    .doc-info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .doc-preview-box {
+        background: #333;
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    .doc-preview-box img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
-        .stat-value {
-            font-size: 1.75rem;
-        }
-        .filter-form {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .filter-form select, .filter-form button {
-            width: 100%;
-        }
-        .solicitudes-table {
-            font-size: 0.75rem;
-        }
-        .solicitudes-table th,
-        .solicitudes-table td {
-            padding: 0.5rem;
-        }
-        .btn-accion {
-            font-size: 0.65rem;
-            padding: 0.2rem 0.4rem;
-        }
+        .stat-value { font-size: 1.75rem; }
+        .filter-form { flex-direction: column; align-items: stretch; }
+        .filter-form select, .filter-form button { width: 100%; }
+        .solicitudes-table { font-size: 0.75rem; }
+        .solicitudes-table th, .solicitudes-table td { padding: 0.5rem; }
+        .btn-accion { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
     }
 </style>
 
@@ -448,27 +305,25 @@
     <!-- Header -->
     <div class="dashboard-header">
         <h1 class="dashboard-title">
-            <i class="fas fa-chart-line" style="color: var(--accent);"></i> 
+            <i class="fas fa-chart-line" style="color: var(--accent);"></i>
             Panel de Administración
         </h1>
         <p class="dashboard-subtitle">Bienvenido al sistema de gestión de la Biblioteca Digital ARTyDIS</p>
     </div>
 
-    <!-- ============================================ -->
-    <!-- SOLICITUDES PENDIENTES - DESTACADO           -->
-    <!-- ============================================ -->
+    <!-- Solicitudes Pendientes - DESTACADO -->
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="stat-card solicitudes">
                 <div class="stat-card-body">
                     <i class="fas fa-users stat-icon"></i>
-                    <div class="stat-value">{{ total_pendientes|default:0 }}</div>
+                    <div class="stat-value" id="contadorPendientes">{{ total_pendientes|default:0 }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-clock text-warning"></i> 
+                        <i class="fas fa-clock text-warning"></i>
                         Solicitudes Pendientes de Aprobación
                     </div>
-                    <a href="{% url 'gestionar_solicitudes' %}" class="stat-link">
-                        <i class="fas fa-arrow-right me-1"></i> Gestionar todas las solicitudes
+                    <a href="#tabla-solicitudes" class="stat-link">
+                        <i class="fas fa-arrow-down me-1"></i> Ver solicitudes pendientes
                     </a>
                 </div>
             </div>
@@ -533,82 +388,75 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- TABLA DE SOLICITUDES PENDIENTES              -->
-    <!-- ============================================ -->
-    <div class="row g-4 mb-4">
+    <!-- Tabla de Solicitudes Pendientes -->
+    <div class="row g-4 mb-4" id="tabla-solicitudes">
         <div class="col-12">
             <div class="table-container">
                 <div class="section-title">
-                    <i class="fas fa-clock" style="color: var(--accent);"></i> 
+                    <i class="fas fa-clock" style="color: var(--accent);"></i>
                     Solicitudes Pendientes
                     {% if total_pendientes > 0 %}
-                        <span class="badge bg-warning text-dark ms-2">{{ total_pendientes }}</span>
+                        <span class="badge bg-warning text-dark ms-2" id="badgePendientes">{{ total_pendientes }}</span>
                     {% endif %}
                 </div>
-                
-                {% if pendientes and pendientes|length > 0 %}
-                    <div class="table-responsive">
-                        <table class="data-table solicitudes-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Carrera</th>
-                                    <th>Fecha</th>
-                                    <th>Documentos</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for usuario in pendientes|slice:":10" %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>
-                                        <strong>{{ usuario.nombres }} {{ usuario.apepat }}</strong>
-                                    </td>
-                                    <td>{{ usuario.correo }}</td>
-                                    <td>{{ usuario.carrera|default:"-" }}</td>
-                                    <td>{{ usuario.fecha_solicitud|date:"d/m/Y H:i" }}</td>
-                                    <td>
-                                        <a href="{% url 'ver_documentos_solicitud' usuario.usuario_id %}" 
-                                           class="btn-accion btn-accion-documentos" target="_blank">
-                                            <i class="fas fa-file-alt"></i> Ver
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <a href="{% url 'aprobar_solicitud' usuario.usuario_id %}" 
-                                               class="btn-accion btn-accion-aprobar"
-                                               onclick="return confirm('¿Aprobar a {{ usuario.nombres }} {{ usuario.apepat }}?')">
-                                                <i class="fas fa-check"></i> Aprobar
-                                            </a>
-                                            <a href="{% url 'rechazar_solicitud' usuario.usuario_id %}" 
-                                               class="btn-accion btn-accion-rechazar">
-                                                <i class="fas fa-times"></i> Rechazar
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% if pendientes|length > 10 %}
-                        <div class="text-center mt-3">
-                            <a href="{% url 'gestionar_solicitudes' %}" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-eye"></i> Ver todas las solicitudes ({{ pendientes|length }})
-                            </a>
+
+                <div id="contenedorSolicitudes">
+                    {% if pendientes and pendientes|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="data-table solicitudes-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Carrera</th>
+                                        <th>Fecha</th>
+                                        <th>Documentos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodySolicitudes">
+                                    {% for usuario in pendientes|slice:":10" %}
+                                    <tr id="fila-usuario-{{ usuario.usuario_id }}">
+                                        <td>{{ forloop.counter }}</td>
+                                        <td><strong>{{ usuario.nombres }} {{ usuario.apepat }}</strong></td>
+                                        <td>{{ usuario.correo }}</td>
+                                        <td>{{ usuario.carrera|default:"-" }}</td>
+                                        <td>{{ usuario.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn-accion btn-accion-documentos"
+                                                    onclick="verDocumentos({{ usuario.usuario_id }})">
+                                                <i class="fas fa-file-alt"></i> Ver
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <button type="button"
+                                                        class="btn-accion btn-accion-aprobar"
+                                                        onclick="confirmarAprobar({{ usuario.usuario_id }}, '{{ usuario.nombres|escapejs }} {{ usuario.apepat|escapejs }}', '{{ usuario.correo|escapejs }}')">
+                                                    <i class="fas fa-check"></i> Aprobar
+                                                </button>
+                                                <button type="button"
+                                                        class="btn-accion btn-accion-rechazar"
+                                                        onclick="confirmarRechazar({{ usuario.usuario_id }}, '{{ usuario.nombres|escapejs }} {{ usuario.apepat|escapejs }}', '{{ usuario.correo|escapejs }}')">
+                                                    <i class="fas fa-times"></i> Rechazar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state" id="sinSolicitudes">
+                            <i class="fas fa-check-circle"></i>
+                            <h5 class="text-success">¡No hay solicitudes pendientes!</h5>
+                            <p class="text-muted">Todas las solicitudes han sido procesadas</p>
                         </div>
                     {% endif %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <h5 class="text-success">¡No hay solicitudes pendientes!</h5>
-                        <p class="text-muted">Todas las solicitudes han sido procesadas</p>
-                    </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -628,7 +476,6 @@
     </div>
 
     <div class="row g-4">
-        <!-- Gráfica -->
         <div class="col-lg-6">
             <div class="chart-container">
                 <div class="section-title">
@@ -637,8 +484,7 @@
                 <canvas id="primeraGrafica" style="max-height: 300px;"></canvas>
             </div>
         </div>
-        
-        <!-- Tabla de datos -->
+
         <div class="col-lg-6">
             <div class="table-container">
                 <div class="section-title">
@@ -697,8 +543,7 @@
         <div class="section-title">
             <i class="fas fa-database"></i> Resumen General del Sistema
         </div>
-        
-        <!-- Estadísticas principales -->
+
         <div class="summary-stats">
             <div class="summary-card">
                 <i class="fas fa-file-alt" style="color: #FF4757;"></i>
@@ -720,12 +565,9 @@
             </div>
         </div>
 
-        <!-- Desglose por tipo -->
         <div class="type-details">
             <div class="type-card">
-                <div class="type-header">
-                    <i class="fas fa-book me-1"></i> Libros ({{ estado_sistema.libros.total }})
-                </div>
+                <div class="type-header"><i class="fas fa-book me-1"></i> Libros ({{ estado_sistema.libros.total }})</div>
                 <div class="type-row">
                     <span><i class="fas fa-file-alt me-1"></i> Documentos</span>
                     <span>{{ estado_sistema.libros.archivos.pdfs }} ({{ estado_sistema.libros.espacio.pdfs|filesizeformat }})</span>
@@ -737,9 +579,7 @@
             </div>
 
             <div class="type-card">
-                <div class="type-header">
-                    <i class="fas fa-newspaper me-1"></i> Revistas ({{ estado_sistema.revistas.total }})
-                </div>
+                <div class="type-header"><i class="fas fa-newspaper me-1"></i> Revistas ({{ estado_sistema.revistas.total }})</div>
                 <div class="type-row">
                     <span><i class="fas fa-file-alt me-1"></i> Documentos</span>
                     <span>{{ estado_sistema.revistas.archivos.pdfs }} ({{ estado_sistema.revistas.espacio.pdfs|filesizeformat }})</span>
@@ -751,9 +591,7 @@
             </div>
 
             <div class="type-card">
-                <div class="type-header">
-                    <i class="fas fa-images me-1"></i> Galería ({{ estado_sistema.imagenes.total }})
-                </div>
+                <div class="type-header"><i class="fas fa-images me-1"></i> Galería ({{ estado_sistema.imagenes.total }})</div>
                 <div class="type-row">
                     <span><i class="fas fa-image me-1"></i> Imágenes</span>
                     <span>{{ estado_sistema.imagenes.archivos.imagenes }} ({{ estado_sistema.imagenes.espacio.imagenes|filesizeformat }})</span>
@@ -767,73 +605,578 @@
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- MODAL 1: VER DOCUMENTOS                      -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalDocumentos" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder-open" style="color: #F59E0B;"></i>
+                    Documentos de la Solicitud
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem; background: #F8FAFC; max-height: 75vh; overflow-y: auto;">
+
+                <!-- Info usuario -->
+                <div class="doc-info-card mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">NOMBRE COMPLETO</small>
+                            <strong id="docNombre" style="color: #1F2937;">—</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">CORREO</small>
+                            <span id="docCorreo" style="color: #1F2937;">—</span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">CI</small>
+                            <span id="docCI" style="color: #1F2937;">—</span>
+                        </div>
+                        <div class="col-md-5">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">CARRERA</small>
+                            <span id="docCarrera" style="color: #1F2937;">—</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">TELÉFONO</small>
+                            <span id="docTelefono" style="color: #1F2937;">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loader -->
+                <div id="docsLoader" class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #F59E0B;"></i>
+                    <p class="mt-3 text-muted">Cargando documentos...</p>
+                </div>
+
+                <!-- Contenedor documentos -->
+                <div id="docsContainer" style="display: none;">
+
+                    <!-- Matrícula PDF -->
+                    <div id="docMatriculaSection" class="mb-4" style="display: none;">
+                        <h6 class="mb-3" style="color: #0F2B3D; font-weight: 600;">
+                            <i class="fas fa-file-pdf" style="color: #EF4444;"></i> Matrícula
+                        </h6>
+                        <div id="docMatriculaContenido" class="doc-preview-box">
+                            <!-- JS llena -->
+                        </div>
+                    </div>
+
+                    <!-- Carnets -->
+                    <div class="row g-4">
+                        <div id="docCarnetFrenteSection" class="col-md-6" style="display: none;">
+                            <h6 class="mb-3" style="color: #0F2B3D; font-weight: 600;">
+                                <i class="fas fa-id-card" style="color: #F59E0B;"></i> Carnet - Frente
+                            </h6>
+                            <div id="docCarnetFrenteContenido" class="doc-preview-box" style="background: #F8FAFC;">
+                                <!-- JS llena -->
+                            </div>
+                        </div>
+
+                        <div id="docCarnetReversoSection" class="col-md-6" style="display: none;">
+                            <h6 class="mb-3" style="color: #0F2B3D; font-weight: 600;">
+                                <i class="fas fa-id-card" style="color: #F59E0B;"></i> Carnet - Reverso
+                            </h6>
+                            <div id="docCarnetReversoContenido" class="doc-preview-box" style="background: #F8FAFC;">
+                                <!-- JS llena -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sin documentos -->
+                    <div id="sinDocumentos" class="text-center py-5" style="display: none;">
+                        <i class="fas fa-inbox fa-3x" style="color: #9CA3AF;"></i>
+                        <p class="text-muted mt-3">Este usuario no subió documentos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #F8FAFC; border-top: 1px solid #E5E7EB;">
+                <small class="text-muted me-auto">
+                    <i class="fas fa-lock"></i> Vista protegida — descarga deshabilitada
+                </small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL 2: CONFIRMAR APROBACIÓN                -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalAprobar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-success">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-check-circle"></i> Confirmar Aprobación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-user-check" style="font-size: 4rem; color: #10B981;"></i>
+                <h4 class="mt-3 mb-2">¿Aprobar esta solicitud?</h4>
+                <p class="text-muted mb-0">Se dará acceso al usuario:</p>
+                <p class="fw-bold mb-0" id="aprobarNombre" style="color: #0F2B3D; font-size: 1.1rem;"></p>
+                <p class="text-muted small mb-0" id="aprobarCorreo"></p>
+            </div>
+            <div class="modal-footer" style="border: none; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnConfirmarAprobar">
+                    <i class="fas fa-check"></i> Sí, aprobar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL 3: CONFIRMAR RECHAZO                   -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalRechazar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Rechazo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-slash" style="font-size: 4rem; color: #EF4444;"></i>
+                </div>
+                <h4 class="text-center mb-3">¿Rechazar esta solicitud?</h4>
+                <div class="alert alert-danger" style="border-radius: 12px; border-left: 4px solid #EF4444;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Importante:</strong> Al rechazar, el usuario será <strong>eliminado permanentemente</strong> del sistema, incluyendo sus documentos.
+                </div>
+                <p class="text-center mb-2">
+                    Usuario: <strong id="rechazarNombre" style="color: #0F2B3D;"></strong>
+                </p>
+                <p class="text-center text-muted small" id="rechazarCorreo"></p>
+
+                <label class="form-label mt-3">
+                    <i class="fas fa-comment"></i> Motivo del rechazo <span class="text-muted">(opcional)</span>
+                </label>
+                <textarea id="motivoRechazo" class="form-control" rows="3"
+                          placeholder="Ej: Documentos ilegibles, correo no institucional..."
+                          style="border-radius: 10px;"></textarea>
+            </div>
+            <div class="modal-footer" style="border: none; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarRechazar">
+                    <i class="fas fa-trash"></i> Sí, rechazar y eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var datosUnitarias = {
-            labels: [{% for titulo, _ in visitas_agrupadas_unitarias.items %}"{{ titulo|slice:":20" }}", {% endfor %}],
-            datasets: [{
-                label: 'Visitas por Título',
-                data: [{% for _, total in visitas_agrupadas_unitarias.items %}{{ total }}, {% endfor %}],
-                backgroundColor: 'rgba(245, 158, 11, 0.7)',
-                borderColor: '#F59E0B',
-                borderWidth: 2,
-                borderRadius: 8,
-            }]
-        };
+// ============================================
+// VARIABLES GLOBALES
+// ============================================
+let usuarioIdActual = null;
+let modalDocumentos, modalAprobar, modalRechazar;
 
-        var datosNivel = {
-            labels: [{% for categoria, _ in visitas_agrupadas_nivel.items %}"{{ categoria }}", {% endfor %}],
-            datasets: [{
-                label: 'Visitas por Categoría',
-                data: [{% for _, total in visitas_agrupadas_nivel.items %}{{ total }}, {% endfor %}],
-                backgroundColor: 'rgba(31, 58, 74, 0.7)',
-                borderColor: '#1F3A4A',
-                borderWidth: 2,
-                borderRadius: 8,
-            }]
-        };
+// ============================================
+// GRÁFICA DE VISITAS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar modales
+    modalDocumentos = new bootstrap.Modal(document.getElementById('modalDocumentos'));
+    modalAprobar = new bootstrap.Modal(document.getElementById('modalAprobar'));
+    modalRechazar = new bootstrap.Modal(document.getElementById('modalRechazar'));
 
-        var ctx = document.getElementById('primeraGrafica').getContext('2d');
-        var opcionVista = "{{ vista_opcion }}";
+    // Botones de confirmación
+    document.getElementById('btnConfirmarAprobar').addEventListener('click', ejecutarAprobar);
+    document.getElementById('btnConfirmarRechazar').addEventListener('click', ejecutarRechazar);
 
-        if (opcionVista === 'unitarias' && datosUnitarias.labels.length > 0) {
-            new Chart(ctx, {
-                type: 'bar',
-                data: datosUnitarias,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Total Visitas' } },
-                        x: { title: { display: true, text: 'Títulos' }, ticks: { autoSkip: true, maxRotation: 45 } }
-                    }
+    // Gráfica
+    var datosUnitarias = {
+        labels: [{% for titulo, _ in visitas_agrupadas_unitarias.items %}"{{ titulo|slice:":20" }}", {% endfor %}],
+        datasets: [{
+            label: 'Visitas por Título',
+            data: [{% for _, total in visitas_agrupadas_unitarias.items %}{{ total }}, {% endfor %}],
+            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+            borderColor: '#F59E0B',
+            borderWidth: 2,
+            borderRadius: 8,
+        }]
+    };
+
+    var datosNivel = {
+        labels: [{% for categoria, _ in visitas_agrupadas_nivel.items %}"{{ categoria }}", {% endfor %}],
+        datasets: [{
+            label: 'Visitas por Categoría',
+            data: [{% for _, total in visitas_agrupadas_nivel.items %}{{ total }}, {% endfor %}],
+            backgroundColor: 'rgba(31, 58, 74, 0.7)',
+            borderColor: '#1F3A4A',
+            borderWidth: 2,
+            borderRadius: 8,
+        }]
+    };
+
+    var ctx = document.getElementById('primeraGrafica').getContext('2d');
+    var opcionVista = "{{ vista_opcion }}";
+
+    if (opcionVista === 'unitarias' && datosUnitarias.labels.length > 0) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: datosUnitarias,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Total Visitas' } },
+                    x: { title: { display: true, text: 'Títulos' }, ticks: { autoSkip: true, maxRotation: 45 } }
                 }
-            });
-        } else if (opcionVista === 'nivel' && datosNivel.labels.length > 0) {
-            new Chart(ctx, {
-                type: 'bar',
-                data: datosNivel,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Total Visitas' } },
-                        x: { title: { display: true, text: 'Categorías' } }
-                    }
+            }
+        });
+    } else if (opcionVista === 'nivel' && datosNivel.labels.length > 0) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: datosNivel,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Total Visitas' } },
+                    x: { title: { display: true, text: 'Categorías' } }
                 }
-            });
-        } else {
-            ctx.canvas.parentElement.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-chart-line fa-3x mb-2 d-block"></i><p>Seleccione una opción para visualizar la gráfica</p></div>';
+            }
+        });
+    } else {
+        ctx.canvas.parentElement.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-chart-line fa-3x mb-2 d-block"></i><p>Seleccione una opción para visualizar la gráfica</p></div>';
+    }
+});
+
+// ============================================
+// 1. VER DOCUMENTOS
+// ============================================
+function verDocumentos(usuarioId) {
+    usuarioIdActual = usuarioId;
+
+    // Reset modal
+    document.getElementById('docsLoader').style.display = 'block';
+    document.getElementById('docsContainer').style.display = 'none';
+    document.getElementById('docMatriculaSection').style.display = 'none';
+    document.getElementById('docCarnetFrenteSection').style.display = 'none';
+    document.getElementById('docCarnetReversoSection').style.display = 'none';
+    document.getElementById('sinDocumentos').style.display = 'none';
+
+    modalDocumentos.show();
+
+    fetch(`/dashboard/solicitud/${usuarioId}/documentos/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.error || 'Error al cargar documentos');
         }
+
+        const u = data.usuario;
+        document.getElementById('docNombre').textContent = `${u.nombres} ${u.apepat} ${u.apemat}`.trim();
+        document.getElementById('docCorreo').textContent = u.correo;
+        document.getElementById('docCI').textContent = u.ci;
+        document.getElementById('docCarrera').textContent = u.carrera;
+        document.getElementById('docTelefono').textContent = u.telefono;
+
+        document.getElementById('docsLoader').style.display = 'none';
+        document.getElementById('docsContainer').style.display = 'block';
+
+        const docs = data.documentos;
+        let hayAlguno = false;
+
+        // Matrícula PDF
+        if (docs.matricula) {
+            hayAlguno = true;
+            document.getElementById('docMatriculaSection').style.display = 'block';
+            cargarPDFEnContenedor(docs.matricula, document.getElementById('docMatriculaContenido'));
+        }
+
+        // Carnet Frente
+        if (docs.carnet_frente) {
+            hayAlguno = true;
+            document.getElementById('docCarnetFrenteSection').style.display = 'block';
+            cargarImagenEnContenedor(docs.carnet_frente, document.getElementById('docCarnetFrenteContenido'), 'Carnet Frente');
+        }
+
+        // Carnet Reverso
+        if (docs.carnet_reverso) {
+            hayAlguno = true;
+            document.getElementById('docCarnetReversoSection').style.display = 'block';
+            cargarImagenEnContenedor(docs.carnet_reverso, document.getElementById('docCarnetReversoContenido'), 'Carnet Reverso');
+        }
+
+        if (!hayAlguno) {
+            document.getElementById('sinDocumentos').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('docsLoader').innerHTML = `
+            <i class="fas fa-exclamation-triangle fa-3x" style="color: #EF4444;"></i>
+            <p class="mt-3 text-danger">${error.message}</p>
+        `;
     });
+}
+
+// ============================================
+// 2. CARGAR IMAGEN (con proxy)
+// ============================================
+function cargarImagenEnContenedor(driveUrl, contenedor, titulo) {
+    contenedor.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x" style="color: #F59E0B;"></i>';
+
+    fetch(`/proxy/imagen/?url=${encodeURIComponent(driveUrl)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.base64) {
+                contenedor.innerHTML = `
+                    <img src="${data.base64}"
+                         alt="${titulo}"
+                         style="max-width: 100%; max-height: 400px; border-radius: 8px;"
+                         oncontextmenu="return false;"
+                         ondragstart="return false;">
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="fas fa-lock"></i> Vista protegida
+                    </p>
+                `;
+            } else {
+                contenedor.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-image fa-2x mb-2"></i>
+                        <p class="small">No se pudo cargar la imagen</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando imagen:', error);
+            contenedor.innerHTML = '<p class="text-danger small">Error de conexión</p>';
+        });
+}
+
+// ============================================
+// 3. CARGAR PDF (con proxy)
+// ============================================
+function cargarPDFEnContenedor(driveUrl, contenedor) {
+    contenedor.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x" style="color: #F59E0B;"></i>';
+
+    const proxyUrl = `/proxy/pdf/?url=${encodeURIComponent(driveUrl)}`;
+
+    const loadingTask = pdfjsLib.getDocument({
+        url: proxyUrl,
+        withCredentials: true,
+        rangeChunkSize: 65536
+    });
+
+    loadingTask.promise.then(pdf => {
+        return pdf.getPage(1).then(page => {
+            const viewport = page.getViewport({ scale: 1.0 });
+            const maxWidth = contenedor.clientWidth - 32 || 800;
+            const scale = Math.min(maxWidth / viewport.width, 2.0);
+            const scaledViewport = page.getViewport({ scale: scale });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = scaledViewport.width;
+            canvas.height = scaledViewport.height;
+            canvas.style.cssText = 'max-width: 100%; border-radius: 8px;';
+            canvas.oncontextmenu = () => false;
+            canvas.ondragstart = () => false;
+
+            const ctx = canvas.getContext('2d');
+            return page.render({ canvasContext: ctx, viewport: scaledViewport }).promise.then(() => {
+                contenedor.innerHTML = '';
+                contenedor.appendChild(canvas);
+
+                const info = document.createElement('p');
+                info.className = 'text-white small mt-2 mb-0';
+                info.style.textAlign = 'center';
+                info.innerHTML = `<i class="fas fa-file-pdf"></i> Página 1 de ${pdf.numPages} — Vista protegida`;
+                contenedor.appendChild(info);
+            });
+        });
+    }).catch(error => {
+        console.error('Error cargando PDF:', error);
+        contenedor.innerHTML = `
+            <div class="text-center text-white">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2" style="color: #EF4444;"></i>
+                <p class="small">No se pudo cargar el PDF</p>
+            </div>
+        `;
+    });
+}
+
+// ============================================
+// 4. CONFIRMAR APROBAR
+// ============================================
+function confirmarAprobar(usuarioId, nombre, correo) {
+    usuarioIdActual = usuarioId;
+    document.getElementById('aprobarNombre').textContent = nombre;
+    document.getElementById('aprobarCorreo').textContent = correo;
+    modalAprobar.show();
+}
+
+function ejecutarAprobar() {
+    const btn = document.getElementById('btnConfirmarAprobar');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aprobando...';
+
+    fetch(`/dashboard/solicitud/${usuarioIdActual}/aprobar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            modalAprobar.hide();
+            removerFila(usuarioIdActual);
+
+            Swal.fire({
+                title: '¡Aprobado!',
+                text: data.message,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            actualizarContadores(-1);
+        } else {
+            Swal.fire('Error', data.error || 'Error al aprobar', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Error de conexión', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// ============================================
+// 5. CONFIRMAR RECHAZAR
+// ============================================
+function confirmarRechazar(usuarioId, nombre, correo) {
+    usuarioIdActual = usuarioId;
+    document.getElementById('rechazarNombre').textContent = nombre;
+    document.getElementById('rechazarCorreo').textContent = correo;
+    document.getElementById('motivoRechazo').value = '';
+    modalRechazar.show();
+}
+
+function ejecutarRechazar() {
+    const btn = document.getElementById('btnConfirmarRechazar');
+    const originalText = btn.innerHTML;
+    const motivo = document.getElementById('motivoRechazo').value.trim();
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rechazando...';
+
+    fetch(`/dashboard/solicitud/${usuarioIdActual}/rechazar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ motivo: motivo || 'No especificado' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            modalRechazar.hide();
+            removerFila(usuarioIdActual);
+
+            Swal.fire({
+                title: '¡Rechazado y eliminado!',
+                text: data.message,
+                icon: 'success',
+                timer: 2500,
+                showConfirmButton: false
+            });
+
+            actualizarContadores(-1);
+        } else {
+            Swal.fire('Error', data.error || 'Error al rechazar', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Error de conexión', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// ============================================
+// UTILIDADES
+// ============================================
+function removerFila(usuarioId) {
+    const fila = document.getElementById(`fila-usuario-${usuarioId}`);
+    if (fila) {
+        fila.style.transition = 'all 0.4s ease';
+        fila.style.opacity = '0';
+        fila.style.transform = 'translateX(50px)';
+        setTimeout(() => {
+            fila.remove();
+
+            // Si ya no hay filas, mostrar empty state
+            const tbody = document.getElementById('tbodySolicitudes');
+            if (tbody && tbody.children.length === 0) {
+                document.getElementById('contenedorSolicitudes').innerHTML = `
+                    <div class="empty-state" id="sinSolicitudes">
+                        <i class="fas fa-check-circle"></i>
+                        <h5 class="text-success">¡No hay solicitudes pendientes!</h5>
+                        <p class="text-muted">Todas las solicitudes han sido procesadas</p>
+                    </div>
+                `;
+            }
+        }, 400);
+    }
+}
+
+function actualizarContadores(delta) {
+    const contador = document.getElementById('contadorPendientes');
+    if (contador) {
+        const actual = parseInt(contador.textContent) || 0;
+        contador.textContent = Math.max(0, actual + delta);
+    }
+
+    const badge = document.getElementById('badgePendientes');
+    if (badge) {
+        const actual = parseInt(badge.textContent) || 0;
+        const nuevo = Math.max(0, actual + delta);
+        badge.textContent = nuevo;
+        if (nuevo === 0) badge.style.display = 'none';
+    }
+}
 </script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 {% endblock %}

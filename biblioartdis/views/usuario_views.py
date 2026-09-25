@@ -6,6 +6,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.db.models import Q, Count
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from datetime import date
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import check_password
@@ -21,6 +22,11 @@ from ..models import (
 from ..utils.text_cleaner import limpiar_busqueda
 from ..utils.chat_responses import ChatResponses
 from ..groq_config import get_ai_response
+from ..drive_utils import (
+    eliminar_pdf_de_drive,
+    eliminar_imagen_de_drive,
+    extract_file_id_from_url,
+)
 from django.conf import settings
 
 try:
@@ -41,54 +47,39 @@ def perfil(request):
     try:
         usuario = request.user.usuario
         
-        # ============================================
-        # PROCESAR CAMBIO DE CONTRASEÑA (POST)
-        # ============================================
         if request.method == 'POST':
             password_actual = request.POST.get('password_actual')
             password_nuevo = request.POST.get('password_nuevo')
             password_confirm = request.POST.get('password_confirm')
             
-            # Validar campos obligatorios
             if not password_actual or not password_nuevo or not password_confirm:
                 messages.error(request, '❌ Todos los campos son obligatorios.')
                 return render(request, 'perfil.html', {'usuario': usuario})
             
-            # Validar longitud mínima
             if len(password_nuevo) < 9:
                 messages.error(request, '❌ La nueva contraseña debe tener al menos 9 caracteres.')
                 return render(request, 'perfil.html', {'usuario': usuario})
             
-            # Validar que coincidan
             if password_nuevo != password_confirm:
                 messages.error(request, '❌ Las contraseñas no coinciden.')
                 return render(request, 'perfil.html', {'usuario': usuario})
             
-            # Validar contraseña actual
             if not request.user.check_password(password_actual):
                 messages.error(request, '❌ La contraseña actual es incorrecta.')
                 return render(request, 'perfil.html', {'usuario': usuario})
             
-            # Cambiar contraseña
             request.user.set_password(password_nuevo)
             request.user.save()
-            
-            # Mantener la sesión activa
             update_session_auth_hash(request, request.user)
             
             logger.info(f"Contraseña cambiada para usuario: {request.user.username}")
             
-            # Para peticiones AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': '✅ Contraseña cambiada exitosamente.'
-                })
+                return JsonResponse({'success': True, 'message': '✅ Contraseña cambiada exitosamente.'})
             
             messages.success(request, '✅ Contraseña cambiada exitosamente.')
             return redirect('perfil')
         
-        # GET - Mostrar perfil
         usando_ci_como_password = check_password(usuario.ci, usuario.user.password)
         return render(request, 'perfil.html', {
             'usuario': usuario,
@@ -110,7 +101,6 @@ def cambiar_password_ajax(request):
         return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     
     try:
-        # Intentar parsear JSON primero
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -120,7 +110,6 @@ def cambiar_password_ajax(request):
         password_nuevo = data.get('password_nuevo')
         password_confirm = data.get('password_confirm')
         
-        # Validaciones
         if not password_actual or not password_nuevo or not password_confirm:
             return JsonResponse({'success': False, 'error': 'Todos los campos son obligatorios'})
         
@@ -133,17 +122,12 @@ def cambiar_password_ajax(request):
         if not request.user.check_password(password_actual):
             return JsonResponse({'success': False, 'error': 'La contraseña actual es incorrecta'})
         
-        # Cambiar contraseña
         request.user.set_password(password_nuevo)
         request.user.save()
         update_session_auth_hash(request, request.user)
         
         logger.info(f"Contraseña cambiada para usuario: {request.user.username}")
-        
-        return JsonResponse({
-            'success': True,
-            'message': '✅ Contraseña cambiada exitosamente.'
-        })
+        return JsonResponse({'success': True, 'message': '✅ Contraseña cambiada exitosamente.'})
         
     except Exception as e:
         logger.error(f"Error en cambiar_password_ajax: {e}")
@@ -578,8 +562,6 @@ def chat_con_gemini(request):
                 terminos = mensaje.lower().split()
                 palabras_utiles = [p for p in terminos if len(p) > 2 and p not in ['para', 'por', 'con', 'sin', 'del', 'la', 'los', 'las', 'el', 'un', 'una']]
                 
-                resultados = []
-                
                 if palabras_utiles:
                     q = Q()
                     for palabra in palabras_utiles:
@@ -628,16 +610,14 @@ def chat_con_gemini(request):
 
 
 # ============================================
-# RESTABLECER CONTRASEÑA (ADMIN) - EN USUARIO_VIEWS
+# RESTABLECER CONTRASEÑA (ADMIN)
 # ============================================
-
 @login_required
 def restablecer_password(request):
     """
     Vista para que el administrador restablezca la contraseña de un usuario.
     La nueva contraseña será el número de CI del usuario.
     """
-    # Verificar que el usuario es administrador
     if not hasattr(request.user, 'usuario') or request.user.usuario.tipo_usuario != 'Administrador':
         messages.error(request, 'No tienes permisos para realizar esta acción.')
         return redirect('inicio')
@@ -650,8 +630,6 @@ def restablecer_password(request):
                 return redirect('lista_usuarios')
             
             usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
-            
-            # Establecer la contraseña como el CI del usuario
             nueva_password = usuario.ci
             
             if len(nueva_password) < 4:
@@ -674,7 +652,6 @@ def restablecer_password(request):
             messages.error(request, f'Error al restablecer contraseña: {str(e)}')
             return redirect('lista_usuarios')
     
-    # GET - Mostrar confirmación
     usuario_id = request.GET.get('usuario_id')
     if usuario_id:
         usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
@@ -682,3 +659,225 @@ def restablecer_password(request):
     
     messages.error(request, 'ID de usuario no proporcionado.')
     return redirect('lista_usuarios')
+
+
+# ============================================
+# GESTIÓN DE SOLICITUDES EN DASHBOARD (AJAX)
+# ============================================
+
+@login_required
+def ver_documentos_solicitud_ajax(request, usuario_id):
+    """
+    Devuelve las URLs de los documentos del usuario para mostrarlos en modal.
+    ✅ Sin descargar, solo para visualización vía proxy
+    """
+    if not (request.user.is_superuser or 
+            (hasattr(request.user, 'usuario') and request.user.usuario.tipo_usuario == 'Administrador')):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
+    
+    try:
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        
+        documentos = {
+            'matricula': None,
+            'carnet_frente': None,
+            'carnet_reverso': None,
+        }
+        
+        # Buscar en múltiples nombres de campo por compatibilidad
+        for campo, key in [
+            ('google_drive_matricula_url', 'matricula'),
+            ('matricula_pdf_url', 'matricula'),
+            ('matricula_pdf', 'matricula'),
+        ]:
+            url = getattr(usuario, campo, None)
+            if url:
+                documentos[key] = str(url)
+                break
+        
+        for campo, key in [
+            ('google_drive_carnet_frente_url', 'carnet_frente'),
+            ('carnet_frente_url', 'carnet_frente'),
+            ('carnet_frente', 'carnet_frente'),
+        ]:
+            url = getattr(usuario, campo, None)
+            if url:
+                documentos[key] = str(url)
+                break
+        
+        for campo, key in [
+            ('google_drive_carnet_reverso_url', 'carnet_reverso'),
+            ('carnet_reverso_url', 'carnet_reverso'),
+            ('carnet_reverso', 'carnet_reverso'),
+        ]:
+            url = getattr(usuario, campo, None)
+            if url:
+                documentos[key] = str(url)
+                break
+        
+        return JsonResponse({
+            'success': True,
+            'usuario': {
+                'id': usuario.usuario_id,
+                'nombres': usuario.nombres,
+                'apepat': usuario.apepat or '',
+                'apemat': usuario.apemat or '',
+                'ci': usuario.ci or '—',
+                'correo': usuario.correo or '—',
+                'carrera': usuario.carrera or 'No especificada',
+                'telefono': getattr(usuario, 'nro_celular', None) or getattr(usuario, 'telefono', None) or 'No especificado',
+                'tipo_usuario': usuario.tipo_usuario,
+                'fecha_solicitud': usuario.fecha_solicitud.strftime('%d/%m/%Y %H:%M') if hasattr(usuario, 'fecha_solicitud') and usuario.fecha_solicitud else '—',
+            },
+            'documentos': documentos
+        })
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Usuario no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f"Error en ver_documentos_solicitud_ajax: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def aprobar_solicitud_ajax(request, usuario_id):
+    """Aprueba una solicitud vía AJAX desde el dashboard"""
+    if not (request.user.is_superuser or 
+            (hasattr(request.user, 'usuario') and request.user.usuario.tipo_usuario == 'Administrador')):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
+    
+    try:
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        
+        usuario.estado_registro = 'aprobado'
+        usuario.fecha_aprobacion = timezone.now()
+        usuario.esta_activo = True
+        
+        if hasattr(request.user, 'usuario'):
+            usuario.aprobado_por = request.user.usuario
+        
+        usuario.save()
+        
+        # Activar el User de Django
+        usuario.user.is_active = True
+        usuario.user.save()
+        
+        # Notificar por email
+        try:
+            from django.core.mail import send_mail
+            if usuario.correo:
+                send_mail(
+                    subject='✅ Tu cuenta ha sido aprobada',
+                    message=f'''Hola {usuario.nombres},
+
+Tu solicitud de acceso a la Biblioteca ARTyDIS ha sido APROBADA.
+
+Ya puedes iniciar sesión.
+
+Saludos,
+Biblioteca ARTyDIS
+''',
+                    from_email='Biblioteca ARTyDIS <noreply@example.com>',
+                    recipient_list=[usuario.correo],
+                    fail_silently=True
+                )
+        except Exception as e:
+            logger.warning(f"No se pudo enviar email de aprobación: {e}")
+        
+        logger.info(f"✅ Solicitud aprobada: {usuario.nombres} {usuario.apepat} por {request.user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ Usuario {usuario.nombres} {usuario.apepat} aprobado correctamente',
+            'usuario_id': usuario.usuario_id
+        })
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Usuario no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f"Error aprobando solicitud: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def rechazar_solicitud_ajax(request, usuario_id):
+    """
+    Rechaza una solicitud vía AJAX.
+    ✅ ELIMINA al usuario y sus archivos de Drive.
+    """
+    if not (request.user.is_superuser or 
+            (hasattr(request.user, 'usuario') and request.user.usuario.tipo_usuario == 'Administrador')):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
+    
+    try:
+        usuario = get_object_or_404(Usuario, usuario_id=usuario_id)
+        
+        try:
+            data = json.loads(request.body)
+            motivo = data.get('motivo', 'No especificado')
+        except:
+            motivo = request.POST.get('motivo', 'No especificado')
+        
+        nombre_completo = f"{usuario.nombres} {usuario.apepat}"
+        correo = usuario.correo
+        
+        # ✅ Eliminar archivos de Drive asociados
+        for campo_url in [
+            'google_drive_matricula_url', 'google_drive_carnet_frente_url',
+            'google_drive_carnet_reverso_url', 'matricula_pdf_url',
+            'carnet_frente_url', 'carnet_reverso_url'
+        ]:
+            url = getattr(usuario, campo_url, None)
+            if url:
+                try:
+                    file_id = extract_file_id_from_url(str(url))
+                    if file_id:
+                        eliminar_pdf_de_drive(file_id)
+                        logger.info(f"🗑️ Archivo eliminado de Drive: {file_id}")
+                except Exception as e:
+                    logger.warning(f"No se pudo eliminar archivo de Drive {campo_url}: {e}")
+        
+        # Notificar antes de borrar
+        try:
+            from django.core.mail import send_mail
+            if correo:
+                send_mail(
+                    subject='❌ Tu solicitud ha sido rechazada',
+                    message=f'''Hola {usuario.nombres},
+
+Tu solicitud de acceso a la Biblioteca ARTyDIS ha sido RECHAZADA.
+
+Motivo: {motivo}
+
+Si consideras que esto es un error, por favor contacta al administrador.
+
+Saludos,
+Biblioteca ARTyDIS
+''',
+                    from_email='Biblioteca ARTyDIS <noreply@example.com>',
+                    recipient_list=[correo],
+                    fail_silently=True
+                )
+        except Exception as e:
+            logger.warning(f"No se pudo enviar email de rechazo: {e}")
+        
+        # ✅ Eliminar el Usuario y el User de Django
+        user_django = usuario.user
+        usuario.delete()
+        user_django.delete()
+        
+        logger.info(f"🗑️ Solicitud RECHAZADA y ELIMINADA: {nombre_completo} por {request.user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'❌ Solicitud de {nombre_completo} rechazada y eliminada',
+            'usuario_id': usuario_id
+        })
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Usuario no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f"Error rechazando solicitud: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

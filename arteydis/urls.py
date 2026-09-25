@@ -12,7 +12,11 @@ from biblioartdis.views.usuario_views import (
     inicio, novedades_libros, libros_nivel, catalogo,
     sugerir_libro, listar_sugerencias_usuario, descartar_sugerencia,
     ver_pdf, galeria_artistica, ver_imagen,
-    buscar_libros, chatbot_view, obtener_novedades, chat_con_gemini
+    buscar_libros, chatbot_view, obtener_novedades, chat_con_gemini,
+    # ✅ NUEVAS VISTAS AJAX PARA DASHBOARD
+    ver_documentos_solicitud_ajax,
+    aprobar_solicitud_ajax,
+    rechazar_solicitud_ajax,
 )
 
 # Importar las vistas proxy
@@ -28,7 +32,7 @@ urlpatterns = [
     path('proxy/imagen/', proxy_imagen, name='proxy_imagen'),
     path('proxy/pdf/', proxy_pdf, name='proxy_pdf'),
     
-    # Autenticación (usando views desde auth_views)
+    # Autenticación
     path('', views.home, name='home'),
     path('accounts/login/', views.home, name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
@@ -46,8 +50,13 @@ urlpatterns = [
     path('rechazar-usuario/<int:usuario_id>/', views.rechazar_usuario, name='rechazar_usuario'),
     
     # ============================================
-    # GESTIÓN DE SOLICITUDES
+    # GESTIÓN DE SOLICITUDES (AJAX desde Dashboard)
     # ============================================
+    path('dashboard/solicitud/<int:usuario_id>/documentos/', ver_documentos_solicitud_ajax, name='ver_documentos_solicitud_ajax'),
+    path('dashboard/solicitud/<int:usuario_id>/aprobar/', aprobar_solicitud_ajax, name='aprobar_solicitud_ajax'),
+    path('dashboard/solicitud/<int:usuario_id>/rechazar/', rechazar_solicitud_ajax, name='rechazar_solicitud_ajax'),
+    
+    # Rutas viejas (compatibilidad - opcional, puedes borrarlas si ya no las usas)
     path('solicitudes/', views.gestionar_solicitudes, name='gestionar_solicitudes'),
     path('aprobar-solicitud/<int:usuario_id>/', views.aprobar_solicitud, name='aprobar_solicitud'),
     path('rechazar-solicitud/<int:usuario_id>/', views.rechazar_solicitud, name='rechazar_solicitud'),
