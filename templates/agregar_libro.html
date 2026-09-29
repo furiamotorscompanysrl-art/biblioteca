@@ -135,6 +135,7 @@
         font-size: 0.85rem;
         transition: all 0.2s ease;
         background-color: var(--bg-light);
+        width: 100%;
     }
 
     .form-control:focus, .form-select:focus, textarea:focus {
@@ -144,6 +145,9 @@
         background-color: white;
     }
 
+    /* ============================================ */
+    /* PALABRAS CLAVE                               */
+    /* ============================================ */
     .keywords-container {
         background: var(--bg-light);
         border-radius: 12px;
@@ -205,30 +209,117 @@
         cursor: pointer;
     }
 
-    .multi-select-container {
+    /* ============================================ */
+    /* MULTI-SELECT CON BÚSQUEDA                    */
+    /* ============================================ */
+    .multi-select-wrapper {
         background: var(--bg-light);
         border-radius: 12px;
         border: 1.5px solid var(--border-light);
         overflow: hidden;
     }
 
+    .multi-select-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.8rem;
+        background: white;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .multi-select-header .counter {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--accent);
+        background: rgba(245, 158, 11, 0.1);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+    }
+
+    .multi-select-header .actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .multi-select-header .action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .multi-select-header .action-btn:hover {
+        background: var(--bg-light);
+        color: var(--accent);
+    }
+
+    .multi-select-search {
+        position: relative;
+        padding: 0.5rem 0.8rem;
+        background: white;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .multi-select-search i {
+        position: absolute;
+        left: 1.3rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        pointer-events: none;
+    }
+
+    .multi-select-search input {
+        width: 100%;
+        padding: 0.5rem 0.8rem 0.5rem 2rem;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        background: var(--bg-light);
+        transition: all 0.2s ease;
+    }
+
+    .multi-select-search input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
     .multi-select {
         width: 100%;
-        min-height: 150px;
-        padding: 0.5rem;
+        min-height: 180px;
+        max-height: 220px;
+        padding: 0.4rem;
         border: none;
         background: transparent;
+        overflow-y: auto;
     }
 
     .multi-select option {
-        padding: 0.5rem;
+        padding: 0.5rem 0.7rem;
         border-radius: 6px;
         margin-bottom: 2px;
+        font-size: 0.8rem;
+        cursor: pointer;
     }
 
     .multi-select option:checked {
         background: linear-gradient(135deg, var(--primary-dark), var(--primary));
         color: white;
+    }
+
+    .multi-select option.hidden-by-search {
+        display: none;
     }
 
     .multi-select-buttons {
@@ -239,6 +330,60 @@
         background: white;
     }
 
+    .multi-select-buttons input {
+        flex: 1;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+
+    .multi-select-buttons input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .multi-select-buttons button {
+        padding: 0.5rem 1rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .multi-select-buttons button:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+    }
+
+    .multi-select-buttons button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Mensaje cuando no hay resultados */
+    .no-results-msg {
+        text-align: center;
+        padding: 0.8rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-style: italic;
+        display: none;
+    }
+
+    /* ============================================ */
+    /* ARCHIVOS                                     */
+    /* ============================================ */
     .file-upload-area {
         background: var(--bg-light);
         border: 2px dashed var(--border-light);
@@ -313,6 +458,12 @@
         box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
     }
 
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .compression-bar {
         width: 100%;
         height: 4px;
@@ -350,21 +501,6 @@
         margin-right: 8px;
     }
 
-    @media (max-width: 768px) {
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-        .full-width {
-            grid-column: span 1;
-        }
-        .form-body {
-            padding: 1.5rem;
-        }
-        .multi-select-buttons {
-            flex-wrap: wrap;
-        }
-    }
-
     .mt-2 {
         margin-top: 0.75rem;
     }
@@ -380,6 +516,24 @@
         display: inline-flex;
         align-items: center;
         gap: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+        .form-body {
+            padding: 1.5rem;
+        }
+        .multi-select-buttons {
+            flex-wrap: wrap;
+        }
+        .multi-select-buttons input {
+            min-width: 100%;
+        }
     }
 </style>
 
@@ -402,7 +556,7 @@
 
             <form method="post" enctype="multipart/form-data" id="libroForm">
                 {% csrf_token %}
-                
+
                 <!-- Información Básica -->
                 <div class="form-section">
                     <div class="section-title">
@@ -414,14 +568,14 @@
                             <label class="form-label">
                                 <i class="fas fa-heading"></i> Título <span class="required-star">*</span>
                             </label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                            <input type="text" class="form-control" id="titulo" name="titulo"
                                    placeholder="Ingrese el título del libro" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-tag"></i> Edición
                             </label>
-                            <input type="text" class="form-control" id="edicion" name="edicion" 
+                            <input type="text" class="form-control" id="edicion" name="edicion"
                                    placeholder="Ej: 2da Edición">
                         </div>
                         <div class="form-group">
@@ -444,7 +598,7 @@
                             <label class="form-label">
                                 <i class="fas fa-align-left"></i> Descripción
                             </label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" 
+                            <textarea class="form-control" id="descripcion" name="descripcion"
                                       rows="3" placeholder="Descripción del material..."></textarea>
                         </div>
                     </div>
@@ -495,41 +649,103 @@
                         <h4>Autores y Categorías</h4>
                     </div>
                     <div class="form-grid">
+                        <!-- AUTORES -->
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-user-pen"></i> Autores
                             </label>
-                            <div class="multi-select-container">
-                                <select multiple id="autores" name="autores" class="multi-select" size="6">
+                            <div class="multi-select-wrapper">
+                                <!-- Header con contador y acciones -->
+                                <div class="multi-select-header">
+                                    <span class="counter" id="autoresCounter">0 seleccionados</span>
+                                    <div class="actions">
+                                        <button type="button" class="action-btn" onclick="seleccionarTodos('autores')">
+                                            <i class="fas fa-check-double"></i> Todos
+                                        </button>
+                                        <button type="button" class="action-btn" onclick="limpiarSeleccion('autores')">
+                                            <i class="fas fa-times"></i> Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Buscador -->
+                                <div class="multi-select-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" 
+                                           id="buscarAutor" 
+                                           placeholder="Buscar autor..."
+                                           oninput="filtrarOpciones('autores', this.value)">
+                                </div>
+
+                                <!-- Lista -->
+                                <select multiple id="autores" name="autores" class="multi-select" size="6" onchange="actualizarContador('autores')">
                                     {% for autor in autores %}
-                                        <option value="{{ autor.id_autor }}">{{ autor.nombre }}</option>
+                                        <option value="{{ autor.id_autor }}" data-nombre="{{ autor.nombre|lower }}">
+                                            {{ autor.nombre }}
+                                        </option>
                                     {% endfor %}
                                 </select>
+                                <div class="no-results-msg" id="autoresNoResults">
+                                    <i class="fas fa-search"></i> No se encontraron autores
+                                </div>
+
+                                <!-- Agregar nuevo -->
                                 <div class="multi-select-buttons">
-                                    <input type="text" id="nuevo_autor" name="nombre_autor" 
-                                           class="form-control" placeholder="Nuevo autor..." style="flex: 1;">
-                                    <button type="button" class="btn btn-sm" style="background: var(--accent); color: white;" 
-                                            id="agregarAutorBtn">
-                                        <i class="fas fa-plus"></i> Agregar
+                                    <input type="text" id="nuevo_autor" name="nombre_autor"
+                                           placeholder="Crear nuevo autor...">
+                                    <button type="button" id="agregarAutorBtn">
+                                        <i class="fas fa-plus"></i> Crear
                                     </button>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- CATEGORÍAS -->
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-folder-open"></i> Categorías
                             </label>
-                            <div class="multi-select-container">
-                                <select multiple id="categorias" name="categorias" class="multi-select" size="6">
+                            <div class="multi-select-wrapper">
+                                <!-- Header con contador y acciones -->
+                                <div class="multi-select-header">
+                                    <span class="counter" id="categoriasCounter">0 seleccionadas</span>
+                                    <div class="actions">
+                                        <button type="button" class="action-btn" onclick="seleccionarTodos('categorias')">
+                                            <i class="fas fa-check-double"></i> Todas
+                                        </button>
+                                        <button type="button" class="action-btn" onclick="limpiarSeleccion('categorias')">
+                                            <i class="fas fa-times"></i> Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Buscador -->
+                                <div class="multi-select-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" 
+                                           id="buscarCategoria" 
+                                           placeholder="Buscar categoría..."
+                                           oninput="filtrarOpciones('categorias', this.value)">
+                                </div>
+
+                                <!-- Lista -->
+                                <select multiple id="categorias" name="categorias" class="multi-select" size="6" onchange="actualizarContador('categorias')">
                                     {% for categoria in categorias %}
-                                        <option value="{{ categoria.id_categoria }}">{{ categoria.nom_cat }}</option>
+                                        <option value="{{ categoria.id_categoria }}" data-nombre="{{ categoria.nom_cat|lower }}">
+                                            {{ categoria.nom_cat }}
+                                        </option>
                                     {% endfor %}
                                 </select>
+                                <div class="no-results-msg" id="categoriasNoResults">
+                                    <i class="fas fa-search"></i> No se encontraron categorías
+                                </div>
+
+                                <!-- Agregar nuevo -->
                                 <div class="multi-select-buttons">
-                                    <input type="text" id="nueva_categoria" class="form-control" placeholder="Nueva categoría..." style="flex: 1;">
-                                    <button type="button" class="btn btn-sm" style="background: var(--accent); color: white;" 
-                                            id="agregarCategoriaBtn">
-                                        <i class="fas fa-plus"></i> Agregar
+                                    <input type="text" id="nueva_categoria"
+                                           placeholder="Crear nueva categoría...">
+                                    <button type="button" id="agregarCategoriaBtn">
+                                        <i class="fas fa-plus"></i> Crear
                                     </button>
                                 </div>
                             </div>
@@ -563,7 +779,7 @@
                             </div>
                             <small class="text-muted">La portada se subirá a Google Drive automáticamente</small>
                         </div>
-                        
+
                         <!-- PDF -->
                         <div class="form-group">
                             <label class="form-label">
@@ -580,33 +796,33 @@
                             </div>
                             <div class="file-preview" id="pdfPreviewContainer" style="display: none;">
                                 <a id="pdfPreviewLink" href="#" target="_blank">
-                                    <i class="fas fa-file-pdf"></i> Ver PDF subido
+                                    <i class="fas fa-file-pdf"></i> Ver PDF seleccionado
                                 </a>
                                 <button type="button" onclick="removePDF()" class="btn btn-sm" style="background: var(--danger); color: white; margin-left: 10px;">
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             </div>
                             <small class="text-muted">El PDF se subirá a Google Drive automáticamente en segundo plano</small>
-                            
+
                             <!-- URL alternativas -->
                             <div class="form-group mt-2">
                                 <label class="form-label">
                                     <i class="fas fa-link"></i> URL del PDF (opcional)
                                 </label>
-                                <input type="url" class="form-control" id="pdf_url" name="pdf_url" 
+                                <input type="url" class="form-control" id="pdf_url" name="pdf_url"
                                        placeholder="https://ejemplo.com/documento.pdf">
                             </div>
-                            
+
                             <div class="form-group mt-2">
                                 <label class="form-label">
                                     <i class="fab fa-google-drive"></i> Google Drive URL (manual)
                                 </label>
-                                <input type="url" class="form-control" id="google_drive_url" name="google_drive_url" 
+                                <input type="url" class="form-control" id="google_drive_url" name="google_drive_url"
                                        placeholder="https://drive.google.com/file/d/.../preview">
                                 <small class="text-muted">Use esta opción si ya tiene el PDF en Drive y no quiere subirlo de nuevo.</small>
                             </div>
                         </div>
-                        
+
                         <!-- Autorización -->
                         <div class="form-group full-width">
                             <label class="form-label">
@@ -636,290 +852,463 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 
 <script>
-    // ============================================
-    // PALABRAS CLAVE
-    // ============================================
-    let keywords = [];
-
-    function renderKeywords() {
-        const container = document.getElementById('keywordsList');
-        container.innerHTML = keywords.map((kw, i) => `
-            <span class="keyword-badge">
-                ${kw}
-                <button type="button" class="remove-keyword" onclick="removeKeyword(${i})">
-                    <i class="fas fa-times"></i>
-                </button>
-            </span>
-        `).join('');
-        document.getElementById('palabras_claves').value = keywords.join(',');
+// ============================================
+// BÚSQUEDA Y FILTRADO DE AUTORES/CATEGORÍAS
+// ============================================
+function filtrarOpciones(selectId, termino) {
+    const select = document.getElementById(selectId);
+    const opciones = select.querySelectorAll('option');
+    const terminoLower = termino.toLowerCase().trim();
+    const noResultsMsg = document.getElementById(selectId + 'NoResults');
+    
+    let visibles = 0;
+    
+    opciones.forEach(opt => {
+        const nombre = opt.getAttribute('data-nombre') || opt.textContent.toLowerCase();
+        const coincide = !terminoLower || nombre.includes(terminoLower);
+        
+        if (coincide) {
+            opt.classList.remove('hidden-by-search');
+            opt.style.display = '';
+            visibles++;
+        } else {
+            opt.classList.add('hidden-by-search');
+            opt.style.display = 'none';
+        }
+    });
+    
+    if (noResultsMsg) {
+        noResultsMsg.style.display = visibles === 0 ? 'block' : 'none';
     }
+}
 
-    function removeKeyword(index) {
-        keywords.splice(index, 1);
+// ============================================
+// CONTADOR DE SELECCIONADOS
+// ============================================
+function actualizarContador(selectId) {
+    const select = document.getElementById(selectId);
+    const counter = document.getElementById(selectId + 'Counter');
+    if (!counter) return;
+    
+    const seleccionados = Array.from(select.selectedOptions).length;
+    const singular = selectId === 'autores' ? 'seleccionado' : 'seleccionada';
+    const plural = selectId === 'autores' ? 'seleccionados' : 'seleccionadas';
+    
+    counter.textContent = `${seleccionados} ${seleccionados === 1 ? singular : plural}`;
+    
+    // Cambiar color si hay selecciones
+    if (seleccionados > 0) {
+        counter.style.background = 'rgba(16, 185, 129, 0.15)';
+        counter.style.color = '#10B981';
+    } else {
+        counter.style.background = 'rgba(245, 158, 11, 0.1)';
+        counter.style.color = '#F59E0B';
+    }
+}
+
+// ============================================
+// SELECCIONAR TODOS (SOLO LOS VISIBLES)
+// ============================================
+function seleccionarTodos(selectId) {
+    const select = document.getElementById(selectId);
+    const opciones = select.querySelectorAll('option');
+    
+    opciones.forEach(opt => {
+        if (!opt.classList.contains('hidden-by-search') && opt.style.display !== 'none') {
+            opt.selected = true;
+        }
+    });
+    
+    actualizarContador(selectId);
+}
+
+// ============================================
+// LIMPIAR SELECCIÓN
+// ============================================
+function limpiarSeleccion(selectId) {
+    const select = document.getElementById(selectId);
+    Array.from(select.options).forEach(opt => opt.selected = false);
+    actualizarContador(selectId);
+}
+
+// ============================================
+// PALABRAS CLAVE
+// ============================================
+let keywords = [];
+
+function renderKeywords() {
+    const container = document.getElementById('keywordsList');
+    container.innerHTML = keywords.map((kw, i) => `
+        <span class="keyword-badge">
+            ${kw}
+            <button type="button" class="remove-keyword" onclick="removeKeyword(${i})">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>
+    `).join('');
+    document.getElementById('palabras_claves').value = keywords.join(',');
+}
+
+function removeKeyword(index) {
+    keywords.splice(index, 1);
+    renderKeywords();
+}
+
+function addKeyword() {
+    const input = document.getElementById('keywordInput');
+    const keyword = input.value.trim();
+    if (keyword && !keywords.includes(keyword)) {
+        keywords.push(keyword);
         renderKeywords();
+        input.value = '';
     }
+}
 
-    function addKeyword() {
-        const input = document.getElementById('keywordInput');
-        const keyword = input.value.trim();
-        if (keyword && !keywords.includes(keyword)) {
-            keywords.push(keyword);
-            renderKeywords();
-            input.value = '';
-        }
-    }
-
-    document.getElementById('keywordInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addKeyword();
-        }
-    });
-    document.getElementById('addKeywordBtn').addEventListener('click', addKeyword);
-
-    // ============================================
-    // PORTADA
-    // ============================================
-    function previewPortada(input) {
-        const container = document.getElementById('portadaPreviewContainer');
-        const preview = document.getElementById('portadaPreview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.src = e.target.result;
-                container.style.display = 'block';
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function removePortada() {
-        document.getElementById('portada').value = '';
-        document.getElementById('portadaPreviewContainer').style.display = 'none';
-    }
-
-    // ============================================
-    // PDF
-    // ============================================
-    function previewPDF(input) {
-        const container = document.getElementById('pdfPreviewContainer');
-        const link = document.getElementById('pdfPreviewLink');
-        if (input.files && input.files[0]) {
-            const url = URL.createObjectURL(input.files[0]);
-            link.href = url;
-            container.style.display = 'block';
-        }
-    }
-
-    function removePDF() {
-        document.getElementById('pdf').value = '';
-        document.getElementById('pdfPreviewContainer').style.display = 'none';
-    }
-
-    // ============================================
-    // COMPRESIÓN DE PDF ANTES DE SUBIR
-    // ============================================
-    async function comprimirPDF(file, onProgress) {
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-            
-            const compressedBytes = await pdfDoc.save({
-                useObjectStreams: true,
-                addDefaultPage: false
-            });
-            
-            const compressedFile = new File([compressedBytes], file.name, {
-                type: 'application/pdf'
-            });
-            
-            return compressedFile;
-        } catch (error) {
-            console.error("Error comprimiendo PDF:", error);
-            return file;
-        }
-    }
-
-    // ============================================
-    // AGREGAR AUTOR
-    // ============================================
-    document.getElementById('agregarAutorBtn').addEventListener('click', async () => {
-        const nombre = document.getElementById('nuevo_autor').value.trim();
-        if (!nombre) {
-            Swal.fire('Error', 'Ingrese un nombre de autor', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('{% url "agregar_autor" %}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `nombre=${encodeURIComponent(nombre)}`
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                const select = document.getElementById('autores');
-                const option = new Option(data.nombre, data.id_autor);
-                select.add(option);
-                document.getElementById('nuevo_autor').value = '';
-                Swal.fire('Éxito', 'Autor agregado correctamente', 'success');
-            } else {
-                Swal.fire('Error', data.error || 'Error al agregar autor', 'error');
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Error de conexión', 'error');
-        }
-    });
-
-    // ============================================
-    // AGREGAR CATEGORÍA
-    // ============================================
-    document.getElementById('agregarCategoriaBtn').addEventListener('click', async () => {
-        const nombre = document.getElementById('nueva_categoria').value.trim();
-        if (!nombre) {
-            Swal.fire('Error', 'Ingrese un nombre de categoría', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('{% url "agregar_categoria" %}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `nombre_categoria=${encodeURIComponent(nombre)}`
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                const select = document.getElementById('categorias');
-                const option = new Option(data.nombre, data.id_categoria);
-                select.add(option);
-                document.getElementById('nueva_categoria').value = '';
-                Swal.fire('Éxito', 'Categoría agregada correctamente', 'success');
-            } else {
-                Swal.fire('Error', data.error || 'Error al agregar categoría', 'error');
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Error de conexión', 'error');
-        }
-    });
-
-    // ============================================
-    // ENVÍO DEL FORMULARIO
-    // ============================================
-    document.getElementById('libroForm').addEventListener('submit', async (e) => {
+document.getElementById('keywordInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
         e.preventDefault();
+        addKeyword();
+    }
+});
+document.getElementById('addKeywordBtn').addEventListener('click', addKeyword);
+
+// ============================================
+// PORTADA
+// ============================================
+function previewPortada(input) {
+    const container = document.getElementById('portadaPreviewContainer');
+    const preview = document.getElementById('portadaPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            container.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removePortada() {
+    document.getElementById('portada').value = '';
+    document.getElementById('portadaPreviewContainer').style.display = 'none';
+}
+
+// ============================================
+// PDF
+// ============================================
+function previewPDF(input) {
+    const container = document.getElementById('pdfPreviewContainer');
+    const link = document.getElementById('pdfPreviewLink');
+    if (input.files && input.files[0]) {
+        const url = URL.createObjectURL(input.files[0]);
+        link.href = url;
+        container.style.display = 'block';
+    }
+}
+
+function removePDF() {
+    document.getElementById('pdf').value = '';
+    document.getElementById('pdfPreviewContainer').style.display = 'none';
+}
+
+// ============================================
+// COMPRESIÓN DE PDF
+// ============================================
+async function comprimirPDF(file) {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+        const compressedBytes = await pdfDoc.save({
+            useObjectStreams: true,
+            addDefaultPage: false
+        });
+        return new File([compressedBytes], file.name, { type: 'application/pdf' });
+    } catch (error) {
+        console.error("Error comprimiendo PDF:", error);
+        return file;
+    }
+}
+
+// ============================================
+// AGREGAR AUTOR (CON VALIDACIÓN DE DUPLICADOS)
+// ============================================
+document.getElementById('agregarAutorBtn').addEventListener('click', async () => {
+    const input = document.getElementById('nuevo_autor');
+    const nombre = input.value.trim();
+    
+    if (!nombre) {
+        Swal.fire('Error', 'Ingrese un nombre de autor', 'error');
+        return;
+    }
+    
+    // ✅ Verificar si ya existe localmente
+    const select = document.getElementById('autores');
+    const opciones = Array.from(select.options);
+    const existente = opciones.find(opt => 
+        opt.textContent.trim().toLowerCase() === nombre.toLowerCase()
+    );
+    
+    if (existente) {
+        // Ya existe → solo seleccionarlo
+        existente.selected = true;
+        input.value = '';
+        actualizarContador('autores');
         
-        const submitBtn = document.getElementById('submitBtn');
-        const pdfInput = document.getElementById('pdf');
-        const compressionBar = document.getElementById('compressionBar');
-        const compressionProgress = document.getElementById('compressionProgress');
-        const googleDriveUrl = document.getElementById('google_drive_url').value.trim();
+        Swal.fire({
+            title: 'Autor ya existente',
+            text: `"${nombre}" ya está en la lista. Se ha seleccionado automáticamente.`,
+            icon: 'info',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        return;
+    }
+    
+    // Crear nuevo
+    const btn = document.getElementById('agregarAutorBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    
+    try {
+        const response = await fetch('{% url "agregar_autor" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `nombre=${encodeURIComponent(nombre)}`
+        });
+        const data = await response.json();
         
-        // Validar título
-        const titulo = document.getElementById('titulo').value.trim();
-        if (!titulo) {
-            Swal.fire('Error', 'El título es obligatorio', 'error');
+        if (data.success) {
+            const option = new Option(data.nombre, data.id_autor);
+            option.setAttribute('data-nombre', data.nombre.toLowerCase());
+            option.selected = true;
+            select.add(option);
+            input.value = '';
+            actualizarContador('autores');
+            
+            Swal.fire({
+                title: '¡Creado!',
+                text: `Autor "${data.nombre}" agregado y seleccionado`,
+                icon: 'success',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire('Error', data.error || 'Error al agregar autor', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Error de conexión', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
+
+// También con Enter en el input
+document.getElementById('nuevo_autor').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('agregarAutorBtn').click();
+    }
+});
+
+// ============================================
+// AGREGAR CATEGORÍA (CON VALIDACIÓN DE DUPLICADOS)
+// ============================================
+document.getElementById('agregarCategoriaBtn').addEventListener('click', async () => {
+    const input = document.getElementById('nueva_categoria');
+    const nombre = input.value.trim();
+    
+    if (!nombre) {
+        Swal.fire('Error', 'Ingrese un nombre de categoría', 'error');
+        return;
+    }
+    
+    // ✅ Verificar si ya existe localmente
+    const select = document.getElementById('categorias');
+    const opciones = Array.from(select.options);
+    const existente = opciones.find(opt => 
+        opt.textContent.trim().toLowerCase() === nombre.toLowerCase()
+    );
+    
+    if (existente) {
+        existente.selected = true;
+        input.value = '';
+        actualizarContador('categorias');
+        
+        Swal.fire({
+            title: 'Categoría ya existente',
+            text: `"${nombre}" ya está en la lista. Se ha seleccionado automáticamente.`,
+            icon: 'info',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        return;
+    }
+    
+    const btn = document.getElementById('agregarCategoriaBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    
+    try {
+        const response = await fetch('{% url "agregar_categoria" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `nombre_categoria=${encodeURIComponent(nombre)}`
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            const option = new Option(data.nombre, data.id_categoria);
+            option.setAttribute('data-nombre', data.nombre.toLowerCase());
+            option.selected = true;
+            select.add(option);
+            input.value = '';
+            actualizarContador('categorias');
+            
+            Swal.fire({
+                title: '¡Creada!',
+                text: `Categoría "${data.nombre}" agregada y seleccionada`,
+                icon: 'success',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire('Error', data.error || 'Error al agregar categoría', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Error de conexión', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
+
+document.getElementById('nueva_categoria').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('agregarCategoriaBtn').click();
+    }
+});
+
+// ============================================
+// ENVÍO DEL FORMULARIO
+// ============================================
+document.getElementById('libroForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const pdfInput = document.getElementById('pdf');
+    const compressionBar = document.getElementById('compressionBar');
+    const compressionProgress = document.getElementById('compressionProgress');
+    const googleDriveUrl = document.getElementById('google_drive_url').value.trim();
+    
+    const titulo = document.getElementById('titulo').value.trim();
+    if (!titulo) {
+        Swal.fire('Error', 'El título es obligatorio', 'error');
+        return;
+    }
+    
+    if (googleDriveUrl) {
+        console.log("Usando Google Drive URL, omitiendo subida de PDF");
+    } else if (pdfInput.files.length > 0) {
+        const file = pdfInput.files[0];
+        const fileSizeMB = file.size / (1024 * 1024);
+        
+        if (fileSizeMB > 2048) {
+            Swal.fire('Error', `El PDF supera los 2GB (${fileSizeMB.toFixed(0)}MB).`, 'error');
             return;
         }
         
-        // Si tiene Google Drive URL, no procesar PDF
-        if (googleDriveUrl) {
-            console.log("Usando Google Drive URL, omitiendo subida de PDF");
-        } 
-        // Verificar si hay PDF y si es grande
-        else if (pdfInput.files.length > 0) {
-            const file = pdfInput.files[0];
-            const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB > 5 && fileSizeMB < 100) {
+            compressionBar.style.display = 'block';
+            compressionProgress.style.width = '30%';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comprimiendo PDF...';
             
-            // ✅ LÍMITE AUMENTADO A 2GB
-            if (fileSizeMB > 2048) {
-                Swal.fire('Error', `El PDF supera los 2GB (${fileSizeMB.toFixed(0)}MB). Contacta al administrador.`, 'error');
-                return;
-            }
+            compressionProgress.style.width = '60%';
+            const pdfToUpload = await comprimirPDF(file);
+            compressionProgress.style.width = '100%';
             
-            // ✅ Comprimir solo si es entre 5MB y 100MB (para no saturar el navegador)
-            if (fileSizeMB > 5 && fileSizeMB < 100) {
-                compressionBar.style.display = 'block';
-                compressionProgress.style.width = '30%';
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comprimiendo PDF...';
-                
-                compressionProgress.style.width = '60%';
-                const pdfToUpload = await comprimirPDF(file);
-                compressionProgress.style.width = '100%';
-                
-                await new Promise(r => setTimeout(r, 300));
-                compressionBar.style.display = 'none';
-                
-                const newFileList = new DataTransfer();
-                newFileList.items.add(pdfToUpload);
-                pdfInput.files = newFileList.files;
-                
-                const newSizeMB = pdfToUpload.size / (1024 * 1024);
-                console.log(`PDF comprimido: ${fileSizeMB.toFixed(1)}MB → ${newSizeMB.toFixed(1)}MB`);
-            } else if (fileSizeMB >= 100) {
-                // Para archivos muy grandes (>100MB), subir sin comprimir
-                console.log(`PDF grande (${fileSizeMB.toFixed(1)}MB), subiendo sin comprimir`);
-            }
+            await new Promise(r => setTimeout(r, 300));
+            compressionBar.style.display = 'none';
+            
+            const newFileList = new DataTransfer();
+            newFileList.items.add(pdfToUpload);
+            pdfInput.files = newFileList.files;
         }
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('{% url "agregar_libro" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await response.json();
         
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-        
-        const formData = new FormData(e.target);
-        
-        try {
-            const response = await fetch('{% url "agregar_libro" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
+        if (data.success) {
+            Swal.fire({
+                title: '¡Libro guardado exitosamente!',
+                text: 'Los archivos se están subiendo a Google Drive en segundo plano.',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Ver lista de libros',
+                cancelButtonText: 'Agregar otro libro'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{% url "listar_libros" %}';
+                } else {
+                    e.target.reset();
+                    keywords = [];
+                    renderKeywords();
+                    removePortada();
+                    removePDF();
+                    actualizarContador('autores');
+                    actualizarContador('categorias');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Libro';
+                    compressionBar.style.display = 'none';
+                    compressionProgress.style.width = '0%';
                 }
             });
-            const data = await response.json();
-            
-            if (data.success) {
-                Swal.fire({
-                    title: '¡Libro guardado exitosamente!',
-                    text: 'Los archivos se están subiendo a Google Drive en segundo plano.',
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ver lista de libros',
-                    cancelButtonText: 'Agregar otro libro'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '{% url "listar_libros" %}';
-                    } else {
-                        e.target.reset();
-                        keywords = [];
-                        renderKeywords();
-                        removePortada();
-                        removePDF();
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Libro';
-                        compressionBar.style.display = 'none';
-                        compressionProgress.style.width = '0%';
-                    }
-                });
-            } else {
-                Swal.fire('Error', data.error || 'Ocurrió un error al guardar', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Libro';
-                compressionBar.style.display = 'none';
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+        } else {
+            Swal.fire('Error', data.error || 'Ocurrió un error al guardar', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Libro';
             compressionBar.style.display = 'none';
         }
-    });
+    } catch (error) {
+        Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Libro';
+        compressionBar.style.display = 'none';
+    }
+});
+
+// ============================================
+// INICIALIZACIÓN
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarContador('autores');
+    actualizarContador('categorias');
+});
 </script>
 {% endblock %}
