@@ -377,7 +377,19 @@ FILE_UPLOAD_HANDLERS = [
 
 # Configurar carpeta de temp_uploads en .gitignore
 TEMP_UPLOADS_DIR = FILE_UPLOAD_TEMP_DIR
+# settings.py (al final)
 
+# settings.py (al final, junto a las otras configuraciones)
+
+# ============================================
+# CONFIGURACIÓN DE OPENROUTER
+# ============================================
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
+
+if OPENROUTER_API_KEY:
+    print("✅ OpenRouter API Key configurada")
+else:
+    print("⚠️ OPENROUTER_API_KEY no encontrada - El chatbot no funcionará")
 # ============================================
 # CONFIGURACIÓN DE LOGS
 # ============================================

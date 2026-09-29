@@ -21,7 +21,7 @@ from ..models import (
 )
 from ..utils.text_cleaner import limpiar_busqueda
 from ..utils.chat_responses import ChatResponses
-from ..groq_config import get_ai_response
+from ..openrouter_config import get_ai_response
 from ..drive_utils import (
     eliminar_pdf_de_drive,
     eliminar_imagen_de_drive,
